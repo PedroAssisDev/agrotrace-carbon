@@ -1,0 +1,75 @@
+{
+  "schema_version": "anchor_payload_v1",
+  "anchor_intent": {
+    "intent_id": "anchor-intent-2026-annual-002",
+    "intent_type": "carbon_result_integrity",
+    "created_at": "2026-12-31T23:59:59Z",
+    "created_by": "agrotrace-carbon-blockchain-service",
+    "environment": "local"
+  },
+  "evidence_package": {
+    "package_id": "pkg-carbon-annual-2026-002",
+    "package_id_hash": "0x0a1b2c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff",
+    "package_type": "annual_carbon_result",
+    "package_version": "1.0.0",
+    "period": {
+      "period_start": "2026-01-01",
+      "period_end": "2026-12-31",
+      "period_granularity": "annual"
+    },
+    "scope": {
+      "project_id_hash": "0x1b2c3d4e5f60718293a4b5c6d7e8f9012233445566778899aabbccddeeff0011",
+      "farm_id_hash": "0x2c3d4e5f60718293a4b5c6d7e8f9011233445566778899aabbccddeeff001122",
+      "management_unit_id_hash": null
+    }
+  },
+  "integrity": {
+    "hash_algorithm": "sha256",
+    "canonicalization_method": "json_canonical_v1",
+    "package_hash": "0x3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff001122",
+    "merkle_root": "0x4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff00112233",
+    "metadata_hash": "0x5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff0011223344",
+    "previous_package_hash": null
+  },
+  "evidence_items": [
+    {
+      "item_id": "item-001",
+      "item_type": "calculation_method_version",
+      "source_reference": "method-version-hash-only",
+      "item_hash": "0x6f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff0011223344",
+      "item_order": 1
+    },
+    {
+      "item_id": "item-002",
+      "item_type": "calculation_parameters",
+      "source_reference": "parameter-set-hash-only",
+      "item_hash": "0x7f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff0011223344",
+      "item_order": 2
+    },
+    {
+      "item_id": "item-003",
+      "item_type": "approved_result",
+      "source_reference": "approved-result-hash-only",
+      "item_hash": "0x8f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff0011223344",
+      "item_order": 3
+    }
+  ],
+  "public_summary": {
+    "enabled": true,
+    "result_type": "gross_emission",
+    "total_emission_scaled": 155250,
+    "unit": "kgCO2e",
+    "scale": 1000
+  },
+  "anchoring": {
+    "anchoring_mode": "not_selected_yet",
+    "network_type": null,
+    "network_name": null,
+    "chain_id": null,
+    "contract_address": null,
+    "transaction_hash": null,
+    "block_number": null,
+    "anchored_at": null,
+    "anchoring_status": "not_submitted"
+  }
+}

@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agrotrace/schemas/anchor_payload.schema.json",
+  "title": "Anchor Payload Model",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "anchor_intent",
+    "evidence_package",
+    "integrity",
+    "evidence_items",
+    "public_summary",
+    "anchoring"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["anchor_payload_v1"]
+    },
+    "anchor_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent_id",
+        "intent_type",
+        "created_at",
+        "created_by",
+        "environment"
+      ],
+      "properties": {
+        "intent_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "intent_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "created_by": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["local", "dev", "staging", "prod"]
+        }
+      }
+    },
+    "evidence_package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package_id",
+        "package_id_hash",
+        "package_type",
+        "period"
+      ],
+      "properties": {
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package_id_hash": {
+          "$ref": "#/$defs/hashString"
+        },
+        "package_type": {
+          "type": "string",
+          "enum": [
+            "monthly_carbon_result",
+            "annual_carbon_result",
+            "daily_to_monthly_aggregation",
+            "monthly_to_annual_aggregation",
+            "ontology_publication",
+            "manual_audit_package"
+          ]
+        },
+        "package_version": {
+          "type": "string"
+        },
+        "period": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["period_start", "period_end", "period_granularity"],
+          "properties": {
+            "period_start": {
+              "type": "string",
+              "format": "date"
+            },
+            "period_end": {
+              "type": "string",
+              "format": "date"
+            },
+            "period_granularity": {
+              "type": "string",
+              "enum": ["daily", "monthly", "annual", "custom"]
+            }
+          }
+        },
+        "scope": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id_hash": {
+              "$ref": "#/$defs/hashStringOrNull"
+            },
+            "farm_id_hash": {
+              "$ref": "#/$defs/hashStringOrNull"
+            },
+            "management_unit_id_hash": {
+              "$ref": "#/$defs/hashStringOrNull"
+            }
+          }
+        }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hash_algorithm",
+        "canonicalization_method",
+        "package_hash",
+        "metadata_hash"
+      ],
+      "properties": {
+        "hash_algorithm": {
+          "type": "string",
+          "enum": ["sha256", "sha3_256"],
+          "default": "sha256"
+        },
+        "canonicalization_method": {
+          "type": "string",
+          "minLength": 1
+        },
+        "package_hash": {
+          "$ref": "#/$defs/hashString"
+        },
+        "merkle_root": {
+          "$ref": "#/$defs/hashStringOrNull"
+        },
+        "metadata_hash": {
+          "$ref": "#/$defs/hashString"
+        },
+        "previous_package_hash": {
+          "$ref": "#/$defs/hashStringOrNull"
+        }
+      }
+    },
+    "evidence_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["item_id", "item_type", "item_hash", "item_order"],
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "item_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_reference": {
+            "type": "string"
+          },
+          "item_hash": {
+            "$ref": "#/$defs/hashString"
+          },
+          "item_order": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "public_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "result_type",
+        "total_emission_scaled",
+        "unit",
+        "scale"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "result_type": {
+          "type": ["string", "null"],
+          "enum": [
+            "gross_emission",
+            "net_emission",
+            "reduction",
+            "removal",
+            "eligible_credit",
+            null
+          ]
+        },
+        "total_emission_scaled": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "unit": {
+          "type": ["string", "null"]
+        },
+        "scale": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "enabled": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "result_type": {
+                "type": "string",
+                "enum": [
+                  "gross_emission",
+                  "net_emission",
+                  "reduction",
+                  "removal",
+                  "eligible_credit"
+                ]
+              },
+              "total_emission_scaled": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "scale": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "result_type": {
+                "type": "null"
+              },
+              "total_emission_scaled": {
+                "type": "null"
+              },
+              "unit": {
+                "type": "null"
+              },
+              "scale": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "anchoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anchoring_mode",
+        "network_type",
+        "network_name",
+        "chain_id",
+        "contract_address",
+        "transaction_hash",
+        "block_number",
+        "anchored_at",
+        "anchoring_status"
+      ],
+      "properties": {
+        "anchoring_mode": {
+          "type": "string",
+          "enum": [
+            "not_selected_yet",
+            "local_simulation",
+            "testnet",
+            "mainnet",
+            "permissioned_network"
+          ]
+        },
+        "network_type": {
+          "type": ["string", "null"]
+        },
+        "network_name": {
+          "type": ["string", "null"]
+        },
+        "chain_id": {
+          "type": ["string", "null"]
+        },
+        "contract_address": {
+          "type": ["string", "null"]
+        },
+        "transaction_hash": {
+          "type": ["string", "null"]
+        },
+        "block_number": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "anchored_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "anchoring_status": {
+          "type": "string",
+          "enum": [
+            "not_submitted",
+            "pending",
+            "submitted",
+            "confirmed",
+            "failed",
+            "simulated"
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "hashString": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{16,}$"
+    },
+    "hashStringOrNull": {
+      "type": ["string", "null"],
+      "pattern": "^0x[0-9a-fA-F]{16,}$"
+    }
+  }
+}

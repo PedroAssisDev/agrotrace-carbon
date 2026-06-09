@@ -1,0 +1,100 @@
+{
+  // Versao do contrato de dados do payload de ancoragem
+  "schema_version": "anchor_payload_v1",
+
+  // Intencao da ancoragem (quem criou, quando e em qual ambiente)
+  "anchor_intent": {
+    "intent_id": "anchor-intent-2026-annual-001",
+    "intent_type": "carbon_result_integrity",
+    "created_at": "2026-12-31T23:59:59Z",
+    "created_by": "agrotrace-carbon-blockchain-service",
+    "environment": "local"
+  },
+
+  // Pacote minimo de referencia do resultado auditavel
+  "evidence_package": {
+    "package_id": "pkg-carbon-annual-2026-001",
+    // Hash do identificador interno do pacote (nao publica o ID bruto externo)
+    "package_id_hash": "0xa7f1b92c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccdde0",
+    "package_type": "annual_carbon_result",
+    "package_version": "1.0.0",
+    "period": {
+      "period_start": "2026-01-01",
+      "period_end": "2026-12-31",
+      "period_granularity": "annual"
+    },
+    "scope": {
+      "project_id_hash": "0xb1c2d3e4f5a697887766554433221100ffeeddccbbaa99887766554433221100",
+      "farm_id_hash": "0xc1d2e3f4a5b6877866554433221100aa1234567890abcdef1234567890abcdef",
+      // Pode ser nulo quando nao houver recorte por unidade de manejo
+      "management_unit_id_hash": null
+    }
+  },
+
+  // Provas de integridade do pacote
+  "integrity": {
+    "hash_algorithm": "sha256",
+    "canonicalization_method": "json_canonical_v1",
+    // Hash principal do pacote consolidado
+    "package_hash": "0xddeeff00112233445566778899aabbcc00112233445566778899aabbccddeeff",
+    // Opcional: raiz Merkle para prova de inclusao de itens
+    "merkle_root": "0xeeff00112233445566778899aabbccdd11223344556677889900aabbccddeeff",
+    // Hash dos metadados auxiliares
+    "metadata_hash": "0xff00112233445566778899aabbccdde12233445566778899aabbccddeeff0011",
+    "previous_package_hash": null
+  },
+
+  // Itens de evidencia usados para montar o pacote
+  "evidence_items": [
+    {
+      "item_id": "item-001",
+      "item_type": "calculation_method_version",
+      "source_reference": "method-version-hash-only",
+      "item_hash": "0x111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000",
+      "item_order": 1
+    },
+    {
+      "item_id": "item-002",
+      "item_type": "calculation_parameters",
+      "source_reference": "parameter-set-hash-only",
+      "item_hash": "0x22223333444455556666777788889999aaaabbbbccccddddeeeeffff00001111",
+      "item_order": 2
+    },
+    {
+      "item_id": "item-003",
+      "item_type": "approved_result",
+      "source_reference": "approved-result-hash-only",
+      "item_hash": "0x3333444455556666777788889999aaaabbbbccccddddeeeeffff000011112222",
+      "item_order": 3
+    },
+    {
+      "item_id": "item-004",
+      "item_type": "human_approval",
+      "source_reference": "approval-hash-only",
+      "item_hash": "0x444455556666777788889999aaaabbbbccccddddeeeeffff0000111122223333",
+      "item_order": 4
+    }
+  ],
+
+  // Modo privado: nao publica emissao total
+  "public_summary": {
+    "enabled": false,
+    "result_type": null,
+    "total_emission_scaled": null,
+    "unit": null,
+    "scale": null
+  },
+
+  // Estrutura de ancoragem existe, mas sem rede escolhida no MVP
+  "anchoring": {
+    "anchoring_mode": "not_selected_yet",
+    "network_type": null,
+    "network_name": null,
+    "chain_id": null,
+    "contract_address": null,
+    "transaction_hash": null,
+    "block_number": null,
+    "anchored_at": null,
+    "anchoring_status": "not_submitted"
+  }
+}
