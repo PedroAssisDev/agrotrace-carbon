@@ -96,6 +96,7 @@ class PopulationCache:
         self.org_contexts: dict[str, object] = {}
         self.temp_contexts: dict[str, object] = {}
         self.properties: dict[str, object] = {}
+        self.lots: dict[str, object] = {}
         self.animals: dict[str, object] = {}
         self.records: dict[str, object] = {}
 
@@ -178,15 +179,52 @@ def _ensure_property(
     return ind
 
 
-def _ensure_animal(onto: object, cache: PopulationCache, animal_id: str) -> object:
+def _ensure_lot(
+    onto: object,
+    cache: PopulationCache,
+    lot_id: str,
+    property_id: str,
+) -> object:
+    from ontology.cycle_model import upsert_lot
+
+    key = iri_mod.lot_iri(lot_id)
+    if key in cache.lots:
+        return cache.lots[key]
+    lot = upsert_lot(onto, lot_id=lot_id, property_id=property_id)
+    cache.lots[key] = lot
+    return lot
+
+
+def _ensure_animal(
+    onto: object,
+    cache: PopulationCache,
+    animal_id: str,
+    *,
+    property_id: str,
+    lot_id: str | None = None,
+) -> object:
+    from ontology.cycle_model import upsert_animal
+
     key = iri_mod.animal_iri(animal_id)
     if key in cache.animals:
-        return cache.animals[key]
-    with onto:
-        ind = _get_class(onto, "Animal")(key)
-        ind.hasIdentifier = [animal_id]
-    cache.animals[key] = ind
-    return ind
+        animal = cache.animals[key]
+        # Refresh links if lot newly provided
+        if lot_id and not list(getattr(animal, "belongsToLot", None) or []):
+            return upsert_animal(
+                onto,
+                animal_id=animal_id,
+                property_id=property_id,
+                lot_id=lot_id,
+            )
+        return animal
+    animal = upsert_animal(
+        onto,
+        animal_id=animal_id,
+        property_id=property_id,
+        lot_id=lot_id,
+    )
+    cache.animals[key] = animal
+    return animal
 
 
 def detect_record_class_name(row: dict[str, Any], org: dict[str, Any], tc: dict[str, Any]) -> str:
@@ -230,10 +268,32 @@ def populate_from_dataframe(
         org_ctx = _ensure_org_context(onto, cache, org)
         temp_ctx = _ensure_temp_context(onto, cache, tc, row)
         prop = _ensure_property(onto, cache, org, row)
+        property_id = str(
+            row.get("property_id")
+            or org.get("identifier")
+            or _get_dp_safe(prop)
+            or "unknown"
+        )
+
+        lot = None
+        lot_id = None if _is_empty(row.get("lot_id")) else str(row["lot_id"])
+        if lot_id is None and (org.get("granularity") or "").lower() in ("lot", "lote"):
+            # identifier at lot granularity may be the lot id
+            cand = org.get("identifier")
+            if cand and str(cand) != property_id:
+                lot_id = str(cand)
+        if lot_id:
+            lot = _ensure_lot(onto, cache, lot_id, property_id)
 
         animal = None
         if not _is_empty(row.get("animal_id")):
-            animal = _ensure_animal(onto, cache, str(row["animal_id"]))
+            animal = _ensure_animal(
+                onto,
+                cache,
+                str(row["animal_id"]),
+                property_id=property_id,
+                lot_id=lot_id,
+            )
 
         record_cls_name = detect_record_class_name(row, org, tc)
         org_id = str(org.get("identifier") or row.get("property_id") or "unknown")
@@ -244,6 +304,8 @@ def populate_from_dataframe(
                 record.hasOrganizationalContext = [org_ctx]
                 record.hasTemporalContext = [temp_ctx]
                 record.refersToProperty = [prop]
+                if lot:
+                    record.refersToLot = [lot]
                 if animal:
                     record.refersToAnimal = [animal]
                 if layout_name:
@@ -271,6 +333,8 @@ def populate_from_dataframe(
                 obs.hasOrganizationalContext = [org_ctx]
                 obs.hasTemporalContext = [temp_ctx]
                 obs.refersToProperty = [prop]
+                if lot:
+                    obs.refersToLot = [lot]
                 if animal:
                     obs.refersToAnimal = [animal]
                 var_ind = get_catalog_individual(onto, "variables", canonical)
@@ -289,6 +353,11 @@ def populate_from_dataframe(
                 record.hasObservation.append(obs)
 
     return onto
+
+
+def _get_dp_safe(ind: object) -> str | None:
+    vals = list(getattr(ind, "hasIdentifier", None) or [])
+    return str(vals[0]) if vals else None
 
 
 def populate_from_csv(
