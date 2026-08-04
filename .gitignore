@@ -1,0 +1,74 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Frontend generated data (reproduzível via seed/reset)
+frontend/data/cycles/*.json
+frontend/data/normalized/*
+frontend/data/publications/*
+frontend/data/evidence_packages/*
+frontend/data/ontology_exports/*
+frontend/data/properties/*
+frontend/data/db/*.db
+frontend/data/db/*.db-*
+frontend/data/logs/*
+frontend/data/raw_originals/*
+frontend/data/reports/*
+!frontend/data/**/.gitkeep
+
+# Save-file generated
+agrotrace-carbon-save-file/data/originals/*
+agrotrace-carbon-save-file/data/emulated_uploads/*
+!agrotrace-carbon-save-file/data/**/.gitkeep
+
+# Runtime local na raiz (não versionar)
+/data/logs/
+/data/input/
+/data/processed/
+/data/rejected/
+/data/validation_reports/
+/data/*.csv
+/data/*.db
+!/data/seed/
+!/data/seed/**/.gitkeep
+
+# Service local DBs
+**/*.sqlite
+**/*.db
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Foundry / Solidity artifacts
+agrotrace-carbon-blockchain-service/contracts/cache/
+agrotrace-carbon-blockchain-service/contracts/out/
+agrotrace-carbon-blockchain-service/contracts/broadcast/
+**/contracts/cache/
+**/contracts/out/
+**/broadcast/
