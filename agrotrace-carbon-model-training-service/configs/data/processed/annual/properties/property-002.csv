@@ -1,0 +1,9 @@
+property_id,period,granularity,lactating_cows,milk_production_liters,total_ghg_emissions_tco2e,approval_status,publication_status
+property-002,2018-01-01,annual,40.0,330500.0,214.5,approved,published
+property-002,2019-01-01,annual,41.0,338750.0,219.85,approved,published
+property-002,2020-01-01,annual,42.0,347000.0,225.2,approved,published
+property-002,2021-01-01,annual,43.0,355250.0,230.55,approved,published
+property-002,2022-01-01,annual,44.0,363500.0,235.9,approved,published
+property-002,2023-01-01,annual,45.0,371750.0,241.25,approved,published
+property-002,2024-01-01,annual,46.0,380000.0,246.6,approved,published
+property-002,2025-01-01,annual,47.0,388250.0,251.95,approved,published
