@@ -1,5 +1,7 @@
 """Camada de cálculos de emissões: funções puras, entradas explícitas e escopo temporal."""
 
+__version__ = "1.0.0"
+
 from emissions.calculation_bundle import CalculationBundle, ProvenanceMetadata
 from emissions.csv_adapter import farm_period_from_row, required_csv_columns
 from emissions.defaults import (
