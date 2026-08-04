@@ -107,28 +107,36 @@ class CheckCollector:
 
 
 @contextmanager
-def isolated_data_root(*, bootstrap: bool = True) -> Iterator[Path]:
+def isolated_data_root(
+    *,
+    bootstrap: bool = True,
+    respect_cli_data_root: bool = False,
+) -> Iterator[Path]:
     """TemporaryDirectory + ``config.apply_data_root`` + bootstrap opcional.
 
     Não toca em ``frontend/data`` operacional. Restaura o root default ao sair.
+
+    Por padrão ignora ``--data-root`` compartilhado da regressão (evita poluição
+    entre validate_*). Passe ``respect_cli_data_root=True`` só quando o teste
+    precisar deliberadamente reutilizar o root do CLI.
     """
     import tempfile
 
     import config
     from utils.data_root_cli import apply_data_root_from_argv
 
-    # Consome --data-root se o chamador passou; caso contrário usa temp.
+    # Consome argv para não deixar --data-root “sobrando” em sys.argv.
     explicit = apply_data_root_from_argv()
-    own_temp = explicit is None
+    use_explicit = respect_cli_data_root and explicit is not None
 
-    if own_temp:
+    if use_explicit:
+        tmp_cm = None
+        root = Path(explicit)
+    else:
         tmp_cm = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         tmp = tmp_cm.__enter__()
         root = Path(tmp) / "agrotrace-data"
         config.apply_data_root(root, reset_runtime=True)
-    else:
-        tmp_cm = None
-        root = Path(explicit)
 
     if bootstrap:
         try:
