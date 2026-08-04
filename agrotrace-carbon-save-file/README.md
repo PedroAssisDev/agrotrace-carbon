@@ -2,6 +2,8 @@
 
 Servico de preservacao do dado bruto original do AgroTrace Carbon.
 
+> Documento canônico do módulo: [../docs/modules/save-file.md](../docs/modules/save-file.md).
+
 ## Papel no ciclo
 
 Cobre as etapas iniciais de entrada e preservacao:

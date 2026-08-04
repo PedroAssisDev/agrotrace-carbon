@@ -2,6 +2,8 @@
 
 Serviço responsável por observar eventos do `agrotrace-carbon-traceability-service`, montar pacotes de evidência, gerar hashes determinísticos, Merkle Roots e ancorar evidências criptográficas — em modo simulado ou em redes EVM (Anvil / Sepolia).
 
+> Documento canônico do módulo: [../docs/modules/blockchain-service.md](../docs/modules/blockchain-service.md).
+
 ## Responsabilidades
 
 - Observar `audit_outbox_event` do serviço de proveniência
