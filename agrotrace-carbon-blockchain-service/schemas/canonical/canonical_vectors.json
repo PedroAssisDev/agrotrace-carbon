@@ -1,0 +1,116 @@
+{
+  "strategy": "json_canonical_v1",
+  "version": "1",
+  "vectors": [
+    {
+      "id": "key_order_equal",
+      "payloads": [
+        {
+          "z": 1,
+          "a": {
+            "y": 2,
+            "b": 3
+          },
+          "m": [
+            1,
+            2
+          ]
+        },
+        {
+          "m": [
+            1,
+            2
+          ],
+          "a": {
+            "b": 3,
+            "y": 2
+          },
+          "z": 1
+        }
+      ],
+      "expect_equal_bytes": true,
+      "canonical_bytes": "{\"a\":{\"b\":3,\"y\":2},\"m\":[1,2],\"z\":1}",
+      "hash": "0x0ff739d9c1d15a93630ae3a5408bed36db3c8fd6211feede0bb229bc8a409c89"
+    },
+    {
+      "id": "unicode_accents",
+      "payloads": [
+        {
+          "fazenda": "São José",
+          "municipio": "Patos de Minas",
+          "note": "açúcar"
+        }
+      ],
+      "expect_equal_bytes": true,
+      "canonical_bytes": "{\"fazenda\":\"São José\",\"municipio\":\"Patos de Minas\",\"note\":\"açúcar\"}",
+      "hash": "0xa00d61eee2a092536850849f0b7a5da9b274930fda2bd95791028767a59a52fb"
+    },
+    {
+      "id": "value_alteration_diverges",
+      "payloads": [
+        {
+          "value": 10,
+          "unit": "kg"
+        },
+        {
+          "value": 11,
+          "unit": "kg"
+        }
+      ],
+      "expect_equal_bytes": false,
+      "hashes": [
+        "0x6c81c957e197901af6a435abd9a2eced1c76007c864985e1f57aba06b7cfd9e6",
+        "0x291ca040f0b42c88cf1f379c83f406592383d4bd7e23732acc93056facd2fb12"
+      ]
+    },
+    {
+      "id": "list_order_matters",
+      "payloads": [
+        {
+          "items": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "items": [
+            3,
+            2,
+            1
+          ]
+        }
+      ],
+      "expect_equal_bytes": false,
+      "hashes": [
+        "0x7aff5dcbe562761bfd9d8569cdd3226d3944acad6539db5d62ad3f67d9a45d0a",
+        "0x27d87096a02d69dbce3514d6528cf8384ded1e55bd4dac03e5daf2f40b72586d"
+      ]
+    },
+    {
+      "id": "null_bool_numbers",
+      "payloads": [
+        {
+          "n": null,
+          "t": true,
+          "f": false,
+          "i": 1,
+          "w": 1.0,
+          "d": "1.5"
+        }
+      ],
+      "canonical_bytes": "{\"d\":\"1.5\",\"f\":false,\"i\":1,\"n\":null,\"t\":true,\"w\":1}",
+      "hash": "0xd06e15ffdc7a1e930ad767ae41fbb484b8bc7e81f6be699a11af577beb3f8e38"
+    },
+    {
+      "id": "unknown_method_raises",
+      "method": "json_canonical_v999",
+      "raises": "UnknownCanonicalizationError"
+    },
+    {
+      "id": "missing_method_defaults_v1",
+      "canonical_bytes": "{\"a\":1}",
+      "hash": "0x015abd7f5cc57a2dd94b7590f04ad8084273905ee33ec5cebeae62276a97f862"
+    }
+  ]
+}

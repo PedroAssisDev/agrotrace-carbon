@@ -26,6 +26,13 @@ def init_database(settings: Settings | None = None) -> None:
         except Exception:
             # New DBs already have the column via models; ignore migration edge cases
             pass
+        try:
+            from app.infrastructure.db.sqlite_append_only import install_sqlite_append_only
+
+            with engine.begin() as conn:
+                install_sqlite_append_only(conn)
+        except Exception:
+            pass
     with SqlAlchemyUnitOfWork(create_session_factory(settings)) as uow:
         uow.blockchain_networks.ensure_default_networks()
 

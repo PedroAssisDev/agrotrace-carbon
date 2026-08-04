@@ -5,15 +5,41 @@ import json
 from app.application.dto.commands import VerifyEvidencePackageCommand
 from app.application.dto.results import VerifyEvidencePackageResult
 from app.domain.entities import VerificationLog
-from app.domain.services.canonical_json_service import parse_canonical_json, to_canonical_json
+from app.domain.services.canonical_json_service import (
+    DEFAULT_CANONICALIZATION_METHOD,
+    UnknownCanonicalizationError,
+    parse_canonical_json,
+    resolve_canonicalization_method,
+)
 from app.domain.services.merkle_service import MerkleLeaf, build_merkle_root
 from app.domain.services.sha256_service import sha256_hex
 from app.domain.value_objects.statuses import EvidencePackageStatus, VerificationType
 from app.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 from app.infrastructure.logging.audit_logger import AuditLogger
 from app.shared.clock import utcnow
-from app.shared.exceptions import NotFoundError
+from app.shared.exceptions import NotFoundError, VerificationError
 from app.shared.ids import new_id
+
+
+def _resolve_package_method(package, uow) -> str:
+    """Read canonicalization_method from package / hash_record; default historical v1."""
+    try:
+        payload = parse_canonical_json(package.canonical_payload_json or "{}")
+        integrity = payload.get("integrity_context") or {}
+        method = integrity.get("canonicalization_method") or payload.get("canonicalization_method")
+        if method:
+            return resolve_canonicalization_method(method)
+    except Exception:
+        pass
+    try:
+        records = uow.hash_records.list_by_package(package.evidence_package_id)
+        for rec in records or []:
+            method = getattr(rec, "canonicalization_method", None)
+            if method:
+                return resolve_canonicalization_method(method)
+    except Exception:
+        pass
+    return DEFAULT_CANONICALIZATION_METHOD
 
 
 class VerifyEvidencePackageUseCase:
@@ -26,6 +52,11 @@ class VerifyEvidencePackageUseCase:
         if package is None:
             raise NotFoundError(f"Evidence package not found: {command.evidence_package_id}")
 
+        try:
+            method = _resolve_package_method(package, self._uow)
+        except UnknownCanonicalizationError as exc:
+            raise VerificationError(str(exc)) from exc
+
         items = self._uow.evidence_items.list_by_package(package.evidence_package_id)
         item_results: list[dict] = []
         all_items_valid = True
@@ -33,7 +64,7 @@ class VerifyEvidencePackageUseCase:
 
         for item in items:
             payload = parse_canonical_json(item.canonical_payload_json or "{}")
-            computed = sha256_hex(payload)
+            computed = sha256_hex(payload, method=method)
             is_valid = computed == item.item_hash
             all_items_valid = all_items_valid and is_valid
             computed_leaves.append(
@@ -52,7 +83,9 @@ class VerifyEvidencePackageUseCase:
                     computed_hash=computed,
                     is_valid=is_valid,
                     verified_at=utcnow(),
-                    details_json=json.dumps({"item_id": str(item.evidence_item_id)}),
+                    details_json=json.dumps(
+                        {"item_id": str(item.evidence_item_id), "canonicalization_method": method}
+                    ),
                 )
             )
             item_results.append(
@@ -61,10 +94,14 @@ class VerifyEvidencePackageUseCase:
                     "expected": item.item_hash,
                     "computed": computed,
                     "is_valid": is_valid,
+                    "canonicalization_method": method,
                 }
             )
 
-        computed_package_hash = sha256_hex(parse_canonical_json(package.canonical_payload_json or "{}"))
+        computed_package_hash = sha256_hex(
+            parse_canonical_json(package.canonical_payload_json or "{}"),
+            method=method,
+        )
         package_hash_valid = computed_package_hash == package.package_hash
         self._uow.verification_logs.add(
             VerificationLog(
@@ -75,7 +112,7 @@ class VerifyEvidencePackageUseCase:
                 computed_hash=computed_package_hash,
                 is_valid=package_hash_valid,
                 verified_at=utcnow(),
-                details_json=None,
+                details_json=json.dumps({"canonicalization_method": method}),
             )
         )
 
@@ -104,7 +141,7 @@ class VerifyEvidencePackageUseCase:
                 computed_hash=computed_package_hash,
                 is_valid=is_valid,
                 verified_at=utcnow(),
-                details_json=json.dumps({"item_count": len(items)}),
+                details_json=json.dumps({"item_count": len(items), "canonicalization_method": method}),
             )
         )
 
@@ -121,7 +158,7 @@ class VerifyEvidencePackageUseCase:
             entity_type="evidence_package",
             entity_id=str(package.evidence_package_id),
             message="Verification completed",
-            context={"is_valid": is_valid},
+            context={"is_valid": is_valid, "canonicalization_method": method},
         )
 
         return VerifyEvidencePackageResult(
@@ -131,5 +168,6 @@ class VerifyEvidencePackageUseCase:
                 "items": item_results,
                 "package_hash_valid": package_hash_valid,
                 "merkle_root_valid": merkle_valid,
+                "canonicalization_method": method,
             },
         )
