@@ -1,0 +1,2044 @@
+@prefix : <http://example.org/agromrv-lite#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://example.org/agromrv-lite> a owl:Ontology .
+
+:BatchCalculationExecution a owl:Class ;
+    rdfs:subClassOf :CalculationExecution .
+
+:CH4EmissionResult a owl:Class ;
+    rdfs:subClassOf :EmissionResult .
+
+:CO2EmissionResult a owl:Class ;
+    rdfs:subClassOf :EmissionResult .
+
+:ConversionCalculationExecution a owl:Class ;
+    rdfs:subClassOf :CalculationExecution .
+
+:ConvertedInput a owl:Class ;
+    rdfs:subClassOf :CalculationInput .
+
+:DMIResult a owl:Class ;
+    rdfs:subClassOf :CalculationResult .
+
+:DestinationObservation a owl:Class ;
+    rdfs:subClassOf :QualitativeObservation .
+
+:EmissionCalculationExecution a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :generatesCalculationResult ;
+            owl:someValuesFrom :EmissionResult ],
+        :CalculationExecution .
+
+:EmissionFactorInput a owl:Class ;
+    rdfs:subClassOf :CalculationInput .
+
+:FertilizerUseObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:GWPInput a owl:Class ;
+    rdfs:subClassOf :CalculationInput .
+
+:LegacyCompatibilityExecution a owl:Class ;
+    rdfs:subClassOf :CalculationExecution .
+
+:Location a owl:Class ;
+    rdfs:subClassOf :FarmEntity .
+
+:N2OEmissionResult a owl:Class ;
+    rdfs:subClassOf :EmissionResult .
+
+:ObservationInput a owl:Class ;
+    rdfs:subClassOf :CalculationInput .
+
+:ParameterInput a owl:Class ;
+    rdfs:subClassOf :CalculationInput .
+
+:ProductivityResult a owl:Class ;
+    rdfs:subClassOf :CalculationResult .
+
+:ResponsiblePersonObservation a owl:Class ;
+    rdfs:subClassOf :QualitativeObservation .
+
+:belongsToRecord a owl:ObjectProperty ;
+    rdfs:domain :Observation ;
+    rdfs:range :DataRecord .
+
+:convertsFromGranularity a owl:ObjectProperty ;
+    rdfs:domain :ConversionCalculationMethod ;
+    rdfs:range :TemporalContext .
+
+:convertsToGranularity a owl:ObjectProperty ;
+    rdfs:domain :ConversionCalculationMethod ;
+    rdfs:range :TemporalContext .
+
+:hasAggregationStrategy a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasCalculationInput a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution ;
+    rdfs:range :CalculationInput .
+
+:hasCalculationVersion a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasCanonicalName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasCompatibilityMode a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasDate a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasDisplayName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasEndDate a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasExpectedUnit a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasFormulaExpression a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasFunctionName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasGWP_CH4 a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+:hasGWP_CO2 a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+:hasGWP_N2O a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+:hasIdentifier a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasInformationResponsible a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasLocationName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasMethodDescription a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasModulePath a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasObservation a owl:ObjectProperty ;
+    rdfs:domain :DataRecord ;
+    rdfs:range :Observation .
+
+:hasOrganizationalGranularity a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasOriginalColumnName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasOwnerName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasParameterName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasParameterValue a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+:hasPartialResult a owl:ObjectProperty ;
+    rdfs:domain :AggregatedResult,
+        :TotalGHGCO2eCalculationMethod ;
+    rdfs:range :CalculationResult .
+
+:hasPropertyName a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasRecordType a owl:ObjectProperty ;
+    rdfs:domain :DataRecord ;
+    rdfs:range owl:Thing .
+
+:hasSourceLayout a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasStartDate a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasTemporalGranularity a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasTemporalType a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasTotalResult a owl:ObjectProperty ;
+    rdfs:domain :AggregatedResult,
+        :CalculationExecution ;
+    rdfs:range :CalculationResult .
+
+:hasYear a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:implementedByFunction a owl:ObjectProperty ;
+    rdfs:domain :CalculationMethod ;
+    rdfs:range :SoftwareFunction .
+
+:implementedInSoftwareComponent a owl:ObjectProperty ;
+    rdfs:domain :CalculationMethod,
+        :SoftwareFunction ;
+    rdfs:range :SoftwareComponent .
+
+:method_batch_runner a :BatchCalculationRunner,
+        owl:NamedIndividual ;
+    rdfs:label "batch_runner"^^xsd:string ;
+    :hasFunctionName "compute_row_results"^^xsd:string ;
+    :hasModulePath "batch_runner.py"^^xsd:string ;
+    :hasResultUnit "dimensionless"^^xsd:string ;
+    :implementedByFunction :fn_compute_row_results ;
+    :implementedInSoftwareComponent :sw_batch_runner_component .
+
+:method_calculate_energy_co2 a :EnergyCO2CalculationMethod,
+        owl:NamedIndividual ;
+    rdfs:label "calculate_energy_co2"^^xsd:string ;
+    :calculatesEmissionSource :source_energy_use ;
+    :calculatesGas :gas_carbon_dioxide ;
+    :hasFunctionName "calculate_energy_co2"^^xsd:string ;
+    :hasModulePath "emissions/energy.py"^^xsd:string ;
+    :hasResultUnit "kg_co2"^^xsd:string ;
+    :implementedByFunction :fn_calculate_energy_co2 ;
+    :implementedInSoftwareComponent :sw_energy_component ;
+    :requiresInputVariable :var_diesel,
+        :var_electricity_grid,
+        :var_gasoline,
+        :var_other_fuel,
+        :var_photovoltaic_energy .
+
+:method_calculate_enteric_fermentation_ch4 a :EntericFermentationCH4CalculationMethod,
+        owl:NamedIndividual ;
+    rdfs:label "calculate_enteric_fermentation_ch4"^^xsd:string ;
+    :calculatesEmissionSource :source_enteric_fermentation ;
+    :calculatesGas :gas_methane ;
+    :hasFunctionName "calculate_enteric_fermentation_ch4"^^xsd:string ;
+    :hasModulePath "emissions/enteric_fermentation.py"^^xsd:string ;
+    :hasResultUnit "kg_ch4"^^xsd:string ;
+    :implementedByFunction :fn_calculate_enteric_fermentation_ch4 ;
+    :implementedInSoftwareComponent :sw_enteric_fermentation_component ;
+    :requiresInputVariable :var_bulls,
+        :var_calves,
+        :var_dry_cows,
+        :var_ef_enteric_kg_ch4,
+        :var_lactating_cows .
+
+:method_calculate_fertilizer_n2o a :FertilizerN2OCalculationMethod,
+        owl:NamedIndividual ;
+    rdfs:label "calculate_fertilizer_n2o"^^xsd:string ;
+    :calculatesEmissionSource :source_fertilizer_application ;
+    :calculatesGas :gas_nitrous_oxide ;
+    :hasFunctionName "calculate_fertilizer_n2o"^^xsd:string ;
+    :hasModulePath "emissions/fertilizer.py"^^xsd:string ;
+    :hasResultUnit "kg_n2o"^^xsd:string ;
+    :implementedByFunction :fn_calculate_fertilizer_n2o ;
+    :implementedInSoftwareComponent :sw_fertilizer_component ;
+    :requiresInputVariable :var_non_organic_fertilizer,
+        :var_organic_fertilizer .
+
+:method_calculate_manure_management_ch4 a :ManureManagementCH4CalculationMethod,
+        owl:NamedIndividual ;
+    rdfs:label "calculate_manure_management_ch4"^^xsd:string ;
+    :calculatesEmissionSource :source_manure_management ;
+    :calculatesGas :gas_methane ;
+    :hasFunctionName "calculate_manure_management_ch4"^^xsd:string ;
+    :hasModulePath "emissions/manure_management.py"^^xsd:string ;
+    :hasResultUnit "kg_ch4"^^xsd:string ;
+    :implementedByFunction :fn_calculate_manure_management_ch4 ;
+    :implementedInSoftwareComponent :sw_manure_management_component ;
+    :requiresInputVariable :var_calves,
+        :var_dry_cows,
+        :var_heifers,
+        :var_lactating_cows .
+
+:method_calculate_total_ghg_co2e a :TotalGHGCO2eCalculationMethod,
+        owl:NamedIndividual ;
+    rdfs:label "calculate_total_ghg_co2e"^^xsd:string ;
+    :calculatesEmissionSource :source_total_ghg ;
+    :hasFunctionName "calculate_total_ghg_co2e"^^xsd:string ;
+    :hasModulePath "emissions/ghg_total.py"^^xsd:string ;
+    :hasResultUnit "kg_co2e"^^xsd:string ;
+    :implementedByFunction :fn_calculate_total_ghg_co2e ;
+    :implementedInSoftwareComponent :sw_ghg_total_component ;
+    :requiresGWPParameterSet true ;
+    :usesGWPParameterSet :gwp_gwp_set_example_2026 .
+
+:method_environmental_calcs_adapter a :LegacyCompatibilityAdapter,
+        owl:NamedIndividual ;
+    rdfs:label "environmental_calcs_adapter"^^xsd:string ;
+    :hasCompatibilityMode "legacy"^^xsd:string ;
+    :hasFunctionName "calculate_total_emissions"^^xsd:string ;
+    :hasModulePath "environmental_calcs.py"^^xsd:string ;
+    :hasResultUnit "dimensionless"^^xsd:string ;
+    :implementedByFunction :fn_calculate_total_emissions ;
+    :implementedInSoftwareComponent :sw_environmental_calcs_adapter .
+
+:method_legacy_default_configuration_provider a :DefaultConfigurationProvider,
+        owl:NamedIndividual ;
+    rdfs:label "legacy_default_configuration_provider"^^xsd:string ;
+    :hasFunctionName "default_enteric_ch4_kg_per_animal_yearly"^^xsd:string ;
+    :hasModulePath "emissions/defaults.py"^^xsd:string ;
+    :hasResultUnit "dimensionless"^^xsd:string ;
+    :implementedByFunction :fn_default_enteric_ch4_kg_per_animal_yearly ;
+    :implementedInSoftwareComponent :sw_defaults_component .
+
+:method_monthly_to_annual_proration a :MonthlyToAnnualProrationMethod,
+        owl:NamedIndividual ;
+    rdfs:label "monthly_to_annual_proration"^^xsd:string ;
+    :hasFunctionName "uniform_monthly_from_yearly_per_animal"^^xsd:string ;
+    :hasModulePath "emissions/conversion_helpers.py"^^xsd:string ;
+    :hasResultUnit "dimensionless"^^xsd:string ;
+    :implementedByFunction :fn_uniform_monthly_from_yearly_per_animal ;
+    :implementedInSoftwareComponent :sw_conversion_helpers_component .
+
+:method_monthly_to_annual_sum a :MonthlyToAnnualSumMethod,
+        owl:NamedIndividual ;
+    rdfs:label "monthly_to_annual_sum"^^xsd:string ;
+    :hasFunctionName "sum_monthly_values"^^xsd:string ;
+    :hasModulePath "emissions/conversion_helpers.py"^^xsd:string ;
+    :hasResultUnit "dimensionless"^^xsd:string ;
+    :implementedByFunction :fn_sum_monthly_values ;
+    :implementedInSoftwareComponent :sw_conversion_helpers_component .
+
+:refersToAnimal a owl:ObjectProperty ;
+    rdfs:domain :DataRecord,
+        :Observation ;
+    rdfs:range :Animal .
+
+:refersToProperty a owl:ObjectProperty ;
+    rdfs:domain :DataRecord,
+        :Observation ;
+    rdfs:range :Property .
+
+:requiresGWPParameterSet a owl:DatatypeProperty ;
+    rdfs:range xsd:boolean .
+
+:requiresInputVariable a owl:ObjectProperty ;
+    rdfs:domain :CalculationMethod ;
+    rdfs:range :CanonicalVariable .
+
+:unit_dimensionless a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Dimensionless"^^xsd:string ;
+    :hasCanonicalName "dimensionless"^^xsd:string .
+
+:unit_kg_ch4 a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram CH4"^^xsd:string ;
+    :hasCanonicalName "kg_ch4"^^xsd:string .
+
+:unit_kg_co2 a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram CO2"^^xsd:string ;
+    :hasCanonicalName "kg_co2"^^xsd:string .
+
+:unit_kg_co2e a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram CO2 equivalent"^^xsd:string ;
+    :hasCanonicalName "kg_co2e"^^xsd:string .
+
+:unit_kg_n2o a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram N2O"^^xsd:string ;
+    :hasCanonicalName "kg_n2o"^^xsd:string .
+
+:unit_kg_per_day a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram per day"^^xsd:string ;
+    :hasCanonicalName "kg_per_day"^^xsd:string .
+
+:unit_kg_per_month a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram per month"^^xsd:string ;
+    :hasCanonicalName "kg_per_month"^^xsd:string .
+
+:unit_liter a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Liter"^^xsd:string ;
+    :hasCanonicalName "liter"^^xsd:string .
+
+:usesCanonicalVariable a owl:ObjectProperty ;
+    rdfs:domain :CalculationInput,
+        :CalculationMethod ;
+    rdfs:range :CanonicalVariable .
+
+:usesEmissionFactor a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution,
+        :CalculationMethod ;
+    rdfs:range :EmissionFactor .
+
+:usesObservation a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution,
+        :CalculationInput ;
+    rdfs:range :Observation .
+
+:var_barley a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Barley"^^xsd:string ;
+    :hasCanonicalName "barley"^^xsd:string ;
+    :hasDisplayName "Barley"^^xsd:string ;
+    :hasOriginalColumnName "barley"^^xsd:string .
+
+:var_beans_peas a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Beans Peas"^^xsd:string ;
+    :hasCanonicalName "beans_peas"^^xsd:string ;
+    :hasDisplayName "Beans Peas"^^xsd:string ;
+    :hasOriginalColumnName "beans_peas"^^xsd:string .
+
+:var_brewers_grain_brewery_residue a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Brewers Grain Brewery Residue"^^xsd:string ;
+    :hasCanonicalName "brewers_grain_brewery_residue"^^xsd:string ;
+    :hasDisplayName "Brewers Grain Brewery Residue"^^xsd:string ;
+    :hasOriginalColumnName "brewers_grain_brewery_residue"^^xsd:string .
+
+:var_bulls_weight a :WeightVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Bulls Weight"^^xsd:string ;
+    :hasCanonicalName "bulls_weight"^^xsd:string ;
+    :hasDisplayName "Bulls Weight"^^xsd:string ;
+    :hasOriginalColumnName "bulls_weight"^^xsd:string .
+
+:var_cassava_tapioca a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Cassava Tapioca"^^xsd:string ;
+    :hasCanonicalName "cassava_tapioca"^^xsd:string ;
+    :hasDisplayName "Cassava Tapioca"^^xsd:string ;
+    :hasOriginalColumnName "cassava_tapioca"^^xsd:string .
+
+:var_citrus_pulp a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Citrus Pulp"^^xsd:string ;
+    :hasCanonicalName "citrus_pulp"^^xsd:string ;
+    :hasDisplayName "Citrus Pulp"^^xsd:string ;
+    :hasOriginalColumnName "citrus_pulp"^^xsd:string .
+
+:var_cottonseed_cake_meal a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Cottonseed Cake Meal"^^xsd:string ;
+    :hasCanonicalName "cottonseed_cake_meal"^^xsd:string ;
+    :hasDisplayName "Cottonseed Cake Meal"^^xsd:string ;
+    :hasOriginalColumnName "cottonseed_cake_meal"^^xsd:string .
+
+:var_cows_discarded_per_year a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Cows Discarded Per Year"^^xsd:string ;
+    :hasCanonicalName "cows_discarded_per_year"^^xsd:string ;
+    :hasDisplayName "Cows Discarded Per Year"^^xsd:string ;
+    :hasOriginalColumnName "cows_discarded_per_year"^^xsd:string .
+
+:var_crop_residues a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Crop Residues"^^xsd:string ;
+    :hasCanonicalName "crop_residues"^^xsd:string ;
+    :hasDisplayName "Crop Residues"^^xsd:string ;
+    :hasOriginalColumnName "crop_residues"^^xsd:string .
+
+:var_ddg a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Ddg"^^xsd:string ;
+    :hasCanonicalName "ddg"^^xsd:string ;
+    :hasDisplayName "Ddg"^^xsd:string ;
+    :hasOriginalColumnName "ddg"^^xsd:string .
+
+:var_discarded_cows_destination a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Discarded Cows Destination"^^xsd:string ;
+    :hasCanonicalName "discarded_cows_destination"^^xsd:string ;
+    :hasDisplayName "Discarded Cows Destination"^^xsd:string ;
+    :hasOriginalColumnName "discarded_cows_destination"^^xsd:string .
+
+:var_dmi_check a :NutritionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Dmi Check"^^xsd:string ;
+    :hasCanonicalName "dmi_check"^^xsd:string ;
+    :hasDisplayName "Dmi Check"^^xsd:string ;
+    :hasOriginalColumnName "dmi_check"^^xsd:string .
+
+:var_equines_and_mules a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Equines And Mules"^^xsd:string ;
+    :hasCanonicalName "equines_and_mules"^^xsd:string ;
+    :hasDisplayName "Equines And Mules"^^xsd:string ;
+    :hasOriginalColumnName "equines_and_mules"^^xsd:string .
+
+:var_females a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Females"^^xsd:string ;
+    :hasCanonicalName "females"^^xsd:string ;
+    :hasDisplayName "Females"^^xsd:string ;
+    :hasOriginalColumnName "females"^^xsd:string .
+
+:var_grass_fresh a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Grass Fresh"^^xsd:string ;
+    :hasCanonicalName "grass_fresh"^^xsd:string ;
+    :hasDisplayName "Grass Fresh"^^xsd:string ;
+    :hasOriginalColumnName "grass_fresh"^^xsd:string .
+
+:var_grass_hay_off_farm a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Grass Hay Off Farm"^^xsd:string ;
+    :hasCanonicalName "grass_hay_off_farm"^^xsd:string ;
+    :hasDisplayName "Grass Hay Off Farm"^^xsd:string ;
+    :hasOriginalColumnName "grass_hay_off_farm"^^xsd:string .
+
+:var_grass_hay_on_farm a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Grass Hay On Farm"^^xsd:string ;
+    :hasCanonicalName "grass_hay_on_farm"^^xsd:string ;
+    :hasDisplayName "Grass Hay On Farm"^^xsd:string ;
+    :hasOriginalColumnName "grass_hay_on_farm"^^xsd:string .
+
+:var_grass_silage_on_or_off_farm a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Grass Silage On Or Off Farm"^^xsd:string ;
+    :hasCanonicalName "grass_silage_on_or_off_farm"^^xsd:string ;
+    :hasDisplayName "Grass Silage On Or Off Farm"^^xsd:string ;
+    :hasOriginalColumnName "grass_silage_on_or_off_farm"^^xsd:string .
+
+:var_hay_oat_clover a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Hay Oat Clover"^^xsd:string ;
+    :hasCanonicalName "hay_oat_clover"^^xsd:string ;
+    :hasDisplayName "Hay Oat Clover"^^xsd:string ;
+    :hasOriginalColumnName "hay_oat_clover"^^xsd:string .
+
+:var_heifers_weight a :WeightVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Heifers Weight"^^xsd:string ;
+    :hasCanonicalName "heifers_weight"^^xsd:string ;
+    :hasDisplayName "Heifers Weight"^^xsd:string ;
+    :hasOriginalColumnName "heifers_weight"^^xsd:string .
+
+:var_information_responsible a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Information Responsible"^^xsd:string ;
+    :hasCanonicalName "information_responsible"^^xsd:string ;
+    :hasDisplayName "Information Responsible"^^xsd:string ;
+    :hasOriginalColumnName "information_responsible"^^xsd:string .
+
+:var_location a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Location"^^xsd:string ;
+    :hasCanonicalName "location"^^xsd:string ;
+    :hasDisplayName "Location"^^xsd:string ;
+    :hasOriginalColumnName "location"^^xsd:string .
+
+:var_lucerne_alfalfa_hay a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Lucerne Alfalfa Hay"^^xsd:string ;
+    :hasCanonicalName "lucerne_alfalfa_hay"^^xsd:string ;
+    :hasDisplayName "Lucerne Alfalfa Hay"^^xsd:string ;
+    :hasOriginalColumnName "lucerne_alfalfa_hay"^^xsd:string .
+
+:var_lucerne_alfalfa_silage a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Lucerne Alfalfa Silage"^^xsd:string ;
+    :hasCanonicalName "lucerne_alfalfa_silage"^^xsd:string ;
+    :hasDisplayName "Lucerne Alfalfa Silage"^^xsd:string ;
+    :hasOriginalColumnName "lucerne_alfalfa_silage"^^xsd:string .
+
+:var_maize_grain a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Maize Grain"^^xsd:string ;
+    :hasCanonicalName "maize_grain"^^xsd:string ;
+    :hasDisplayName "Maize Grain"^^xsd:string ;
+    :hasOriginalColumnName "maize_grain"^^xsd:string .
+
+:var_male_calves_in_fattening a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Male Calves In Fattening"^^xsd:string ;
+    :hasCanonicalName "male_calves_in_fattening"^^xsd:string ;
+    :hasDisplayName "Male Calves In Fattening"^^xsd:string ;
+    :hasOriginalColumnName "male_calves_in_fattening"^^xsd:string .
+
+:var_male_calves_in_raising a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Male Calves In Raising"^^xsd:string ;
+    :hasCanonicalName "male_calves_in_raising"^^xsd:string ;
+    :hasDisplayName "Male Calves In Raising"^^xsd:string ;
+    :hasOriginalColumnName "male_calves_in_raising"^^xsd:string .
+
+:var_males a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Males"^^xsd:string ;
+    :hasCanonicalName "males"^^xsd:string ;
+    :hasDisplayName "Males"^^xsd:string ;
+    :hasOriginalColumnName "males"^^xsd:string .
+
+:var_milk_powder_dry_matter a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk Powder Dry Matter"^^xsd:string ;
+    :hasCanonicalName "milk_powder_dry_matter"^^xsd:string ;
+    :hasDisplayName "Milk Powder Dry Matter"^^xsd:string ;
+    :hasOriginalColumnName "milk_powder_dry_matter"^^xsd:string .
+
+:var_mineral_mix a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Mineral Mix"^^xsd:string ;
+    :hasCanonicalName "mineral_mix"^^xsd:string ;
+    :hasDisplayName "Mineral Mix"^^xsd:string ;
+    :hasOriginalColumnName "mineral_mix"^^xsd:string .
+
+:var_oats a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Oats"^^xsd:string ;
+    :hasCanonicalName "oats"^^xsd:string ;
+    :hasDisplayName "Oats"^^xsd:string ;
+    :hasOriginalColumnName "oats"^^xsd:string .
+
+:var_other_cereals a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Other Cereals"^^xsd:string ;
+    :hasCanonicalName "other_cereals"^^xsd:string ;
+    :hasDisplayName "Other Cereals"^^xsd:string ;
+    :hasOriginalColumnName "other_cereals"^^xsd:string .
+
+:var_other_feed a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Other Feed"^^xsd:string ;
+    :hasCanonicalName "other_feed"^^xsd:string ;
+    :hasDisplayName "Other Feed"^^xsd:string ;
+    :hasOriginalColumnName "other_feed"^^xsd:string .
+
+:var_other_fodder a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Other Fodder"^^xsd:string ;
+    :hasCanonicalName "other_fodder"^^xsd:string ;
+    :hasDisplayName "Other Fodder"^^xsd:string ;
+    :hasOriginalColumnName "other_fodder"^^xsd:string .
+
+:var_owner_name a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Owner Name"^^xsd:string ;
+    :hasCanonicalName "owner_name"^^xsd:string ;
+    :hasDisplayName "Owner Name"^^xsd:string ;
+    :hasOriginalColumnName "owner_name"^^xsd:string .
+
+:var_pregnant_heifers a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Pregnant Heifers"^^xsd:string ;
+    :hasCanonicalName "pregnant_heifers"^^xsd:string ;
+    :hasDisplayName "Pregnant Heifers"^^xsd:string ;
+    :hasOriginalColumnName "pregnant_heifers"^^xsd:string .
+
+:var_productivity a :MilkVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Productivity"^^xsd:string ;
+    :hasCanonicalName "productivity"^^xsd:string ;
+    :hasDisplayName "Productivity"^^xsd:string ;
+    :hasOriginalColumnName "productivity"^^xsd:string .
+
+:var_property_id a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Property Id"^^xsd:string ;
+    :hasCanonicalName "property_id"^^xsd:string ;
+    :hasDisplayName "Property Id"^^xsd:string ;
+    :hasOriginalColumnName "property_id"^^xsd:string .
+
+:var_property_name a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Property Name"^^xsd:string ;
+    :hasCanonicalName "property_name"^^xsd:string ;
+    :hasDisplayName "Property Name"^^xsd:string ;
+    :hasOriginalColumnName "property_name"^^xsd:string .
+
+:var_rapeseed_cake_meal a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Rapeseed Cake Meal"^^xsd:string ;
+    :hasCanonicalName "rapeseed_cake_meal"^^xsd:string ;
+    :hasDisplayName "Rapeseed Cake Meal"^^xsd:string ;
+    :hasOriginalColumnName "rapeseed_cake_meal"^^xsd:string .
+
+:var_reproducers a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Reproducers"^^xsd:string ;
+    :hasCanonicalName "reproducers"^^xsd:string ;
+    :hasDisplayName "Reproducers"^^xsd:string ;
+    :hasOriginalColumnName "reproducers"^^xsd:string .
+
+:var_rice a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Rice"^^xsd:string ;
+    :hasCanonicalName "rice"^^xsd:string ;
+    :hasDisplayName "Rice"^^xsd:string ;
+    :hasOriginalColumnName "rice"^^xsd:string .
+
+:var_rye a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Rye"^^xsd:string ;
+    :hasCanonicalName "rye"^^xsd:string ;
+    :hasDisplayName "Rye"^^xsd:string ;
+    :hasOriginalColumnName "rye"^^xsd:string .
+
+:var_sorghum a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Sorghum"^^xsd:string ;
+    :hasCanonicalName "sorghum"^^xsd:string ;
+    :hasDisplayName "Sorghum"^^xsd:string ;
+    :hasOriginalColumnName "sorghum"^^xsd:string .
+
+:var_sorghum_silage a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Sorghum Silage"^^xsd:string ;
+    :hasCanonicalName "sorghum_silage"^^xsd:string ;
+    :hasDisplayName "Sorghum Silage"^^xsd:string ;
+    :hasOriginalColumnName "sorghum_silage"^^xsd:string .
+
+:var_soybean_meal_hull a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Soybean Meal Hull"^^xsd:string ;
+    :hasCanonicalName "soybean_meal_hull"^^xsd:string ;
+    :hasDisplayName "Soybean Meal Hull"^^xsd:string ;
+    :hasOriginalColumnName "soybean_meal_hull"^^xsd:string .
+
+:var_straw_peanut_hull_others a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Straw Peanut Hull Others"^^xsd:string ;
+    :hasCanonicalName "straw_peanut_hull_others"^^xsd:string ;
+    :hasDisplayName "Straw Peanut Hull Others"^^xsd:string ;
+    :hasOriginalColumnName "straw_peanut_hull_others"^^xsd:string .
+
+:var_suckling_calves_female a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Suckling Calves Female"^^xsd:string ;
+    :hasCanonicalName "suckling_calves_female"^^xsd:string ;
+    :hasDisplayName "Suckling Calves Female"^^xsd:string ;
+    :hasOriginalColumnName "suckling_calves_female"^^xsd:string .
+
+:var_suckling_calves_male a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Suckling Calves Male"^^xsd:string ;
+    :hasCanonicalName "suckling_calves_male"^^xsd:string ;
+    :hasDisplayName "Suckling Calves Male"^^xsd:string ;
+    :hasOriginalColumnName "suckling_calves_male"^^xsd:string .
+
+:var_sugarbeet_molasses a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Sugarbeet Molasses"^^xsd:string ;
+    :hasCanonicalName "sugarbeet_molasses"^^xsd:string ;
+    :hasDisplayName "Sugarbeet Molasses"^^xsd:string ;
+    :hasOriginalColumnName "sugarbeet_molasses"^^xsd:string .
+
+:var_sunflower_cake_meal a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Sunflower Cake Meal"^^xsd:string ;
+    :hasCanonicalName "sunflower_cake_meal"^^xsd:string ;
+    :hasDisplayName "Sunflower Cake Meal"^^xsd:string ;
+    :hasOriginalColumnName "sunflower_cake_meal"^^xsd:string .
+
+:var_total a :EmissionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Total"^^xsd:string ;
+    :hasCanonicalName "total"^^xsd:string ;
+    :hasDisplayName "Total"^^xsd:string ;
+    :hasOriginalColumnName "total"^^xsd:string .
+
+:var_total_feed_input a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Total Feed Input"^^xsd:string ;
+    :hasCanonicalName "total_feed_input"^^xsd:string ;
+    :hasDisplayName "Total Feed Input"^^xsd:string ;
+    :hasOriginalColumnName "total_feed_input"^^xsd:string .
+
+:var_total_ghg_co2e a :EmissionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Total Ghg Co2E"^^xsd:string ;
+    :hasCanonicalName "total_ghg_co2e"^^xsd:string ;
+    :hasDisplayName "Total Ghg Co2E"^^xsd:string ;
+    :hasOriginalColumnName "total_ghg_co2e"^^xsd:string .
+
+:var_wheat a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Wheat"^^xsd:string ;
+    :hasCanonicalName "wheat"^^xsd:string ;
+    :hasDisplayName "Wheat"^^xsd:string ;
+    :hasOriginalColumnName "wheat"^^xsd:string .
+
+:var_whey_powder a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Whey Powder"^^xsd:string ;
+    :hasCanonicalName "whey_powder"^^xsd:string ;
+    :hasDisplayName "Whey Powder"^^xsd:string ;
+    :hasOriginalColumnName "whey_powder"^^xsd:string .
+
+:AdministrativeObservation a owl:Class ;
+    rdfs:subClassOf :QualitativeObservation .
+
+:AnnualPropertyInventoryRecord a owl:Class ;
+    rdfs:subClassOf :DataRecord .
+
+:BatchCalculationRunner a owl:Class ;
+    rdfs:subClassOf :SoftwareComponent .
+
+:CO2EquivalentResult a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :usesGWPParameterSet ;
+            owl:someValuesFrom :GWPParameterSet ],
+        :EmissionResult .
+
+:CarbonDioxide a owl:Class ;
+    rdfs:subClassOf :GreenhouseGas .
+
+:ConfigurationMethod a owl:Class ;
+    rdfs:subClassOf :CalculationMethod .
+
+:DailyAnimalNutritionRecord a owl:Class ;
+    rdfs:subClassOf :DataRecord .
+
+:DailyAnimalProductionRecord a owl:Class ;
+    rdfs:subClassOf :DataRecord .
+
+:DefaultConfigurationProvider a owl:Class ;
+    rdfs:subClassOf :ConfigurationMethod .
+
+:EconomicObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:EconomicVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:EmissionFactor a owl:Class ;
+    rdfs:subClassOf :CalculationParameter .
+
+:EnergyCO2CalculationMethod a owl:Class ;
+    rdfs:subClassOf :EmissionCalculationMethod .
+
+:EnergyUse a owl:Class ;
+    rdfs:subClassOf :EmissionSource .
+
+:EnergyUseObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:EntericFermentation a owl:Class ;
+    rdfs:subClassOf :EmissionSource .
+
+:EntericFermentationCH4CalculationMethod a owl:Class ;
+    rdfs:subClassOf :EmissionCalculationMethod .
+
+:FeedInputObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:FertilizerApplication a owl:Class ;
+    rdfs:subClassOf :EmissionSource .
+
+:FertilizerN2OCalculationMethod a owl:Class ;
+    rdfs:subClassOf :EmissionCalculationMethod .
+
+:FuelUseObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:LegacyCompatibilityAdapter a owl:Class ;
+    rdfs:subClassOf :SoftwareComponent .
+
+:ManureManagement a owl:Class ;
+    rdfs:subClassOf :EmissionSource .
+
+:ManureManagementCH4CalculationMethod a owl:Class ;
+    rdfs:subClassOf :EmissionCalculationMethod .
+
+:Methane a owl:Class ;
+    rdfs:subClassOf :GreenhouseGas .
+
+:MilkSalesObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:MonthlyPropertyRecord a owl:Class ;
+    rdfs:subClassOf :DataRecord .
+
+:MonthlyToAnnualProrationMethod a owl:Class ;
+    rdfs:subClassOf :ConversionCalculationMethod .
+
+:MonthlyToAnnualSumMethod a owl:Class ;
+    rdfs:subClassOf :ConversionCalculationMethod .
+
+:NitrousOxide a owl:Class ;
+    rdfs:subClassOf :GreenhouseGas .
+
+:SoilTypeObservation a owl:Class ;
+    rdfs:subClassOf :QualitativeObservation .
+
+:SoilVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:TotalGHG a owl:Class ;
+    rdfs:subClassOf :EmissionSource .
+
+:calculatesEmissionSource a owl:ObjectProperty ;
+    rdfs:domain :EmissionCalculationMethod,
+        :EmissionResult ;
+    rdfs:range :EmissionSource .
+
+:calculatesGas a owl:ObjectProperty ;
+    rdfs:domain :EmissionCalculationMethod,
+        :EmissionResult ;
+    rdfs:range :GreenhouseGas .
+
+:fn_calculate_energy_co2 a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "calculate_energy_co2"^^xsd:string ;
+    :hasModulePath "emissions/energy.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_energy_component .
+
+:fn_calculate_enteric_fermentation_ch4 a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "calculate_enteric_fermentation_ch4"^^xsd:string ;
+    :hasModulePath "emissions/enteric_fermentation.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_enteric_fermentation_component .
+
+:fn_calculate_fertilizer_n2o a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "calculate_fertilizer_n2o"^^xsd:string ;
+    :hasModulePath "emissions/fertilizer.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_fertilizer_component .
+
+:fn_calculate_manure_management_ch4 a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "calculate_manure_management_ch4"^^xsd:string ;
+    :hasModulePath "emissions/manure_management.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_manure_management_component .
+
+:fn_calculate_total_emissions a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "calculate_total_emissions"^^xsd:string ;
+    :hasModulePath "environmental_calcs.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_environmental_calcs_adapter .
+
+:fn_calculate_total_ghg_co2e a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "calculate_total_ghg_co2e"^^xsd:string ;
+    :hasModulePath "emissions/ghg_total.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_ghg_total_component .
+
+:fn_compute_row_results a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "compute_row_results"^^xsd:string ;
+    :hasModulePath "batch_runner.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_batch_runner_component .
+
+:fn_default_enteric_ch4_kg_per_animal_yearly a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "default_enteric_ch4_kg_per_animal_yearly"^^xsd:string ;
+    :hasModulePath "emissions/defaults.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_defaults_component .
+
+:fn_sum_monthly_values a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "sum_monthly_values"^^xsd:string ;
+    :hasModulePath "emissions/conversion_helpers.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_conversion_helpers_component .
+
+:fn_uniform_monthly_from_yearly_per_animal a :SoftwareFunction,
+        owl:NamedIndividual ;
+    :hasFunctionName "uniform_monthly_from_yearly_per_animal"^^xsd:string ;
+    :hasModulePath "emissions/conversion_helpers.py"^^xsd:string ;
+    :implementedInSoftwareComponent :sw_conversion_helpers_component .
+
+:gas_carbon_dioxide a :CarbonDioxide,
+        owl:NamedIndividual ;
+    rdfs:label "CO2"^^xsd:string ;
+    :hasCanonicalName "carbon_dioxide"^^xsd:string .
+
+:gas_nitrous_oxide a :NitrousOxide,
+        owl:NamedIndividual ;
+    rdfs:label "N2O"^^xsd:string ;
+    :hasCanonicalName "nitrous_oxide"^^xsd:string .
+
+:generatesCalculationResult a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution ;
+    rdfs:range :CalculationResult .
+
+:gwp_gwp_set_example_2026 a :GWPParameterSet,
+        owl:NamedIndividual ;
+    rdfs:label "gwp_set_example_2026"^^xsd:string ;
+    :hasGWP_CO2 1.0 ;
+    :hasMethodDescription "Example injectable GWP parameter set — not a fixed scientific standard."^^xsd:string .
+
+:hasCalculationMethod a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution,
+        :CalculationMethod ;
+    rdfs:range :CalculationMethod .
+
+:hasNumericResult a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+:hasNumericValue a owl:DatatypeProperty ;
+    rdfs:range xsd:decimal .
+
+:hasResultUnit a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasTextValue a owl:DatatypeProperty ;
+    rdfs:range xsd:string .
+
+:hasUnit a owl:ObjectProperty ;
+    rdfs:domain :CalculationResult,
+        :EmissionResult,
+        :QuantitativeObservation ;
+    rdfs:range :Unit .
+
+:obs_record_br_1_day_2026_01_15_dry_matter_intake a :NutritionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_day_2026_01_15 ;
+    :hasNumericValue 18.2 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "dry_matter_intake"^^xsd:string ;
+    :hasTemporalContext :time_day_2026_01_15 ;
+    :hasUnit :unit_kg_dm_per_day ;
+    :observesVariable :var_dry_matter_intake ;
+    :refersToAnimal :animal_a123 ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_day_2026_01_15_energy_density a :NutritionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_day_2026_01_15 ;
+    :hasNumericValue 6.5 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "energy_density"^^xsd:string ;
+    :hasTemporalContext :time_day_2026_01_15 ;
+    :hasUnit :unit_mj_per_kg_dm ;
+    :observesVariable :var_energy_density ;
+    :refersToAnimal :animal_a123 ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_day_2026_01_15_milk a :MilkProductionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_day_2026_01_15 ;
+    :hasNumericValue 22.4 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "milk"^^xsd:string ;
+    :hasTemporalContext :time_day_2026_01_15 ;
+    :hasUnit :unit_liter_per_day ;
+    :observesVariable :var_milk ;
+    :refersToAnimal :animal_a123 ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_day_2026_01_15_weight a :AnimalWeightObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_day_2026_01_15 ;
+    :hasNumericValue 520.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "weight"^^xsd:string ;
+    :hasTemporalContext :time_day_2026_01_15 ;
+    :hasUnit :unit_kg ;
+    :observesVariable :var_weight ;
+    :refersToAnimal :animal_a123 ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_area_used_for_dairy_activity a :LandUseObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 3.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "area_used_for_dairy_activity"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_hectare ;
+    :observesVariable :var_area_used_for_dairy_activity ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_draft_and_breeding_bulls a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 0.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "draft_and_breeding_bulls"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_draft_and_breeding_bulls ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_dry_cows a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 4.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "dry_cows"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_dry_cows ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_ef_enteric_kg_ch4 a :EmissionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 4.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "ef_enteric_kg_ch4"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_kg_ch4_per_head_month ;
+    :observesVariable :var_ef_enteric_kg_ch4 ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_employees_during_the_month a :AdministrativeObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 2.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "employees_during_the_month"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_employees_during_the_month ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_enteric_tco2e a :EmissionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 2.5 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "enteric_tco2e"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_tonne_co2e ;
+    :observesVariable :var_enteric_tco2e ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_heifers_in_raising a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 8.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "heifers_in_raising"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_heifers_in_raising ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_lactating_cows a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 13.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "lactating_cows"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_lactating_cows ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_milk_gross_price a :EconomicObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 2.3 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "milk_gross_price"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_currency ;
+    :observesVariable :var_milk_gross_price ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_milk_production a :MilkProductionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 6200.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "milk_production"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_liter_per_month ;
+    :observesVariable :var_milk_production ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_milk_sales a :MilkSalesObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 6000.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "milk_sales"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_liter_per_month ;
+    :observesVariable :var_milk_sales ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_number_of_dry_cows a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 4.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "number_of_dry_cows"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_number_of_dry_cows ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_month_2026_01_01_2026_01_31_number_of_lactating_cows a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_month_2026_01_01_2026_01_31 ;
+    :hasNumericValue 13.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "number_of_lactating_cows"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_number_of_lactating_cows ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_calves a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 15.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "calves"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_calves ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_calves_weight a :AnimalWeightObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 150.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "calves_weight"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_kg ;
+    :observesVariable :var_calves_weight ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_diesel a :FuelUseObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 88410.3 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "diesel"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_liter_fuel ;
+    :observesVariable :var_diesel ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 4.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "dry_cows"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_dry_cows ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows_weight a :AnimalWeightObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 530.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "dry_cows_weight"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_kg ;
+    :observesVariable :var_dry_cows_weight ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_electricity_grid a :EnergyUseObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 41241.35 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "electricity_grid"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_kwh ;
+    :observesVariable :var_electricity_grid ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows a :HerdCountObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 13.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "lactating_cows"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_head ;
+    :observesVariable :var_lactating_cows ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows_weight a :AnimalWeightObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 500.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "lactating_cows_weight"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_kg ;
+    :observesVariable :var_lactating_cows_weight ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_maize_silage a :FeedInputObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 47168.95 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "maize_silage"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_kg_per_year ;
+    :observesVariable :var_maize_silage ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_milk_fat_percentage a :MilkCompositionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 4.13 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "milk_fat_percentage"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_percentage ;
+    :observesVariable :var_milk_fat_percentage ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_milk_protein_percentage a :MilkCompositionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 3.32 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "milk_protein_percentage"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_percentage ;
+    :observesVariable :var_milk_protein_percentage ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_pasture_area a :LandUseObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 3.0 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "pasture_area"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_hectare ;
+    :observesVariable :var_pasture_area ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_predominant_soil_type a :SoilTypeObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "predominant_soil_type"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasTextValue "Latossolo Vermelho-Amarelo"^^xsd:string ;
+    :hasUnit :unit_text ;
+    :observesVariable :var_predominant_soil_type ;
+    :refersToProperty :property_br_1 .
+
+:obs_record_br_1_year_2026_01_01_2026_12_31_total_milk_production a :MilkProductionObservation,
+        owl:NamedIndividual ;
+    :belongsToRecord :record_br_1_year_2026_01_01_2026_12_31 ;
+    :hasNumericValue 73384.41 ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasOriginalColumnName "total_milk_production"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :hasUnit :unit_liter_per_year ;
+    :observesVariable :var_total_milk_production ;
+    :refersToProperty :property_br_1 .
+
+:observesVariable a owl:ObjectProperty ;
+    rdfs:domain :Observation ;
+    rdfs:range :CanonicalVariable .
+
+:source_energy_use a :EnergyUse,
+        owl:NamedIndividual ;
+    rdfs:label "Energy Use"^^xsd:string ;
+    :hasCanonicalName "energy_use"^^xsd:string .
+
+:source_enteric_fermentation a :EntericFermentation,
+        owl:NamedIndividual ;
+    rdfs:label "Enteric Fermentation"^^xsd:string ;
+    :hasCanonicalName "enteric_fermentation"^^xsd:string .
+
+:source_fertilizer_application a :FertilizerApplication,
+        owl:NamedIndividual ;
+    rdfs:label "Fertilizer Application"^^xsd:string ;
+    :hasCanonicalName "fertilizer_application"^^xsd:string .
+
+:source_manure_management a :ManureManagement,
+        owl:NamedIndividual ;
+    rdfs:label "Manure Management"^^xsd:string ;
+    :hasCanonicalName "manure_management"^^xsd:string .
+
+:source_total_ghg a :TotalGHG,
+        owl:NamedIndividual ;
+    rdfs:label "Total Ghg"^^xsd:string ;
+    :hasCanonicalName "total_ghg"^^xsd:string .
+
+:unit_currency a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Currency"^^xsd:string ;
+    :hasCanonicalName "currency"^^xsd:string .
+
+:unit_kg_ch4_per_head_month a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "kg CH4 per head per month"^^xsd:string ;
+    :hasCanonicalName "kg_ch4_per_head_month"^^xsd:string .
+
+:unit_kg_dm_per_day a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram DM per day"^^xsd:string ;
+    :hasCanonicalName "kg_dm_per_day"^^xsd:string .
+
+:unit_kg_per_year a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram per year"^^xsd:string ;
+    :hasCanonicalName "kg_per_year"^^xsd:string .
+
+:unit_kwh a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilowatt-hour"^^xsd:string ;
+    :hasCanonicalName "kWh"^^xsd:string .
+
+:unit_liter_fuel a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Liter of fuel"^^xsd:string ;
+    :hasCanonicalName "liter_fuel"^^xsd:string .
+
+:unit_liter_per_day a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Liter per day"^^xsd:string ;
+    :hasCanonicalName "liter_per_day"^^xsd:string .
+
+:unit_liter_per_year a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Liter per year"^^xsd:string ;
+    :hasCanonicalName "liter_per_year"^^xsd:string .
+
+:unit_mj_per_kg_dm a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "MJ per kg DM"^^xsd:string ;
+    :hasCanonicalName "mj_per_kg_dm"^^xsd:string .
+
+:unit_text a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Text"^^xsd:string ;
+    :hasCanonicalName "text"^^xsd:string .
+
+:unit_tonne_co2e a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Tonne CO2 equivalent"^^xsd:string ;
+    :hasCanonicalName "tonne_co2e"^^xsd:string .
+
+:usesGWPParameterSet a owl:ObjectProperty ;
+    rdfs:domain :CO2EquivalentResult,
+        :CalculationExecution,
+        :CalculationMethod ;
+    rdfs:range :GWPParameterSet .
+
+:var_area_used_for_dairy_activity a :LandVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Area Used For Dairy Activity"^^xsd:string ;
+    :hasCanonicalName "area_used_for_dairy_activity"^^xsd:string ;
+    :hasDisplayName "Area Used For Dairy Activity"^^xsd:string ;
+    :hasOriginalColumnName "area_used_for_dairy_activity"^^xsd:string .
+
+:var_bulls a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Bulls"^^xsd:string ;
+    :hasCanonicalName "bulls"^^xsd:string ;
+    :hasDisplayName "Bulls"^^xsd:string ;
+    :hasOriginalColumnName "bulls"^^xsd:string .
+
+:var_calves_weight a :WeightVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Calves Weight"^^xsd:string ;
+    :hasCanonicalName "calves_weight"^^xsd:string ;
+    :hasDisplayName "Calves Weight"^^xsd:string ;
+    :hasOriginalColumnName "calves_weight"^^xsd:string .
+
+:var_draft_and_breeding_bulls a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Draft And Breeding Bulls"^^xsd:string ;
+    :hasCanonicalName "draft_and_breeding_bulls"^^xsd:string ;
+    :hasDisplayName "Draft And Breeding Bulls"^^xsd:string ;
+    :hasOriginalColumnName "draft_and_breeding_bulls"^^xsd:string .
+
+:var_dry_cows_weight a :WeightVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Dry Cows Weight"^^xsd:string ;
+    :hasCanonicalName "dry_cows_weight"^^xsd:string ;
+    :hasDisplayName "Dry Cows Weight"^^xsd:string ;
+    :hasOriginalColumnName "dry_cows_weight"^^xsd:string .
+
+:var_dry_matter_intake a :NutritionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Dry Matter Intake"^^xsd:string ;
+    :hasCanonicalName "dry_matter_intake"^^xsd:string ;
+    :hasDisplayName "Dry Matter Intake"^^xsd:string ;
+    :hasOriginalColumnName "dry_matter_intake"^^xsd:string .
+
+:var_employees_during_the_month a :AdministrativeVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Employees During The Month"^^xsd:string ;
+    :hasCanonicalName "employees_during_the_month"^^xsd:string ;
+    :hasDisplayName "Employees During The Month"^^xsd:string ;
+    :hasOriginalColumnName "employees_during_the_month"^^xsd:string .
+
+:var_energy_density a :NutritionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Energy Density"^^xsd:string ;
+    :hasCanonicalName "energy_density"^^xsd:string ;
+    :hasDisplayName "Energy Density"^^xsd:string ;
+    :hasOriginalColumnName "energy_density"^^xsd:string .
+
+:var_enteric_tco2e a :EmissionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Enteric Tco2E"^^xsd:string ;
+    :hasCanonicalName "enteric_tco2e"^^xsd:string ;
+    :hasDisplayName "Enteric Tco2E"^^xsd:string ;
+    :hasOriginalColumnName "enteric_tco2e"^^xsd:string .
+
+:var_gasoline a :FuelVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Gasoline"^^xsd:string ;
+    :hasCanonicalName "gasoline"^^xsd:string ;
+    :hasDisplayName "Gasoline"^^xsd:string ;
+    :hasOriginalColumnName "gasoline"^^xsd:string .
+
+:var_heifers a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Heifers"^^xsd:string ;
+    :hasCanonicalName "heifers"^^xsd:string ;
+    :hasDisplayName "Heifers"^^xsd:string ;
+    :hasOriginalColumnName "heifers"^^xsd:string .
+
+:var_heifers_in_raising a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Heifers In Raising"^^xsd:string ;
+    :hasCanonicalName "heifers_in_raising"^^xsd:string ;
+    :hasDisplayName "Heifers In Raising"^^xsd:string ;
+    :hasOriginalColumnName "heifers_in_raising"^^xsd:string .
+
+:var_lactating_cows_weight a :WeightVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Lactating Cows Weight"^^xsd:string ;
+    :hasCanonicalName "lactating_cows_weight"^^xsd:string ;
+    :hasDisplayName "Lactating Cows Weight"^^xsd:string ;
+    :hasOriginalColumnName "lactating_cows_weight"^^xsd:string .
+
+:var_maize_silage a :FeedVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Maize Silage"^^xsd:string ;
+    :hasCanonicalName "maize_silage"^^xsd:string ;
+    :hasDisplayName "Maize Silage"^^xsd:string ;
+    :hasOriginalColumnName "maize_silage"^^xsd:string .
+
+:var_milk a :MilkVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk"^^xsd:string ;
+    :hasCanonicalName "milk"^^xsd:string ;
+    :hasDisplayName "Milk"^^xsd:string ;
+    :hasOriginalColumnName "milk"^^xsd:string .
+
+:var_milk_fat_percentage a :MilkCompositionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk Fat Percentage"^^xsd:string ;
+    :hasCanonicalName "milk_fat_percentage"^^xsd:string ;
+    :hasDisplayName "Milk Fat Percentage"^^xsd:string ;
+    :hasOriginalColumnName "milk_fat_percentage"^^xsd:string .
+
+:var_milk_gross_price a :EconomicVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk Gross Price"^^xsd:string ;
+    :hasCanonicalName "milk_gross_price"^^xsd:string ;
+    :hasDisplayName "Milk Gross Price"^^xsd:string ;
+    :hasOriginalColumnName "milk_gross_price"^^xsd:string .
+
+:var_milk_production a :MilkVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk Production"^^xsd:string ;
+    :hasCanonicalName "milk_production"^^xsd:string ;
+    :hasDisplayName "Milk Production"^^xsd:string ;
+    :hasOriginalColumnName "milk_production"^^xsd:string .
+
+:var_milk_protein_percentage a :MilkCompositionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk Protein Percentage"^^xsd:string ;
+    :hasCanonicalName "milk_protein_percentage"^^xsd:string ;
+    :hasDisplayName "Milk Protein Percentage"^^xsd:string ;
+    :hasOriginalColumnName "milk_protein_percentage"^^xsd:string .
+
+:var_milk_sales a :MilkVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Milk Sales"^^xsd:string ;
+    :hasCanonicalName "milk_sales"^^xsd:string ;
+    :hasDisplayName "Milk Sales"^^xsd:string ;
+    :hasOriginalColumnName "milk_sales"^^xsd:string .
+
+:var_non_organic_fertilizer a :FertilizerVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Non Organic Fertilizer"^^xsd:string ;
+    :hasCanonicalName "non_organic_fertilizer"^^xsd:string ;
+    :hasDisplayName "Non Organic Fertilizer"^^xsd:string ;
+    :hasOriginalColumnName "non_organic_fertilizer"^^xsd:string .
+
+:var_number_of_dry_cows a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Number Of Dry Cows"^^xsd:string ;
+    :hasCanonicalName "number_of_dry_cows"^^xsd:string ;
+    :hasDisplayName "Number Of Dry Cows"^^xsd:string ;
+    :hasOriginalColumnName "number_of_dry_cows"^^xsd:string .
+
+:var_number_of_lactating_cows a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Number Of Lactating Cows"^^xsd:string ;
+    :hasCanonicalName "number_of_lactating_cows"^^xsd:string ;
+    :hasDisplayName "Number Of Lactating Cows"^^xsd:string ;
+    :hasOriginalColumnName "number_of_lactating_cows"^^xsd:string .
+
+:var_organic_fertilizer a :FertilizerVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Organic Fertilizer"^^xsd:string ;
+    :hasCanonicalName "organic_fertilizer"^^xsd:string ;
+    :hasDisplayName "Organic Fertilizer"^^xsd:string ;
+    :hasOriginalColumnName "organic_fertilizer"^^xsd:string .
+
+:var_other_fuel a :FuelVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Other Fuel"^^xsd:string ;
+    :hasCanonicalName "other_fuel"^^xsd:string ;
+    :hasDisplayName "Other Fuel"^^xsd:string ;
+    :hasOriginalColumnName "other_fuel"^^xsd:string .
+
+:var_pasture_area a :LandVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Pasture Area"^^xsd:string ;
+    :hasCanonicalName "pasture_area"^^xsd:string ;
+    :hasDisplayName "Pasture Area"^^xsd:string ;
+    :hasOriginalColumnName "pasture_area"^^xsd:string .
+
+:var_photovoltaic_energy a :EnergyVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Photovoltaic Energy"^^xsd:string ;
+    :hasCanonicalName "photovoltaic_energy"^^xsd:string ;
+    :hasDisplayName "Photovoltaic Energy"^^xsd:string ;
+    :hasOriginalColumnName "photovoltaic_energy"^^xsd:string .
+
+:var_predominant_soil_type a :SoilVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Predominant Soil Type"^^xsd:string ;
+    :hasCanonicalName "predominant_soil_type"^^xsd:string ;
+    :hasDisplayName "Predominant Soil Type"^^xsd:string ;
+    :hasOriginalColumnName "predominant_soil_type"^^xsd:string .
+
+:var_total_milk_production a :MilkVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Total Milk Production"^^xsd:string ;
+    :hasCanonicalName "total_milk_production"^^xsd:string ;
+    :hasDisplayName "Total Milk Production"^^xsd:string ;
+    :hasOriginalColumnName "total_milk_production"^^xsd:string .
+
+:var_weight a :WeightVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Weight"^^xsd:string ;
+    :hasCanonicalName "weight"^^xsd:string ;
+    :hasDisplayName "Weight"^^xsd:string ;
+    :hasOriginalColumnName "weight"^^xsd:string .
+
+:AggregatedResult a owl:Class ;
+    rdfs:subClassOf :CalculationResult .
+
+:Animal a owl:Class ;
+    rdfs:subClassOf :FarmEntity .
+
+:CalculationEntity a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:CalculationParameter a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:EmissionObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:EnergyVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:FertilizerVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:LandUseObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:LandVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:MilkCompositionObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:MilkCompositionVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:NutritionObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:Property a owl:Class ;
+    rdfs:subClassOf :FarmEntity .
+
+:TotalGHGCO2eCalculationMethod a owl:Class ;
+    rdfs:subClassOf :EmissionCalculationMethod .
+
+:gas_methane a :Methane,
+        owl:NamedIndividual ;
+    rdfs:label "CH4"^^xsd:string ;
+    :hasCanonicalName "methane"^^xsd:string .
+
+:sw_batch_runner_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "batch_runner_component"^^xsd:string ;
+    :hasModulePath "batch_runner.py"^^xsd:string .
+
+:sw_defaults_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "defaults_component"^^xsd:string ;
+    :hasModulePath "emissions/defaults.py"^^xsd:string .
+
+:sw_energy_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "energy_component"^^xsd:string ;
+    :hasModulePath "emissions/energy.py"^^xsd:string .
+
+:sw_enteric_fermentation_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "enteric_fermentation_component"^^xsd:string ;
+    :hasModulePath "emissions/enteric_fermentation.py"^^xsd:string .
+
+:sw_environmental_calcs_adapter a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "environmental_calcs_adapter"^^xsd:string ;
+    :hasModulePath "environmental_calcs.py"^^xsd:string .
+
+:sw_fertilizer_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "fertilizer_component"^^xsd:string ;
+    :hasModulePath "emissions/fertilizer.py"^^xsd:string .
+
+:sw_ghg_total_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "ghg_total_component"^^xsd:string ;
+    :hasModulePath "emissions/ghg_total.py"^^xsd:string .
+
+:sw_manure_management_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "manure_management_component"^^xsd:string ;
+    :hasModulePath "emissions/manure_management.py"^^xsd:string .
+
+:unit_hectare a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Hectare"^^xsd:string ;
+    :hasCanonicalName "hectare"^^xsd:string .
+
+:unit_liter_per_month a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Liter per month"^^xsd:string ;
+    :hasCanonicalName "liter_per_month"^^xsd:string .
+
+:unit_percentage a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Percentage"^^xsd:string ;
+    :hasCanonicalName "percentage"^^xsd:string .
+
+:var_diesel a :FuelVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Diesel"^^xsd:string ;
+    :hasCanonicalName "diesel"^^xsd:string ;
+    :hasDisplayName "Diesel"^^xsd:string ;
+    :hasOriginalColumnName "diesel"^^xsd:string .
+
+:var_ef_enteric_kg_ch4 a :EmissionVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Ef Enteric Kg Ch4"^^xsd:string ;
+    :hasCanonicalName "ef_enteric_kg_ch4"^^xsd:string ;
+    :hasDisplayName "Ef Enteric Kg Ch4"^^xsd:string ;
+    :hasOriginalColumnName "ef_enteric_kg_ch4"^^xsd:string .
+
+:var_electricity_grid a :EnergyVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Electricity Grid"^^xsd:string ;
+    :hasCanonicalName "electricity_grid"^^xsd:string ;
+    :hasDisplayName "Electricity Grid"^^xsd:string ;
+    :hasOriginalColumnName "electricity_grid"^^xsd:string .
+
+:FarmEntity a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:FuelVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:GWPParameterSet a owl:Class ;
+    rdfs:subClassOf :CalculationParameter .
+
+:MilkProductionObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:NutritionVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:hasOrganizationalContext a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution,
+        :Context,
+        :DataRecord,
+        :Observation ;
+    rdfs:range :OrganizationalContext .
+
+:hasTemporalContext a owl:ObjectProperty ;
+    rdfs:domain :CalculationExecution,
+        :Context,
+        :DataRecord,
+        :Observation ;
+    rdfs:range :TemporalContext .
+
+:var_calves a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Calves"^^xsd:string ;
+    :hasCanonicalName "calves"^^xsd:string ;
+    :hasDisplayName "Calves"^^xsd:string ;
+    :hasOriginalColumnName "calves"^^xsd:string .
+
+:AnimalWeightObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:Context a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:ConversionCalculationMethod a owl:Class ;
+    rdfs:subClassOf :CalculationMethod .
+
+:EmissionVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:QualitativeObservation a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :hasTextValue ;
+            owl:someValuesFrom xsd:string ],
+        :Observation .
+
+:record_br_1_day_2026_01_15 a :DailyAnimalNutritionRecord,
+        :DailyAnimalProductionRecord,
+        owl:NamedIndividual ;
+    :hasObservation :obs_record_br_1_day_2026_01_15_dry_matter_intake,
+        :obs_record_br_1_day_2026_01_15_energy_density,
+        :obs_record_br_1_day_2026_01_15_milk,
+        :obs_record_br_1_day_2026_01_15_weight ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasSourceLayout "daily_nutrition"^^xsd:string ;
+    :hasTemporalContext :time_day_2026_01_15 ;
+    :refersToAnimal :animal_a123 ;
+    :refersToProperty :property_br_1 .
+
+:sw_conversion_helpers_component a :SoftwareComponent,
+        owl:NamedIndividual ;
+    rdfs:label "conversion_helpers_component"^^xsd:string ;
+    :hasModulePath "emissions/conversion_helpers.py"^^xsd:string .
+
+:unit_kg a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Kilogram"^^xsd:string ;
+    :hasCanonicalName "kg"^^xsd:string .
+
+:var_dry_cows a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Dry Cows"^^xsd:string ;
+    :hasCanonicalName "dry_cows"^^xsd:string ;
+    :hasDisplayName "Dry Cows"^^xsd:string ;
+    :hasOriginalColumnName "dry_cows"^^xsd:string .
+
+:var_lactating_cows a :HerdVariable,
+        owl:NamedIndividual ;
+    rdfs:label "Lactating Cows"^^xsd:string ;
+    :hasCanonicalName "lactating_cows"^^xsd:string ;
+    :hasDisplayName "Lactating Cows"^^xsd:string ;
+    :hasOriginalColumnName "lactating_cows"^^xsd:string .
+
+:GreenhouseGas a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:MilkVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:OrganizationalContext a owl:Class ;
+    rdfs:subClassOf :Context .
+
+:animal_a123 a :Animal,
+        owl:NamedIndividual ;
+    :hasIdentifier "A123"^^xsd:string .
+
+:time_day_2026_01_15 a :TemporalContext,
+        owl:NamedIndividual ;
+    :hasDate "2026-01-15"^^xsd:string ;
+    :hasTemporalGranularity "day"^^xsd:string ;
+    :hasTemporalType "instant"^^xsd:string .
+
+:WeightVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:AdministrativeVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:EmissionCalculationMethod a owl:Class ;
+    rdfs:subClassOf :CalculationMethod .
+
+:EmissionSource a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:CalculationInput a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:CalculationResult a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:EmissionResult a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :hasNumericResult ;
+            owl:someValuesFrom xsd:decimal ],
+        [ a owl:Restriction ;
+            owl:onProperty :hasResultUnit ;
+            owl:someValuesFrom xsd:string ],
+        [ a owl:Restriction ;
+            owl:onProperty :calculatesGas ;
+            owl:someValuesFrom :GreenhouseGas ],
+        [ a owl:Restriction ;
+            owl:onProperty :calculatesEmissionSource ;
+            owl:someValuesFrom :EmissionSource ],
+        :CalculationResult .
+
+:HerdCountObservation a owl:Class ;
+    rdfs:subClassOf :QuantitativeObservation .
+
+:TemporalContext a owl:Class ;
+    rdfs:subClassOf :Context .
+
+:Observation a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :hasOrganizationalContext ;
+            owl:someValuesFrom :OrganizationalContext ],
+        [ a owl:Restriction ;
+            owl:onProperty :hasTemporalContext ;
+            owl:someValuesFrom :TemporalContext ],
+        [ a owl:Restriction ;
+            owl:onProperty :observesVariable ;
+            owl:someValuesFrom :CanonicalVariable ],
+        owl:Thing .
+
+:unit_head a :Unit,
+        owl:NamedIndividual ;
+    rdfs:label "Head (animals)"^^xsd:string ;
+    :hasCanonicalName "head"^^xsd:string .
+
+:DataRecord a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :hasTemporalContext ;
+            owl:someValuesFrom :TemporalContext ],
+        [ a owl:Restriction ;
+            owl:onProperty :hasOrganizationalContext ;
+            owl:someValuesFrom :OrganizationalContext ],
+        owl:Thing .
+
+:CalculationMethod a owl:Class ;
+    rdfs:subClassOf :CalculationEntity .
+
+:SoftwareFunction a owl:Class ;
+    rdfs:subClassOf :SoftwareComponent .
+
+:CalculationExecution a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :hasOrganizationalContext ;
+            owl:someValuesFrom :OrganizationalContext ],
+        [ a owl:Restriction ;
+            owl:onProperty :hasCalculationMethod ;
+            owl:someValuesFrom :CalculationMethod ],
+        [ a owl:Restriction ;
+            owl:onProperty :hasTemporalContext ;
+            owl:someValuesFrom :TemporalContext ],
+        :CalculationEntity .
+
+:SoftwareComponent a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:record_br_1_month_2026_01_01_2026_01_31 a :MonthlyPropertyRecord,
+        owl:NamedIndividual ;
+    :hasObservation :obs_record_br_1_month_2026_01_01_2026_01_31_area_used_for_dairy_activity,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_draft_and_breeding_bulls,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_dry_cows,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_ef_enteric_kg_ch4,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_employees_during_the_month,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_enteric_tco2e,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_heifers_in_raising,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_lactating_cows,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_milk_gross_price,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_milk_production,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_milk_sales,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_number_of_dry_cows,
+        :obs_record_br_1_month_2026_01_01_2026_01_31_number_of_lactating_cows ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasSourceLayout "monthly_property"^^xsd:string ;
+    :hasTemporalContext :time_month_2026_01_01_2026_01_31 ;
+    :refersToProperty :property_br_1 .
+
+:QuantitativeObservation a owl:Class ;
+    rdfs:subClassOf [ a owl:Restriction ;
+            owl:onProperty :hasNumericValue ;
+            owl:someValuesFrom xsd:decimal ],
+        [ a owl:Restriction ;
+            owl:onProperty :hasUnit ;
+            owl:someValuesFrom :Unit ],
+        :Observation .
+
+:record_br_1_year_2026_01_01_2026_12_31 a :AnnualPropertyInventoryRecord,
+        owl:NamedIndividual ;
+    :hasObservation :obs_record_br_1_year_2026_01_01_2026_12_31_calves,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_calves_weight,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_diesel,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows_weight,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_electricity_grid,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows_weight,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_maize_silage,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_milk_fat_percentage,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_milk_protein_percentage,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_pasture_area,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_predominant_soil_type,
+        :obs_record_br_1_year_2026_01_01_2026_12_31_total_milk_production ;
+    :hasOrganizationalContext :org_property_br_1 ;
+    :hasSourceLayout "annual_inventory"^^xsd:string ;
+    :hasTemporalContext :time_year_2026_01_01_2026_12_31 ;
+    :refersToProperty :property_br_1 .
+
+:time_month_2026_01_01_2026_01_31 a :TemporalContext,
+        owl:NamedIndividual ;
+    :hasEndDate "2026-01-31"^^xsd:string ;
+    :hasStartDate "2026-01-01"^^xsd:string ;
+    :hasTemporalGranularity "month"^^xsd:string ;
+    :hasTemporalType "interval"^^xsd:string .
+
+:time_year_2026_01_01_2026_12_31 a :TemporalContext,
+        owl:NamedIndividual ;
+    :hasEndDate "2026-12-31"^^xsd:string ;
+    :hasStartDate "2026-01-01"^^xsd:string ;
+    :hasTemporalGranularity "year"^^xsd:string ;
+    :hasTemporalType "interval"^^xsd:string ;
+    :hasYear "2026"^^xsd:string .
+
+:CanonicalVariable a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:HerdVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+
+:Unit a owl:Class ;
+    rdfs:subClassOf owl:Thing .
+
+:org_property_br_1 a :OrganizationalContext,
+        owl:NamedIndividual ;
+    :hasIdentifier "BR – 1"^^xsd:string ;
+    :hasOrganizationalGranularity "property"^^xsd:string .
+
+:property_br_1 a :Property,
+        owl:NamedIndividual ;
+    :hasIdentifier "BR – 1"^^xsd:string ;
+    :hasInformationResponsible "Anonymous"^^xsd:string ;
+    :hasOwnerName "Anonymous"^^xsd:string ;
+    :hasPropertyName "BR – 1"^^xsd:string .
+
+:FeedVariable a owl:Class ;
+    rdfs:subClassOf :CanonicalVariable .
+

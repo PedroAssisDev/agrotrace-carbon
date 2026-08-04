@@ -17,6 +17,7 @@ venv/
 # IDE / OS
 .idea/
 .vscode/
+.cursor/
 *.swp
 Thumbs.db
 .DS_Store
@@ -58,6 +59,8 @@ agrotrace-carbon-save-file/data/emulated_uploads/*
 # Service local DBs
 **/*.sqlite
 **/*.db
+**/*.csv
+**/*.md
 
 # Env / secrets
 .env

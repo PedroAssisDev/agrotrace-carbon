@@ -1,0 +1,143 @@
+# MonthlyLayoutV1 — EcoFarm OS
+layout_id: monthly:v1
+catalog_display_name: MonthlyLayoutV1
+layout_family: monthly
+version: "1.0"
+status: active
+
+physical:
+  format: csv
+  delimiter: ";"
+  encoding: utf-8
+  header_row: true
+
+granularity:
+  temporal: interval_month
+  organizational: property
+
+# Harmonização pós-normalização (ex.: ref implementada — ver docs/harmonization.md)
+harmonization:
+  steps:
+    - ref: strip_whitespace_strings
+      fields: [property_id]
+
+detection:
+  priority: 20
+
+schema:
+  fields:
+    - logical: property_id
+      aliases: [Property]
+      type: string
+      required: true
+    - logical: period_start
+      aliases: [Period]
+      type: date
+      required: true
+    - logical: milk_production
+      aliases: [Milk_Production]
+      type: number
+      required: true
+    - logical: milk_sales
+      aliases: [Milk_Sales]
+      type: number
+      required: false
+    - logical: milk_gross_price
+      aliases: [Milk_Gross_Price]
+      type: number
+      required: false
+    - logical: number_of_lactating_cows
+      aliases: [Number_of_Lactating_Cows]
+      type: number
+      required: false
+    - logical: employees_during_the_month
+      aliases: [Employees_During_the_Month]
+      type: number
+      required: false
+    - logical: area_used_for_dairy_activity
+      aliases: [Area_Used_for_Dairy_Activity]
+      type: number
+      required: false
+    - logical: reproducers
+      aliases: [Reproducers]
+      type: number
+      required: false
+    - logical: lactating_cows
+      aliases: [Lactating_Cows]
+      type: number
+      required: false
+    - logical: dry_cows
+      aliases: [Dry_Cows]
+      type: number
+      required: false
+    - logical: pregnant_heifers
+      aliases: [Pregnant_Heifers]
+      type: number
+      required: false
+    - logical: heifers_in_raising
+      aliases: [Heifers_in_Raising]
+      type: number
+      required: false
+    - logical: suckling_calves_female
+      aliases: [Suckling_Calves_female]
+      type: number
+      required: false
+    - logical: suckling_calves_male
+      aliases: [Suckling_Calves_male]
+      type: number
+      required: false
+    - logical: male_calves_in_raising
+      aliases: [Male_Calves_in_Raising]
+      type: number
+      required: false
+    - logical: male_calves_in_fattening
+      aliases: [Male_Calves_in_Fattening]
+      type: number
+      required: false
+    - logical: draft_and_breeding_bulls
+      aliases: [Draft_and_Breeding_Bulls]
+      type: number
+      required: false
+    - logical: equines_and_mules
+      aliases: [Equines_and_Mules]
+      type: number
+      required: false
+    - logical: number_of_dry_cows
+      aliases: [Number_of_Dry_Cows]
+      type: number
+      required: false
+    - logical: ef_enteric_kg_ch4
+      aliases: [ef_enteric_kgCH4]
+      type: number
+      required: false
+    - logical: enteric_tco2e
+      aliases: [enteric_tCO2e]
+      type: number
+      required: false
+
+validation_rules:
+  - ref: required_fields
+    fields: [property_id, period_start]
+  - ref: date_valid
+    field: period_start
+  - ref: first_day_of_month
+    field: period_start
+  - ref: non_negative
+    field: milk_production
+  - ref: non_negative
+    field: milk_sales
+  - ref: lactating_consistency
+  - ref: dry_consistency
+  - ref: milk_sales_le_production
+
+canonical_mapping:
+  version: "1.0"
+  projections:
+    - logical: property_id
+      target: Property.identifier
+    - logical: period_start
+      target: MonthlyProductionRecord.periodStart
+    - logical: period_end
+      target: MonthlyProductionRecord.periodEnd
+    - logical: milk_production
+      target: MonthlyProductionRecord.milkProduction

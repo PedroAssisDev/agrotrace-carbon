@@ -1,0 +1,8 @@
+# Dependências da camada de wrappers — EcoFarm OS
+# Python 3.10+
+
+PyYAML>=6.0
+
+# Testes
+pytest>=7.0.0
+Pandas>=2.0.0

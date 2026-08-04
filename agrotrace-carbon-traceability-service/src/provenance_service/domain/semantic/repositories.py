@@ -1,0 +1,43 @@
+"""Repository protocols for the semantic context."""
+
+from __future__ import annotations
+
+from typing import Protocol
+from uuid import UUID
+
+from provenance_service.domain.semantic.entities import (
+    CanonicalSnapshot,
+    CanonicalSnapshotItem,
+    OntologyResourceLink,
+    SemanticIntegrationExecution,
+)
+
+
+class SemanticIntegrationExecutionRepository(Protocol):
+    def add(self, execution: SemanticIntegrationExecution) -> None: ...
+    def get(
+        self, semantic_integration_execution_id: UUID
+    ) -> SemanticIntegrationExecution | None: ...
+    def get_by_idempotency_key(
+        self, key: str
+    ) -> SemanticIntegrationExecution | None: ...
+    def list_by_pipeline_run(
+        self, pipeline_run_id: UUID
+    ) -> list[SemanticIntegrationExecution]: ...
+
+
+class CanonicalSnapshotRepository(Protocol):
+    def add(self, snapshot: CanonicalSnapshot) -> None: ...
+    def get(self, canonical_snapshot_id: UUID) -> CanonicalSnapshot | None: ...
+    def get_by_hash(self, snapshot_hash: str) -> CanonicalSnapshot | None: ...
+    def list_by_pipeline_run(self, pipeline_run_id: UUID) -> list[CanonicalSnapshot]: ...
+    def add_item(self, item: CanonicalSnapshotItem) -> None: ...
+    def list_items(
+        self, canonical_snapshot_id: UUID
+    ) -> list[CanonicalSnapshotItem]: ...
+
+
+class OntologyResourceLinkRepository(Protocol):
+    def add(self, link: OntologyResourceLink) -> None: ...
+    def get(self, ontology_resource_link_id: UUID) -> OntologyResourceLink | None: ...
+    def list_by_pipeline_run(self, pipeline_run_id: UUID) -> list[OntologyResourceLink]: ...

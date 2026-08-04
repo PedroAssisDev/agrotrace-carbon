@@ -1,0 +1,63 @@
+# IntradayLayoutV1 — EcoFarm OS
+layout_id: intraday:v1
+catalog_display_name: IntradayLayoutV1
+layout_family: intraday
+version: "1.0"
+status: active
+
+physical:
+  format: csv
+  delimiter: ","
+  encoding: utf-8
+  header_row: true
+
+granularity:
+  temporal: instant
+  organizational: animal
+
+# Deteção automática e desempate entre candidatos (maior priority vence em empate de score)
+detection:
+  priority: 30
+
+schema:
+  fields:
+    - logical: date
+      aliases: [Date]
+      type: date
+      required: true
+    - logical: animal_id
+      aliases: [Tag]
+      type: string
+      required: true
+    - logical: milk
+      aliases: [Milk]
+      type: number
+      required: true
+    - logical: weight
+      aliases: [Weight]
+      type: number
+      required: true
+
+validation_rules:
+  - ref: required_fields
+    fields: [date, animal_id, milk, weight]
+  - ref: date_valid
+    field: date
+  - ref: non_negative
+    field: milk
+  - ref: non_negative
+    field: weight
+  - ref: weight_range_warning
+    field: weight
+
+canonical_mapping:
+  version: "1.0"
+  projections:
+    - logical: date
+      target: MilkProductionObservation.observedAt
+    - logical: animal_id
+      target: Animal.identifier
+    - logical: milk
+      target: MilkProductionObservation.value
+    - logical: weight
+      target: WeightObservation.value

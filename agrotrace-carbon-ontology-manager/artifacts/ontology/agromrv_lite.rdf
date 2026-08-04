@@ -1,0 +1,2451 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xml:base="http://example.org/agromrv-lite"
+         xmlns="http://example.org/agromrv-lite#">
+
+<owl:Ontology rdf:about="http://example.org/agromrv-lite"/>
+
+<owl:ObjectProperty rdf:about="#hasOrganizationalContext">
+  <rdfs:domain rdf:resource="#DataRecord"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:domain rdf:resource="#Context"/>
+  <rdfs:domain rdf:resource="#Observation"/>
+  <rdfs:range rdf:resource="#OrganizationalContext"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasTemporalContext">
+  <rdfs:domain rdf:resource="#DataRecord"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:domain rdf:resource="#Context"/>
+  <rdfs:domain rdf:resource="#Observation"/>
+  <rdfs:range rdf:resource="#TemporalContext"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#refersToProperty">
+  <rdfs:domain rdf:resource="#DataRecord"/>
+  <rdfs:domain rdf:resource="#Observation"/>
+  <rdfs:range rdf:resource="#Property"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#refersToAnimal">
+  <rdfs:domain rdf:resource="#DataRecord"/>
+  <rdfs:domain rdf:resource="#Observation"/>
+  <rdfs:range rdf:resource="#Animal"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasObservation">
+  <rdfs:domain rdf:resource="#DataRecord"/>
+  <rdfs:range rdf:resource="#Observation"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#observesVariable">
+  <rdfs:domain rdf:resource="#Observation"/>
+  <rdfs:range rdf:resource="#CanonicalVariable"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasUnit">
+  <rdfs:domain rdf:resource="#QuantitativeObservation"/>
+  <rdfs:domain rdf:resource="#CalculationResult"/>
+  <rdfs:domain rdf:resource="#EmissionResult"/>
+  <rdfs:range rdf:resource="#Unit"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#belongsToRecord">
+  <rdfs:domain rdf:resource="#Observation"/>
+  <rdfs:range rdf:resource="#DataRecord"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasRecordType">
+  <rdfs:domain rdf:resource="#DataRecord"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasCalculationMethod">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#CalculationMethod"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#implementedByFunction">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:range rdf:resource="#SoftwareFunction"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#implementedInSoftwareComponent">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:domain rdf:resource="#SoftwareFunction"/>
+  <rdfs:range rdf:resource="#SoftwareComponent"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#calculatesGas">
+  <rdfs:domain rdf:resource="#EmissionCalculationMethod"/>
+  <rdfs:domain rdf:resource="#EmissionResult"/>
+  <rdfs:range rdf:resource="#GreenhouseGas"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#calculatesEmissionSource">
+  <rdfs:domain rdf:resource="#EmissionCalculationMethod"/>
+  <rdfs:domain rdf:resource="#EmissionResult"/>
+  <rdfs:range rdf:resource="#EmissionSource"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#requiresInputVariable">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:range rdf:resource="#CanonicalVariable"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#usesEmissionFactor">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#EmissionFactor"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#usesGWPParameterSet">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:domain rdf:resource="#CO2EquivalentResult"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#GWPParameterSet"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasCalculationInput">
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#CalculationInput"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#generatesCalculationResult">
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#CalculationResult"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasPartialResult">
+  <rdfs:domain rdf:resource="#AggregatedResult"/>
+  <rdfs:domain rdf:resource="#TotalGHGCO2eCalculationMethod"/>
+  <rdfs:range rdf:resource="#CalculationResult"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#hasTotalResult">
+  <rdfs:domain rdf:resource="#AggregatedResult"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#CalculationResult"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#convertsFromGranularity">
+  <rdfs:domain rdf:resource="#ConversionCalculationMethod"/>
+  <rdfs:range rdf:resource="#TemporalContext"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#convertsToGranularity">
+  <rdfs:domain rdf:resource="#ConversionCalculationMethod"/>
+  <rdfs:range rdf:resource="#TemporalContext"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#usesObservation">
+  <rdfs:domain rdf:resource="#CalculationInput"/>
+  <rdfs:domain rdf:resource="#CalculationExecution"/>
+  <rdfs:range rdf:resource="#Observation"/>
+</owl:ObjectProperty>
+
+<owl:ObjectProperty rdf:about="#usesCanonicalVariable">
+  <rdfs:domain rdf:resource="#CalculationMethod"/>
+  <rdfs:domain rdf:resource="#CalculationInput"/>
+  <rdfs:range rdf:resource="#CanonicalVariable"/>
+</owl:ObjectProperty>
+
+<owl:DatatypeProperty rdf:about="#hasIdentifier">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasPropertyName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasOwnerName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasInformationResponsible">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasLocationName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasOrganizationalGranularity">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasTemporalType">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasTemporalGranularity">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasStartDate">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasEndDate">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasYear">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasDate">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasNumericValue">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasTextValue">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasCanonicalName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasDisplayName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasOriginalColumnName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasExpectedUnit">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasFunctionName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasModulePath">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasFormulaExpression">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasCalculationVersion">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasMethodDescription">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasParameterName">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasParameterValue">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasNumericResult">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasResultUnit">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasGWP_CH4">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasGWP_N2O">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasGWP_CO2">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasAggregationStrategy">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasCompatibilityMode">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#hasSourceLayout">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#requiresGWPParameterSet">
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#boolean"/>
+</owl:DatatypeProperty>
+
+<owl:Class rdf:about="#Context">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#OrganizationalContext">
+  <rdfs:subClassOf rdf:resource="#Context"/>
+</owl:Class>
+
+<owl:Class rdf:about="#TemporalContext">
+  <rdfs:subClassOf rdf:resource="#Context"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FarmEntity">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Property">
+  <rdfs:subClassOf rdf:resource="#FarmEntity"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Animal">
+  <rdfs:subClassOf rdf:resource="#FarmEntity"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Location">
+  <rdfs:subClassOf rdf:resource="#FarmEntity"/>
+</owl:Class>
+
+<owl:Class rdf:about="#DataRecord">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasOrganizationalContext"/>
+      <owl:someValuesFrom rdf:resource="#OrganizationalContext"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasTemporalContext"/>
+      <owl:someValuesFrom rdf:resource="#TemporalContext"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#AnnualPropertyInventoryRecord">
+  <rdfs:subClassOf rdf:resource="#DataRecord"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MonthlyPropertyRecord">
+  <rdfs:subClassOf rdf:resource="#DataRecord"/>
+</owl:Class>
+
+<owl:Class rdf:about="#DailyAnimalProductionRecord">
+  <rdfs:subClassOf rdf:resource="#DataRecord"/>
+</owl:Class>
+
+<owl:Class rdf:about="#DailyAnimalNutritionRecord">
+  <rdfs:subClassOf rdf:resource="#DataRecord"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Observation">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#observesVariable"/>
+      <owl:someValuesFrom rdf:resource="#CanonicalVariable"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasOrganizationalContext"/>
+      <owl:someValuesFrom rdf:resource="#OrganizationalContext"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasTemporalContext"/>
+      <owl:someValuesFrom rdf:resource="#TemporalContext"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#QuantitativeObservation">
+  <rdfs:subClassOf rdf:resource="#Observation"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasNumericValue"/>
+      <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasUnit"/>
+      <owl:someValuesFrom rdf:resource="#Unit"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#QualitativeObservation">
+  <rdfs:subClassOf rdf:resource="#Observation"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasTextValue"/>
+      <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#FeedInputObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#HerdCountObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#AnimalWeightObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MilkProductionObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MilkCompositionObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MilkSalesObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EnergyUseObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FuelUseObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FertilizerUseObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#LandUseObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#SoilTypeObservation">
+  <rdfs:subClassOf rdf:resource="#QualitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#NutritionObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EconomicObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionObservation">
+  <rdfs:subClassOf rdf:resource="#QuantitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#DestinationObservation">
+  <rdfs:subClassOf rdf:resource="#QualitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ResponsiblePersonObservation">
+  <rdfs:subClassOf rdf:resource="#QualitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#AdministrativeObservation">
+  <rdfs:subClassOf rdf:resource="#QualitativeObservation"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CanonicalVariable">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FeedVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#HerdVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#WeightVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MilkVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MilkCompositionVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EnergyVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FuelVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FertilizerVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#LandVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#SoilVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#NutritionVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EconomicVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#AdministrativeVariable">
+  <rdfs:subClassOf rdf:resource="#CanonicalVariable"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Unit">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CalculationEntity">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CalculationMethod">
+  <rdfs:subClassOf rdf:resource="#CalculationEntity"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionCalculationMethod">
+  <rdfs:subClassOf rdf:resource="#CalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ConversionCalculationMethod">
+  <rdfs:subClassOf rdf:resource="#CalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ConfigurationMethod">
+  <rdfs:subClassOf rdf:resource="#CalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EntericFermentationCH4CalculationMethod">
+  <rdfs:subClassOf rdf:resource="#EmissionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ManureManagementCH4CalculationMethod">
+  <rdfs:subClassOf rdf:resource="#EmissionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FertilizerN2OCalculationMethod">
+  <rdfs:subClassOf rdf:resource="#EmissionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EnergyCO2CalculationMethod">
+  <rdfs:subClassOf rdf:resource="#EmissionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#TotalGHGCO2eCalculationMethod">
+  <rdfs:subClassOf rdf:resource="#EmissionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MonthlyToAnnualSumMethod">
+  <rdfs:subClassOf rdf:resource="#ConversionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#MonthlyToAnnualProrationMethod">
+  <rdfs:subClassOf rdf:resource="#ConversionCalculationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#DefaultConfigurationProvider">
+  <rdfs:subClassOf rdf:resource="#ConfigurationMethod"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CalculationExecution">
+  <rdfs:subClassOf rdf:resource="#CalculationEntity"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasCalculationMethod"/>
+      <owl:someValuesFrom rdf:resource="#CalculationMethod"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasOrganizationalContext"/>
+      <owl:someValuesFrom rdf:resource="#OrganizationalContext"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasTemporalContext"/>
+      <owl:someValuesFrom rdf:resource="#TemporalContext"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionCalculationExecution">
+  <rdfs:subClassOf rdf:resource="#CalculationExecution"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#generatesCalculationResult"/>
+      <owl:someValuesFrom rdf:resource="#EmissionResult"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#ConversionCalculationExecution">
+  <rdfs:subClassOf rdf:resource="#CalculationExecution"/>
+</owl:Class>
+
+<owl:Class rdf:about="#BatchCalculationExecution">
+  <rdfs:subClassOf rdf:resource="#CalculationExecution"/>
+</owl:Class>
+
+<owl:Class rdf:about="#LegacyCompatibilityExecution">
+  <rdfs:subClassOf rdf:resource="#CalculationExecution"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CalculationInput">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ObservationInput">
+  <rdfs:subClassOf rdf:resource="#CalculationInput"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ParameterInput">
+  <rdfs:subClassOf rdf:resource="#CalculationInput"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionFactorInput">
+  <rdfs:subClassOf rdf:resource="#CalculationInput"/>
+</owl:Class>
+
+<owl:Class rdf:about="#GWPInput">
+  <rdfs:subClassOf rdf:resource="#CalculationInput"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ConvertedInput">
+  <rdfs:subClassOf rdf:resource="#CalculationInput"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CalculationParameter">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionFactor">
+  <rdfs:subClassOf rdf:resource="#CalculationParameter"/>
+</owl:Class>
+
+<owl:Class rdf:about="#GWPParameterSet">
+  <rdfs:subClassOf rdf:resource="#CalculationParameter"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CalculationResult">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionResult">
+  <rdfs:subClassOf rdf:resource="#CalculationResult"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#calculatesGas"/>
+      <owl:someValuesFrom rdf:resource="#GreenhouseGas"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#calculatesEmissionSource"/>
+      <owl:someValuesFrom rdf:resource="#EmissionSource"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasNumericResult"/>
+      <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#hasResultUnit"/>
+      <owl:someValuesFrom rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#CH4EmissionResult">
+  <rdfs:subClassOf rdf:resource="#EmissionResult"/>
+</owl:Class>
+
+<owl:Class rdf:about="#N2OEmissionResult">
+  <rdfs:subClassOf rdf:resource="#EmissionResult"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CO2EmissionResult">
+  <rdfs:subClassOf rdf:resource="#EmissionResult"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CO2EquivalentResult">
+  <rdfs:subClassOf rdf:resource="#EmissionResult"/>
+  <rdfs:subClassOf>
+    <owl:Restriction>
+      <owl:onProperty rdf:resource="#usesGWPParameterSet"/>
+      <owl:someValuesFrom rdf:resource="#GWPParameterSet"/>
+    </owl:Restriction>
+  </rdfs:subClassOf>
+</owl:Class>
+
+<owl:Class rdf:about="#ProductivityResult">
+  <rdfs:subClassOf rdf:resource="#CalculationResult"/>
+</owl:Class>
+
+<owl:Class rdf:about="#DMIResult">
+  <rdfs:subClassOf rdf:resource="#CalculationResult"/>
+</owl:Class>
+
+<owl:Class rdf:about="#AggregatedResult">
+  <rdfs:subClassOf rdf:resource="#CalculationResult"/>
+</owl:Class>
+
+<owl:Class rdf:about="#GreenhouseGas">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#CarbonDioxide">
+  <rdfs:subClassOf rdf:resource="#GreenhouseGas"/>
+</owl:Class>
+
+<owl:Class rdf:about="#Methane">
+  <rdfs:subClassOf rdf:resource="#GreenhouseGas"/>
+</owl:Class>
+
+<owl:Class rdf:about="#NitrousOxide">
+  <rdfs:subClassOf rdf:resource="#GreenhouseGas"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EmissionSource">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EntericFermentation">
+  <rdfs:subClassOf rdf:resource="#EmissionSource"/>
+</owl:Class>
+
+<owl:Class rdf:about="#ManureManagement">
+  <rdfs:subClassOf rdf:resource="#EmissionSource"/>
+</owl:Class>
+
+<owl:Class rdf:about="#FertilizerApplication">
+  <rdfs:subClassOf rdf:resource="#EmissionSource"/>
+</owl:Class>
+
+<owl:Class rdf:about="#EnergyUse">
+  <rdfs:subClassOf rdf:resource="#EmissionSource"/>
+</owl:Class>
+
+<owl:Class rdf:about="#TotalGHG">
+  <rdfs:subClassOf rdf:resource="#EmissionSource"/>
+</owl:Class>
+
+<owl:Class rdf:about="#SoftwareComponent">
+  <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
+</owl:Class>
+
+<owl:Class rdf:about="#SoftwareFunction">
+  <rdfs:subClassOf rdf:resource="#SoftwareComponent"/>
+</owl:Class>
+
+<owl:Class rdf:about="#BatchCalculationRunner">
+  <rdfs:subClassOf rdf:resource="#SoftwareComponent"/>
+</owl:Class>
+
+<owl:Class rdf:about="#LegacyCompatibilityAdapter">
+  <rdfs:subClassOf rdf:resource="#SoftwareComponent"/>
+</owl:Class>
+
+<owl:NamedIndividual rdf:about="#unit_head">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Head (animals)</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">head</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_liter">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Liter</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">liter</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_hectare">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hectare</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">hectare</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_percentage">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Percentage</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">percentage</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kwh">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilowatt-hour</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kWh</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_liter_fuel">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Liter of fuel</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">liter_fuel</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_ch4">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram CH4</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_ch4</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_n2o">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram N2O</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_n2o</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_co2">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram CO2</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_co2</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_co2e">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram CO2 equivalent</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_co2e</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_tonne_co2e">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tonne CO2 equivalent</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">tonne_co2e</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_liter_per_day">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Liter per day</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">liter_per_day</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_liter_per_month">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Liter per month</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">liter_per_month</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_liter_per_year">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Liter per year</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">liter_per_year</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_per_day">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram per day</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_per_day</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_per_month">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram per month</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_per_month</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_per_year">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram per year</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_per_year</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_dm_per_day">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kilogram DM per day</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_dm_per_day</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_mj_per_kg_dm">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">MJ per kg DM</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mj_per_kg_dm</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_kg_ch4_per_head_month">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg CH4 per head per month</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_ch4_per_head_month</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_currency">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Currency</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">currency</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_dimensionless">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dimensionless</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dimensionless</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#unit_text">
+  <rdf:type rdf:resource="#Unit"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Text</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">text</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_area_used_for_dairy_activity">
+  <rdf:type rdf:resource="#LandVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Area Used For Dairy Activity</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">area_used_for_dairy_activity</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Area Used For Dairy Activity</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">area_used_for_dairy_activity</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_barley">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Barley</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">barley</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Barley</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">barley</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_beans_peas">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Beans Peas</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">beans_peas</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Beans Peas</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">beans_peas</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_brewers_grain_brewery_residue">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Brewers Grain Brewery Residue</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">brewers_grain_brewery_residue</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Brewers Grain Brewery Residue</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">brewers_grain_brewery_residue</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_bulls">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bulls</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">bulls</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bulls</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">bulls</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_bulls_weight">
+  <rdf:type rdf:resource="#WeightVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bulls Weight</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">bulls_weight</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bulls Weight</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">bulls_weight</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_calves">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Calves</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calves</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Calves</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calves</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_calves_weight">
+  <rdf:type rdf:resource="#WeightVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Calves Weight</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calves_weight</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Calves Weight</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calves_weight</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_cassava_tapioca">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cassava Tapioca</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cassava_tapioca</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cassava Tapioca</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cassava_tapioca</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_citrus_pulp">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Citrus Pulp</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">citrus_pulp</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Citrus Pulp</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">citrus_pulp</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_cottonseed_cake_meal">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cottonseed Cake Meal</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cottonseed_cake_meal</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cottonseed Cake Meal</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cottonseed_cake_meal</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_cows_discarded_per_year">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cows Discarded Per Year</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cows_discarded_per_year</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cows Discarded Per Year</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">cows_discarded_per_year</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_crop_residues">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Crop Residues</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">crop_residues</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Crop Residues</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">crop_residues</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_ddg">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ddg</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ddg</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ddg</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ddg</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_diesel">
+  <rdf:type rdf:resource="#FuelVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Diesel</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">diesel</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Diesel</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">diesel</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_discarded_cows_destination">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Discarded Cows Destination</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">discarded_cows_destination</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Discarded Cows Destination</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">discarded_cows_destination</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_dmi_check">
+  <rdf:type rdf:resource="#NutritionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dmi Check</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dmi_check</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dmi Check</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dmi_check</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_draft_and_breeding_bulls">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Draft And Breeding Bulls</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">draft_and_breeding_bulls</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Draft And Breeding Bulls</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">draft_and_breeding_bulls</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_dry_cows">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dry Cows</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dry Cows</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_dry_cows_weight">
+  <rdf:type rdf:resource="#WeightVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dry Cows Weight</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows_weight</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dry Cows Weight</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows_weight</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_dry_matter_intake">
+  <rdf:type rdf:resource="#NutritionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dry Matter Intake</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_matter_intake</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Dry Matter Intake</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_matter_intake</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_ef_enteric_kg_ch4">
+  <rdf:type rdf:resource="#EmissionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ef Enteric Kg Ch4</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ef_enteric_kg_ch4</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ef Enteric Kg Ch4</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ef_enteric_kg_ch4</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_electricity_grid">
+  <rdf:type rdf:resource="#EnergyVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Electricity Grid</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">electricity_grid</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Electricity Grid</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">electricity_grid</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_employees_during_the_month">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Employees During The Month</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">employees_during_the_month</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Employees During The Month</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">employees_during_the_month</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_energy_density">
+  <rdf:type rdf:resource="#NutritionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Energy Density</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">energy_density</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Energy Density</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">energy_density</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_enteric_tco2e">
+  <rdf:type rdf:resource="#EmissionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Enteric Tco2E</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">enteric_tco2e</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Enteric Tco2E</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">enteric_tco2e</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_equines_and_mules">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Equines And Mules</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">equines_and_mules</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Equines And Mules</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">equines_and_mules</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_females">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Females</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">females</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Females</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">females</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_gasoline">
+  <rdf:type rdf:resource="#FuelVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gasoline</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">gasoline</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gasoline</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">gasoline</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_grass_fresh">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Fresh</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_fresh</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Fresh</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_fresh</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_grass_hay_off_farm">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Hay Off Farm</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_hay_off_farm</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Hay Off Farm</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_hay_off_farm</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_grass_hay_on_farm">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Hay On Farm</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_hay_on_farm</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Hay On Farm</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_hay_on_farm</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_grass_silage_on_or_off_farm">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Silage On Or Off Farm</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_silage_on_or_off_farm</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grass Silage On Or Off Farm</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">grass_silage_on_or_off_farm</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_hay_oat_clover">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hay Oat Clover</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">hay_oat_clover</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hay Oat Clover</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">hay_oat_clover</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_heifers">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heifers</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heifers</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_heifers_in_raising">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heifers In Raising</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers_in_raising</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heifers In Raising</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers_in_raising</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_heifers_weight">
+  <rdf:type rdf:resource="#WeightVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heifers Weight</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers_weight</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heifers Weight</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers_weight</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_information_responsible">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Information Responsible</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">information_responsible</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Information Responsible</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">information_responsible</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_lactating_cows">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lactating Cows</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lactating Cows</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_lactating_cows_weight">
+  <rdf:type rdf:resource="#WeightVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lactating Cows Weight</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows_weight</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lactating Cows Weight</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows_weight</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_location">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Location</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">location</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Location</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">location</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_lucerne_alfalfa_hay">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lucerne Alfalfa Hay</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lucerne_alfalfa_hay</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lucerne Alfalfa Hay</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lucerne_alfalfa_hay</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_lucerne_alfalfa_silage">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lucerne Alfalfa Silage</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lucerne_alfalfa_silage</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lucerne Alfalfa Silage</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lucerne_alfalfa_silage</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_maize_grain">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maize Grain</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maize_grain</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maize Grain</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maize_grain</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_maize_silage">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maize Silage</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maize_silage</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maize Silage</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maize_silage</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_male_calves_in_fattening">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Male Calves In Fattening</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">male_calves_in_fattening</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Male Calves In Fattening</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">male_calves_in_fattening</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_male_calves_in_raising">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Male Calves In Raising</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">male_calves_in_raising</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Male Calves In Raising</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">male_calves_in_raising</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_males">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Males</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">males</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Males</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">males</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk">
+  <rdf:type rdf:resource="#MilkVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk_fat_percentage">
+  <rdf:type rdf:resource="#MilkCompositionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Fat Percentage</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_fat_percentage</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Fat Percentage</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_fat_percentage</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk_gross_price">
+  <rdf:type rdf:resource="#EconomicVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Gross Price</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_gross_price</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Gross Price</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_gross_price</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk_powder_dry_matter">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Powder Dry Matter</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_powder_dry_matter</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Powder Dry Matter</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_powder_dry_matter</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk_production">
+  <rdf:type rdf:resource="#MilkVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Production</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_production</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Production</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_production</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk_protein_percentage">
+  <rdf:type rdf:resource="#MilkCompositionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Protein Percentage</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_protein_percentage</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Protein Percentage</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_protein_percentage</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_milk_sales">
+  <rdf:type rdf:resource="#MilkVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Sales</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_sales</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Milk Sales</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_sales</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_mineral_mix">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Mineral Mix</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mineral_mix</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Mineral Mix</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">mineral_mix</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_non_organic_fertilizer">
+  <rdf:type rdf:resource="#FertilizerVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Non Organic Fertilizer</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">non_organic_fertilizer</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Non Organic Fertilizer</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">non_organic_fertilizer</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_number_of_dry_cows">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Number Of Dry Cows</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">number_of_dry_cows</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Number Of Dry Cows</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">number_of_dry_cows</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_number_of_lactating_cows">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Number Of Lactating Cows</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">number_of_lactating_cows</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Number Of Lactating Cows</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">number_of_lactating_cows</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_oats">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Oats</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">oats</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Oats</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">oats</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_organic_fertilizer">
+  <rdf:type rdf:resource="#FertilizerVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Organic Fertilizer</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">organic_fertilizer</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Organic Fertilizer</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">organic_fertilizer</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_other_cereals">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Cereals</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_cereals</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Cereals</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_cereals</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_other_feed">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Feed</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_feed</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Feed</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_feed</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_other_fodder">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Fodder</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_fodder</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Fodder</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_fodder</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_other_fuel">
+  <rdf:type rdf:resource="#FuelVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Fuel</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_fuel</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Other Fuel</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">other_fuel</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_owner_name">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Owner Name</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">owner_name</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Owner Name</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">owner_name</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_pasture_area">
+  <rdf:type rdf:resource="#LandVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pasture Area</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">pasture_area</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pasture Area</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">pasture_area</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_photovoltaic_energy">
+  <rdf:type rdf:resource="#EnergyVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Photovoltaic Energy</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">photovoltaic_energy</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Photovoltaic Energy</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">photovoltaic_energy</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_predominant_soil_type">
+  <rdf:type rdf:resource="#SoilVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Predominant Soil Type</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">predominant_soil_type</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Predominant Soil Type</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">predominant_soil_type</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_pregnant_heifers">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pregnant Heifers</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">pregnant_heifers</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pregnant Heifers</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">pregnant_heifers</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_productivity">
+  <rdf:type rdf:resource="#MilkVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Productivity</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">productivity</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Productivity</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">productivity</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_property_id">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Property Id</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">property_id</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Property Id</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">property_id</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_property_name">
+  <rdf:type rdf:resource="#AdministrativeVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Property Name</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">property_name</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Property Name</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">property_name</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_rapeseed_cake_meal">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rapeseed Cake Meal</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">rapeseed_cake_meal</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rapeseed Cake Meal</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">rapeseed_cake_meal</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_reproducers">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reproducers</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">reproducers</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reproducers</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">reproducers</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_rice">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rice</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">rice</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rice</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">rice</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_rye">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rye</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">rye</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rye</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">rye</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_sorghum">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sorghum</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sorghum</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sorghum</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sorghum</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_sorghum_silage">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sorghum Silage</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sorghum_silage</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sorghum Silage</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sorghum_silage</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_soybean_meal_hull">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Soybean Meal Hull</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">soybean_meal_hull</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Soybean Meal Hull</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">soybean_meal_hull</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_straw_peanut_hull_others">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Straw Peanut Hull Others</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">straw_peanut_hull_others</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Straw Peanut Hull Others</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">straw_peanut_hull_others</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_suckling_calves_female">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Suckling Calves Female</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">suckling_calves_female</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Suckling Calves Female</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">suckling_calves_female</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_suckling_calves_male">
+  <rdf:type rdf:resource="#HerdVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Suckling Calves Male</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">suckling_calves_male</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Suckling Calves Male</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">suckling_calves_male</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_sugarbeet_molasses">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sugarbeet Molasses</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sugarbeet_molasses</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sugarbeet Molasses</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sugarbeet_molasses</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_sunflower_cake_meal">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sunflower Cake Meal</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sunflower_cake_meal</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sunflower Cake Meal</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sunflower_cake_meal</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_total">
+  <rdf:type rdf:resource="#EmissionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_total_feed_input">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Feed Input</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_feed_input</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Feed Input</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_feed_input</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_total_ghg_co2e">
+  <rdf:type rdf:resource="#EmissionVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Ghg Co2E</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_ghg_co2e</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Ghg Co2E</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_ghg_co2e</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_total_milk_production">
+  <rdf:type rdf:resource="#MilkVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Milk Production</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_milk_production</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Milk Production</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_milk_production</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_weight">
+  <rdf:type rdf:resource="#WeightVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Weight</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">weight</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Weight</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">weight</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_wheat">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wheat</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">wheat</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wheat</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">wheat</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#var_whey_powder">
+  <rdf:type rdf:resource="#FeedVariable"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Whey Powder</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">whey_powder</hasCanonicalName>
+  <hasDisplayName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Whey Powder</hasDisplayName>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">whey_powder</hasOriginalColumnName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#gas_carbon_dioxide">
+  <rdf:type rdf:resource="#CarbonDioxide"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CO2</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">carbon_dioxide</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#gas_methane">
+  <rdf:type rdf:resource="#Methane"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CH4</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">methane</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#gas_nitrous_oxide">
+  <rdf:type rdf:resource="#NitrousOxide"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">N2O</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">nitrous_oxide</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#source_enteric_fermentation">
+  <rdf:type rdf:resource="#EntericFermentation"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Enteric Fermentation</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">enteric_fermentation</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#source_manure_management">
+  <rdf:type rdf:resource="#ManureManagement"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Manure Management</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">manure_management</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#source_fertilizer_application">
+  <rdf:type rdf:resource="#FertilizerApplication"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fertilizer Application</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">fertilizer_application</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#source_energy_use">
+  <rdf:type rdf:resource="#EnergyUse"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Energy Use</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">energy_use</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#source_total_ghg">
+  <rdf:type rdf:resource="#TotalGHG"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Total Ghg</rdfs:label>
+  <hasCanonicalName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_ghg</hasCanonicalName>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_enteric_fermentation_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">enteric_fermentation_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/enteric_fermentation.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_manure_management_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">manure_management_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/manure_management.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_fertilizer_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">fertilizer_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/fertilizer.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_energy_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">energy_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/energy.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_ghg_total_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ghg_total_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/ghg_total.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_conversion_helpers_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">conversion_helpers_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/conversion_helpers.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_defaults_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">defaults_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/defaults.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_batch_runner_component">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">batch_runner_component</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">batch_runner.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#sw_environmental_calcs_adapter">
+  <rdf:type rdf:resource="#SoftwareComponent"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">environmental_calcs_adapter</rdfs:label>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">environmental_calcs.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#gwp_gwp_set_example_2026">
+  <rdf:type rdf:resource="#GWPParameterSet"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">gwp_set_example_2026</rdfs:label>
+  <hasMethodDescription rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Example injectable GWP parameter set — not a fixed scientific standard.</hasMethodDescription>
+  <hasGWP_CO2 rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">1.0</hasGWP_CO2>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_calculate_enteric_fermentation_ch4">
+  <rdf:type rdf:resource="#EntericFermentationCH4CalculationMethod"/>
+  <calculatesGas rdf:resource="#gas_methane"/>
+  <calculatesEmissionSource rdf:resource="#source_enteric_fermentation"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_enteric_fermentation_component"/>
+  <implementedByFunction rdf:resource="#fn_calculate_enteric_fermentation_ch4"/>
+  <requiresInputVariable rdf:resource="#var_lactating_cows"/>
+  <requiresInputVariable rdf:resource="#var_dry_cows"/>
+  <requiresInputVariable rdf:resource="#var_bulls"/>
+  <requiresInputVariable rdf:resource="#var_calves"/>
+  <requiresInputVariable rdf:resource="#var_ef_enteric_kg_ch4"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_enteric_fermentation_ch4</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_enteric_fermentation_ch4</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/enteric_fermentation.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_ch4</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_calculate_enteric_fermentation_ch4">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_enteric_fermentation_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_enteric_fermentation_ch4</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/enteric_fermentation.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_calculate_manure_management_ch4">
+  <rdf:type rdf:resource="#ManureManagementCH4CalculationMethod"/>
+  <calculatesGas rdf:resource="#gas_methane"/>
+  <calculatesEmissionSource rdf:resource="#source_manure_management"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_manure_management_component"/>
+  <implementedByFunction rdf:resource="#fn_calculate_manure_management_ch4"/>
+  <requiresInputVariable rdf:resource="#var_lactating_cows"/>
+  <requiresInputVariable rdf:resource="#var_dry_cows"/>
+  <requiresInputVariable rdf:resource="#var_heifers"/>
+  <requiresInputVariable rdf:resource="#var_calves"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_manure_management_ch4</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_manure_management_ch4</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/manure_management.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_ch4</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_calculate_manure_management_ch4">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_manure_management_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_manure_management_ch4</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/manure_management.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_calculate_fertilizer_n2o">
+  <rdf:type rdf:resource="#FertilizerN2OCalculationMethod"/>
+  <calculatesGas rdf:resource="#gas_nitrous_oxide"/>
+  <calculatesEmissionSource rdf:resource="#source_fertilizer_application"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_fertilizer_component"/>
+  <implementedByFunction rdf:resource="#fn_calculate_fertilizer_n2o"/>
+  <requiresInputVariable rdf:resource="#var_organic_fertilizer"/>
+  <requiresInputVariable rdf:resource="#var_non_organic_fertilizer"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_fertilizer_n2o</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_fertilizer_n2o</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/fertilizer.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_n2o</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_calculate_fertilizer_n2o">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_fertilizer_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_fertilizer_n2o</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/fertilizer.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_calculate_energy_co2">
+  <rdf:type rdf:resource="#EnergyCO2CalculationMethod"/>
+  <calculatesGas rdf:resource="#gas_carbon_dioxide"/>
+  <calculatesEmissionSource rdf:resource="#source_energy_use"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_energy_component"/>
+  <implementedByFunction rdf:resource="#fn_calculate_energy_co2"/>
+  <requiresInputVariable rdf:resource="#var_diesel"/>
+  <requiresInputVariable rdf:resource="#var_gasoline"/>
+  <requiresInputVariable rdf:resource="#var_other_fuel"/>
+  <requiresInputVariable rdf:resource="#var_electricity_grid"/>
+  <requiresInputVariable rdf:resource="#var_photovoltaic_energy"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_energy_co2</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_energy_co2</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/energy.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_co2</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_calculate_energy_co2">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_energy_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_energy_co2</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/energy.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_calculate_total_ghg_co2e">
+  <rdf:type rdf:resource="#TotalGHGCO2eCalculationMethod"/>
+  <usesGWPParameterSet rdf:resource="#gwp_gwp_set_example_2026"/>
+  <calculatesEmissionSource rdf:resource="#source_total_ghg"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_ghg_total_component"/>
+  <implementedByFunction rdf:resource="#fn_calculate_total_ghg_co2e"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_total_ghg_co2e</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_total_ghg_co2e</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/ghg_total.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">kg_co2e</hasResultUnit>
+  <requiresGWPParameterSet rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</requiresGWPParameterSet>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_calculate_total_ghg_co2e">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_ghg_total_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_total_ghg_co2e</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/ghg_total.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_monthly_to_annual_sum">
+  <rdf:type rdf:resource="#MonthlyToAnnualSumMethod"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_conversion_helpers_component"/>
+  <implementedByFunction rdf:resource="#fn_sum_monthly_values"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">monthly_to_annual_sum</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sum_monthly_values</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/conversion_helpers.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dimensionless</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_sum_monthly_values">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_conversion_helpers_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">sum_monthly_values</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/conversion_helpers.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_monthly_to_annual_proration">
+  <rdf:type rdf:resource="#MonthlyToAnnualProrationMethod"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_conversion_helpers_component"/>
+  <implementedByFunction rdf:resource="#fn_uniform_monthly_from_yearly_per_animal"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">monthly_to_annual_proration</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">uniform_monthly_from_yearly_per_animal</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/conversion_helpers.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dimensionless</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_uniform_monthly_from_yearly_per_animal">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_conversion_helpers_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">uniform_monthly_from_yearly_per_animal</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/conversion_helpers.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_legacy_default_configuration_provider">
+  <rdf:type rdf:resource="#DefaultConfigurationProvider"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_defaults_component"/>
+  <implementedByFunction rdf:resource="#fn_default_enteric_ch4_kg_per_animal_yearly"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">legacy_default_configuration_provider</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">default_enteric_ch4_kg_per_animal_yearly</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/defaults.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dimensionless</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_default_enteric_ch4_kg_per_animal_yearly">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_defaults_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">default_enteric_ch4_kg_per_animal_yearly</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">emissions/defaults.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_batch_runner">
+  <rdf:type rdf:resource="#BatchCalculationRunner"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_batch_runner_component"/>
+  <implementedByFunction rdf:resource="#fn_compute_row_results"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">batch_runner</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">compute_row_results</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">batch_runner.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dimensionless</hasResultUnit>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_compute_row_results">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_batch_runner_component"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">compute_row_results</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">batch_runner.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#method_environmental_calcs_adapter">
+  <rdf:type rdf:resource="#LegacyCompatibilityAdapter"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_environmental_calcs_adapter"/>
+  <implementedByFunction rdf:resource="#fn_calculate_total_emissions"/>
+  <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">environmental_calcs_adapter</rdfs:label>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_total_emissions</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">environmental_calcs.py</hasModulePath>
+  <hasResultUnit rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dimensionless</hasResultUnit>
+  <hasCompatibilityMode rdf:datatype="http://www.w3.org/2001/XMLSchema#string">legacy</hasCompatibilityMode>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#fn_calculate_total_emissions">
+  <rdf:type rdf:resource="#SoftwareFunction"/>
+  <implementedInSoftwareComponent rdf:resource="#sw_environmental_calcs_adapter"/>
+  <hasFunctionName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calculate_total_emissions</hasFunctionName>
+  <hasModulePath rdf:datatype="http://www.w3.org/2001/XMLSchema#string">environmental_calcs.py</hasModulePath>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#org_property_br_1">
+  <rdf:type rdf:resource="#OrganizationalContext"/>
+  <hasIdentifier rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BR – 1</hasIdentifier>
+  <hasOrganizationalGranularity rdf:datatype="http://www.w3.org/2001/XMLSchema#string">property</hasOrganizationalGranularity>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#time_year_2026_01_01_2026_12_31">
+  <rdf:type rdf:resource="#TemporalContext"/>
+  <hasTemporalType rdf:datatype="http://www.w3.org/2001/XMLSchema#string">interval</hasTemporalType>
+  <hasTemporalGranularity rdf:datatype="http://www.w3.org/2001/XMLSchema#string">year</hasTemporalGranularity>
+  <hasStartDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-01-01</hasStartDate>
+  <hasEndDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-12-31</hasEndDate>
+  <hasYear rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026</hasYear>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#property_br_1">
+  <rdf:type rdf:resource="#Property"/>
+  <hasIdentifier rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BR – 1</hasIdentifier>
+  <hasPropertyName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BR – 1</hasPropertyName>
+  <hasOwnerName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Anonymous</hasOwnerName>
+  <hasInformationResponsible rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Anonymous</hasInformationResponsible>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#record_br_1_year_2026_01_01_2026_12_31">
+  <rdf:type rdf:resource="#AnnualPropertyInventoryRecord"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_calves"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_calves_weight"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows_weight"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows_weight"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_maize_silage"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_diesel"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_electricity_grid"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_milk_fat_percentage"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_milk_protein_percentage"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_pasture_area"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_predominant_soil_type"/>
+  <hasObservation rdf:resource="#obs_record_br_1_year_2026_01_01_2026_12_31_total_milk_production"/>
+  <hasSourceLayout rdf:datatype="http://www.w3.org/2001/XMLSchema#string">annual_inventory</hasSourceLayout>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_calves">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_calves"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calves</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">15.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_calves_weight">
+  <rdf:type rdf:resource="#AnimalWeightObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_calves_weight"/>
+  <hasUnit rdf:resource="#unit_kg"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">calves_weight</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">150.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_dry_cows"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_dry_cows_weight">
+  <rdf:type rdf:resource="#AnimalWeightObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_dry_cows_weight"/>
+  <hasUnit rdf:resource="#unit_kg"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows_weight</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">530.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_lactating_cows"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">13.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_lactating_cows_weight">
+  <rdf:type rdf:resource="#AnimalWeightObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_lactating_cows_weight"/>
+  <hasUnit rdf:resource="#unit_kg"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows_weight</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">500.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_maize_silage">
+  <rdf:type rdf:resource="#FeedInputObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_maize_silage"/>
+  <hasUnit rdf:resource="#unit_kg_per_year"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maize_silage</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">47168.95</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_diesel">
+  <rdf:type rdf:resource="#FuelUseObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_diesel"/>
+  <hasUnit rdf:resource="#unit_liter_fuel"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">diesel</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">88410.3</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_electricity_grid">
+  <rdf:type rdf:resource="#EnergyUseObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_electricity_grid"/>
+  <hasUnit rdf:resource="#unit_kwh"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">electricity_grid</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">41241.35</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_milk_fat_percentage">
+  <rdf:type rdf:resource="#MilkCompositionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_milk_fat_percentage"/>
+  <hasUnit rdf:resource="#unit_percentage"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_fat_percentage</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.13</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_milk_protein_percentage">
+  <rdf:type rdf:resource="#MilkCompositionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_milk_protein_percentage"/>
+  <hasUnit rdf:resource="#unit_percentage"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_protein_percentage</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.32</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_pasture_area">
+  <rdf:type rdf:resource="#LandUseObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_pasture_area"/>
+  <hasUnit rdf:resource="#unit_hectare"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">pasture_area</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_predominant_soil_type">
+  <rdf:type rdf:resource="#SoilTypeObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_predominant_soil_type"/>
+  <hasUnit rdf:resource="#unit_text"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">predominant_soil_type</hasOriginalColumnName>
+  <hasTextValue rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Latossolo Vermelho-Amarelo</hasTextValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_year_2026_01_01_2026_12_31_total_milk_production">
+  <rdf:type rdf:resource="#MilkProductionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_year_2026_01_01_2026_12_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_year_2026_01_01_2026_12_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_total_milk_production"/>
+  <hasUnit rdf:resource="#unit_liter_per_year"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">total_milk_production</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">73384.41</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#time_day_2026_01_15">
+  <rdf:type rdf:resource="#TemporalContext"/>
+  <hasTemporalType rdf:datatype="http://www.w3.org/2001/XMLSchema#string">instant</hasTemporalType>
+  <hasTemporalGranularity rdf:datatype="http://www.w3.org/2001/XMLSchema#string">day</hasTemporalGranularity>
+  <hasDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-01-15</hasDate>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#animal_a123">
+  <rdf:type rdf:resource="#Animal"/>
+  <hasIdentifier rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A123</hasIdentifier>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#record_br_1_day_2026_01_15">
+  <rdf:type rdf:resource="#DailyAnimalProductionRecord"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_day_2026_01_15"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <refersToAnimal rdf:resource="#animal_a123"/>
+  <hasObservation rdf:resource="#obs_record_br_1_day_2026_01_15_milk"/>
+  <hasObservation rdf:resource="#obs_record_br_1_day_2026_01_15_weight"/>
+  <rdf:type rdf:resource="#DailyAnimalNutritionRecord"/>
+  <hasObservation rdf:resource="#obs_record_br_1_day_2026_01_15_energy_density"/>
+  <hasObservation rdf:resource="#obs_record_br_1_day_2026_01_15_dry_matter_intake"/>
+  <hasSourceLayout rdf:datatype="http://www.w3.org/2001/XMLSchema#string">daily_nutrition</hasSourceLayout>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_day_2026_01_15_milk">
+  <rdf:type rdf:resource="#MilkProductionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_day_2026_01_15"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_day_2026_01_15"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <refersToAnimal rdf:resource="#animal_a123"/>
+  <observesVariable rdf:resource="#var_milk"/>
+  <hasUnit rdf:resource="#unit_liter_per_day"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">22.4</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_day_2026_01_15_weight">
+  <rdf:type rdf:resource="#AnimalWeightObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_day_2026_01_15"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_day_2026_01_15"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <refersToAnimal rdf:resource="#animal_a123"/>
+  <observesVariable rdf:resource="#var_weight"/>
+  <hasUnit rdf:resource="#unit_kg"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">weight</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">520.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_day_2026_01_15_energy_density">
+  <rdf:type rdf:resource="#NutritionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_day_2026_01_15"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_day_2026_01_15"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <refersToAnimal rdf:resource="#animal_a123"/>
+  <observesVariable rdf:resource="#var_energy_density"/>
+  <hasUnit rdf:resource="#unit_mj_per_kg_dm"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">energy_density</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6.5</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_day_2026_01_15_dry_matter_intake">
+  <rdf:type rdf:resource="#NutritionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_day_2026_01_15"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_day_2026_01_15"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <refersToAnimal rdf:resource="#animal_a123"/>
+  <observesVariable rdf:resource="#var_dry_matter_intake"/>
+  <hasUnit rdf:resource="#unit_kg_dm_per_day"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_matter_intake</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">18.2</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#time_month_2026_01_01_2026_01_31">
+  <rdf:type rdf:resource="#TemporalContext"/>
+  <hasTemporalType rdf:datatype="http://www.w3.org/2001/XMLSchema#string">interval</hasTemporalType>
+  <hasTemporalGranularity rdf:datatype="http://www.w3.org/2001/XMLSchema#string">month</hasTemporalGranularity>
+  <hasStartDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-01-01</hasStartDate>
+  <hasEndDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2026-01-31</hasEndDate>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#record_br_1_month_2026_01_01_2026_01_31">
+  <rdf:type rdf:resource="#MonthlyPropertyRecord"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_area_used_for_dairy_activity"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_draft_and_breeding_bulls"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_dry_cows"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_ef_enteric_kg_ch4"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_employees_during_the_month"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_enteric_tco2e"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_heifers_in_raising"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_lactating_cows"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_milk_gross_price"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_milk_production"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_milk_sales"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_number_of_dry_cows"/>
+  <hasObservation rdf:resource="#obs_record_br_1_month_2026_01_01_2026_01_31_number_of_lactating_cows"/>
+  <hasSourceLayout rdf:datatype="http://www.w3.org/2001/XMLSchema#string">monthly_property</hasSourceLayout>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_area_used_for_dairy_activity">
+  <rdf:type rdf:resource="#LandUseObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_area_used_for_dairy_activity"/>
+  <hasUnit rdf:resource="#unit_hectare"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">area_used_for_dairy_activity</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_draft_and_breeding_bulls">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_draft_and_breeding_bulls"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">draft_and_breeding_bulls</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">0.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_dry_cows">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_dry_cows"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">dry_cows</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_ef_enteric_kg_ch4">
+  <rdf:type rdf:resource="#EmissionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_ef_enteric_kg_ch4"/>
+  <hasUnit rdf:resource="#unit_kg_ch4_per_head_month"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ef_enteric_kg_ch4</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_employees_during_the_month">
+  <rdf:type rdf:resource="#AdministrativeObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_employees_during_the_month"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">employees_during_the_month</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_enteric_tco2e">
+  <rdf:type rdf:resource="#EmissionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_enteric_tco2e"/>
+  <hasUnit rdf:resource="#unit_tonne_co2e"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">enteric_tco2e</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.5</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_heifers_in_raising">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_heifers_in_raising"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">heifers_in_raising</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">8.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_lactating_cows">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_lactating_cows"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">lactating_cows</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">13.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_milk_gross_price">
+  <rdf:type rdf:resource="#EconomicObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_milk_gross_price"/>
+  <hasUnit rdf:resource="#unit_currency"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_gross_price</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">2.3</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_milk_production">
+  <rdf:type rdf:resource="#MilkProductionObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_milk_production"/>
+  <hasUnit rdf:resource="#unit_liter_per_month"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_production</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6200.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_milk_sales">
+  <rdf:type rdf:resource="#MilkSalesObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_milk_sales"/>
+  <hasUnit rdf:resource="#unit_liter_per_month"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">milk_sales</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">6000.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_number_of_dry_cows">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_number_of_dry_cows"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">number_of_dry_cows</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">4.0</hasNumericValue>
+</owl:NamedIndividual>
+
+<owl:NamedIndividual rdf:about="#obs_record_br_1_month_2026_01_01_2026_01_31_number_of_lactating_cows">
+  <rdf:type rdf:resource="#HerdCountObservation"/>
+  <belongsToRecord rdf:resource="#record_br_1_month_2026_01_01_2026_01_31"/>
+  <hasOrganizationalContext rdf:resource="#org_property_br_1"/>
+  <hasTemporalContext rdf:resource="#time_month_2026_01_01_2026_01_31"/>
+  <refersToProperty rdf:resource="#property_br_1"/>
+  <observesVariable rdf:resource="#var_number_of_lactating_cows"/>
+  <hasUnit rdf:resource="#unit_head"/>
+  <hasOriginalColumnName rdf:datatype="http://www.w3.org/2001/XMLSchema#string">number_of_lactating_cows</hasOriginalColumnName>
+  <hasNumericValue rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">13.0</hasNumericValue>
+</owl:NamedIndividual>
+
+
+</rdf:RDF>

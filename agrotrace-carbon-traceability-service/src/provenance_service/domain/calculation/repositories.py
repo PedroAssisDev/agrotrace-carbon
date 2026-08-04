@@ -1,0 +1,96 @@
+"""Repository protocols for the calculation context."""
+
+from __future__ import annotations
+
+from typing import Protocol
+from uuid import UUID
+
+from provenance_service.domain.shared.enums import CalculationResultSetStatus
+
+from provenance_service.domain.calculation.entities import (
+    CalculationExecution,
+    CalculationMethod,
+    CalculationMethodVersion,
+    CalculationParameterSet,
+    CalculationParameterValue,
+    CalculationResultItem,
+    CalculationResultSet,
+    CalculationReview,
+    ResultPublicationExecution,
+)
+
+
+class CalculationMethodRepository(Protocol):
+    def add(self, method: CalculationMethod) -> None: ...
+    def get(self, calculation_method_id: UUID) -> CalculationMethod | None: ...
+    def get_by_code(self, method_code: str) -> CalculationMethod | None: ...
+    def list_all(self) -> list[CalculationMethod]: ...
+
+
+class CalculationMethodVersionRepository(Protocol):
+    def add(self, version: CalculationMethodVersion) -> None: ...
+    def get(
+        self, calculation_method_version_id: UUID
+    ) -> CalculationMethodVersion | None: ...
+    def list_by_method(
+        self, calculation_method_id: UUID
+    ) -> list[CalculationMethodVersion]: ...
+
+
+class CalculationParameterSetRepository(Protocol):
+    def add(self, parameter_set: CalculationParameterSet) -> None: ...
+    def add_value(self, value: CalculationParameterValue) -> None: ...
+    def get(
+        self, calculation_parameter_set_id: UUID
+    ) -> CalculationParameterSet | None: ...
+    def list_values(
+        self, calculation_parameter_set_id: UUID
+    ) -> list[CalculationParameterValue]: ...
+    def list_by_pipeline_run(
+        self, pipeline_run_id: UUID
+    ) -> list[CalculationParameterSet]: ...
+
+
+class CalculationExecutionRepository(Protocol):
+    def add(self, execution: CalculationExecution) -> None: ...
+    def get(self, calculation_execution_id: UUID) -> CalculationExecution | None: ...
+    def get_by_idempotency_key(self, key: str) -> CalculationExecution | None: ...
+    def list_by_pipeline_run(
+        self, pipeline_run_id: UUID
+    ) -> list[CalculationExecution]: ...
+
+
+class CalculationResultSetRepository(Protocol):
+    def add(self, result_set: CalculationResultSet) -> None: ...
+    def add_item(self, item: CalculationResultItem) -> None: ...
+    def get(self, calculation_result_set_id: UUID) -> CalculationResultSet | None: ...
+    def list_items(
+        self, calculation_result_set_id: UUID
+    ) -> list[CalculationResultItem]: ...
+    def list_by_pipeline_run(
+        self, pipeline_run_id: UUID
+    ) -> list[CalculationResultSet]: ...
+    def update_status(
+        self,
+        calculation_result_set_id: UUID,
+        status: CalculationResultSetStatus,
+    ) -> None: ...
+    def mark_superseded(self, current_id: UUID, superseded_by_id: UUID) -> None: ...
+
+
+class CalculationReviewRepository(Protocol):
+    def add(self, review: CalculationReview) -> None: ...
+    def get(self, calculation_review_id: UUID) -> CalculationReview | None: ...
+    def list_for_result_set(
+        self, calculation_result_set_id: UUID
+    ) -> list[CalculationReview]: ...
+
+
+class ResultPublicationExecutionRepository(Protocol):
+    def add(self, publication: ResultPublicationExecution) -> None: ...
+    def get(
+        self, result_publication_execution_id: UUID
+    ) -> ResultPublicationExecution | None: ...
+    def list_by_pipeline_run(
+        self, pipeline_run_id: UUID
+    ) -> list[ResultPublicationExecution]: ...

@@ -1,0 +1,39 @@
+# Referencia: campos logicos, unidades sugeridas, IRIs de exemplo.
+# Nao consumido automaticamente pelo pipeline dos wrappers.
+
+namespace_notes:
+  ecofarm_placeholder: "https://ontology.ecofarm.example/"
+
+entries:
+  - logical_field: milk
+    layout_families: [intraday]
+    unit_suggested: L
+    notes: "Confirmar L ou kg com a propriedade."
+
+  - logical_field: weight
+    layout_families: [intraday]
+    unit_suggested: kg
+
+  - logical_field: milk_production
+    layout_families: [monthly]
+    unit_suggested: L
+
+  - logical_field: milk_sales
+    layout_families: [monthly]
+    unit_suggested: L
+
+  - logical_field: area_used_for_dairy_activity
+    layout_families: [monthly]
+    unit_suggested: ha
+
+  - logical_field: total_milk_production
+    layout_families: [annual]
+    unit_suggested: L
+
+  - logical_field: electricity_grid
+    layout_families: [annual]
+    unit_suggested: kWh
+
+  - logical_field: diesel
+    layout_families: [annual]
+    unit_suggested: L

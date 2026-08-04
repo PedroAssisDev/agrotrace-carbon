@@ -1,0 +1,43 @@
+# AnnualLayoutV1 — EcoFarm OS (cabeçalhos → snake_case; ano via options.year ou nome do arquivo)
+layout_id: annual:v1
+catalog_display_name: AnnualLayoutV1
+layout_family: annual
+version: "1.0"
+status: active
+
+physical:
+  format: csv
+  delimiter: ";"
+  encoding: utf-8
+  header_row: true
+
+granularity:
+  temporal: interval_year
+  organizational: property
+
+# Evita confundir com outros CSV delimitados por `;` que só tenham poucas colunas
+detection:
+  priority: 10
+  min_column_count: 15
+
+schema:
+  mode: snake_case_headers
+  required:
+    - property_name
+  numeric_fields_file: numeric_fields.yaml
+
+validation_rules:
+  - ref: required_fields
+    fields: [property_name]
+  - ref: annual_numeric_non_negative
+    __dynamic__: true
+
+canonical_mapping:
+  version: "1.0"
+  projections:
+    - logical: property_name
+      target: Property.name
+    - logical: year
+      target: AnnualFarmInventory.referenceYear
+    - logical: total_milk_production
+      target: AnnualFarmInventory.totalMilkProduction

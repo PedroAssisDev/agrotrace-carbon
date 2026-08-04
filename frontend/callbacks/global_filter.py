@@ -1,0 +1,310 @@
+"""Callbacks do filtro global analítico (navbar: fazenda + período de análise)."""
+
+from __future__ import annotations
+
+import copy
+
+from dash import Input, Output, State, callback, ctx, no_update
+
+from components.global_filters import _aggregated_status_label, _property_options
+from services.filter_service import refresh_filter_options
+from utils.cycle_helpers import strip_private_keys
+from utils.file_helpers import get_cycle, list_cycles
+from utils.global_filter import (
+    DEFAULT_GLOBAL_FILTER,
+    cycle_period,
+    format_filter_badge,
+    format_period_label,
+    format_status_badge_label,
+    normalize_filter_state,
+    period_in_analysis_range,
+)
+from utils.temporal_model import CALC_BASE_LABELS
+
+_SYNC_OUTPUTS = (
+    Output("global-filter-store", "data"),
+    Output("context-cycle-id", "data", allow_duplicate=True),
+    Output("cycle-store", "data", allow_duplicate=True),
+    Output("gf-property-dropdown", "value", allow_duplicate=True),
+    Output("gf-analysis-start", "value", allow_duplicate=True),
+    Output("gf-analysis-end", "value", allow_duplicate=True),
+    Output("gf-view-granularity", "value", allow_duplicate=True),
+    Output("gf-data-mode", "value", allow_duplicate=True),
+    Output("gf-analysis-start", "options", allow_duplicate=True),
+    Output("gf-analysis-end", "options", allow_duplicate=True),
+    Output("gf-analysis-start-field", "style", allow_duplicate=True),
+    Output("gf-analysis-end-field", "style", allow_duplicate=True),
+    Output("gf-period-badge", "children", allow_duplicate=True),
+    Output("gf-granularity-badge", "children", allow_duplicate=True),
+    Output("gf-status-badge", "children", allow_duplicate=True),
+    Output("gf-aggregated-badge", "children", allow_duplicate=True),
+    Output("gf-aggregated-badge", "style", allow_duplicate=True),
+    Output("filter-options-store", "data", allow_duplicate=True),
+)
+
+_SYNC_OUTPUTS_CLEAR = (
+    Output("global-filter-store", "data", allow_duplicate=True),
+    *_SYNC_OUTPUTS[1:],
+)
+
+
+def _load_active_cycle(normalized: dict) -> dict:
+    cycle_id = normalized.get("cycle_id")
+    if not cycle_id:
+        return {}
+    loaded = get_cycle(cycle_id)
+    return strip_private_keys(loaded) if loaded else {}
+
+
+def _analysis_period_ui_state(normalized: dict, options: dict | None) -> tuple:
+    period_opts = (options or {}).get("analysis_periods") or []
+    show = len(period_opts) > 1
+    style = {"display": "block"} if show else {"display": "none"}
+    return (
+        normalized.get("analysis_period_start"),
+        normalized.get("analysis_period_end"),
+        period_opts,
+        period_opts,
+        style,
+        style,
+    )
+
+
+def _badge_children(normalized: dict) -> tuple[str, str, str, str, dict]:
+    period_display = normalized.get("period_display_label") or format_period_label(normalized.get("period") or "")
+    calc_base = normalized.get("calculation_base_granularity") or normalized.get("granularity")
+    calc_label = CALC_BASE_LABELS.get(calc_base or "", "—")
+    agg = normalized.get("aggregated_approval_status")
+    agg_label = f"Agregado: {_aggregated_status_label(agg)}"
+    agg_style = {"display": "inline"} if agg else {"display": "none"}
+    return (
+        f"Período: {period_display}",
+        f"Cálculo: {calc_label}",
+        f"Status: {format_status_badge_label(normalized)}",
+        agg_label,
+        agg_style,
+    )
+
+
+def _build_sync_response(normalized: dict, options: dict) -> tuple:
+    active = _load_active_cycle(normalized)
+    ap_start, ap_end, ap_opts, ap_opts_end, ap_start_style, ap_end_style = _analysis_period_ui_state(
+        normalized, options,
+    )
+    badges = _badge_children(normalized)
+    return (
+        normalized,
+        normalized.get("cycle_id"),
+        active,
+        normalized.get("farm_id"),
+        ap_start,
+        ap_end,
+        normalized.get("view_granularity"),
+        normalized.get("data_mode"),
+        ap_opts,
+        ap_opts_end,
+        ap_start_style,
+        ap_end_style,
+        badges[0],
+        badges[1],
+        badges[2],
+        badges[3],
+        badges[4],
+        options,
+    )
+
+
+def _raw_from_prev(prev: dict) -> dict:
+    return {
+        "farm_id": prev.get("farm_id"),
+        "analysis_period_start": prev.get("analysis_period_start"),
+        "analysis_period_end": prev.get("analysis_period_end"),
+        "view_granularity": prev.get("view_granularity"),
+        "data_mode": prev.get("data_mode"),
+        "cycle_id": prev.get("cycle_id"),
+    }
+
+
+@callback(
+    *_SYNC_OUTPUTS,
+    Input("gf-property-dropdown", "value"),
+    Input("gf-analysis-start", "value"),
+    Input("gf-analysis-end", "value"),
+    Input("gf-view-granularity", "value"),
+    Input("gf-data-mode", "value"),
+    State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    prevent_initial_call=True,
+)
+def sync_global_filter(
+    farm_id, analysis_start, analysis_end, view_granularity, data_mode,
+    current_gf, context_cycle_id,
+):
+    all_cycles = list_cycles()
+    prev = normalize_filter_state(current_gf, all_cycles, context_cycle_id=context_cycle_id)
+    raw = _raw_from_prev(prev)
+
+    trigger = ctx.triggered_id
+    if trigger == "gf-property-dropdown":
+        raw["farm_id"] = farm_id if isinstance(farm_id, str) and farm_id.strip() else None
+        raw["analysis_period_start"] = None
+        raw["analysis_period_end"] = None
+    elif trigger == "gf-analysis-start":
+        raw["analysis_period_start"] = analysis_start
+        raw["analysis_period_end"] = analysis_end or prev.get("analysis_period_end")
+    elif trigger == "gf-analysis-end":
+        raw["analysis_period_start"] = analysis_start or prev.get("analysis_period_start")
+        raw["analysis_period_end"] = analysis_end
+    elif trigger == "gf-view-granularity":
+        raw["view_granularity"] = view_granularity
+    elif trigger == "gf-data-mode":
+        raw["data_mode"] = data_mode
+    else:
+        raw["farm_id"] = farm_id if isinstance(farm_id, str) and farm_id.strip() else prev.get("farm_id")
+        if view_granularity is not None:
+            raw["view_granularity"] = view_granularity
+        if data_mode is not None:
+            raw["data_mode"] = data_mode
+
+    normalized = normalize_filter_state(raw, all_cycles, context_cycle_id=context_cycle_id)
+    options = refresh_filter_options(normalized)
+    return _build_sync_response(normalized, options)
+
+
+@callback(
+    *_SYNC_OUTPUTS_CLEAR,
+    Input("btn-gf-clear", "n_clicks"),
+    prevent_initial_call=True,
+)
+def clear_global_filter(n):
+    if not n:
+        return (no_update,) * 18
+    cleared = copy.deepcopy(DEFAULT_GLOBAL_FILTER)
+    options = refresh_filter_options(cleared)
+    return _build_sync_response(cleared, options)
+
+
+@callback(
+    Output("context-cycle-id", "data", allow_duplicate=True),
+    Output("cycle-store", "data", allow_duplicate=True),
+    Output("gf-property-dropdown", "value", allow_duplicate=True),
+    Output("gf-analysis-start", "value", allow_duplicate=True),
+    Output("gf-analysis-end", "value", allow_duplicate=True),
+    Output("gf-view-granularity", "value", allow_duplicate=True),
+    Output("gf-data-mode", "value", allow_duplicate=True),
+    Output("gf-analysis-start", "options", allow_duplicate=True),
+    Output("gf-analysis-end", "options", allow_duplicate=True),
+    Output("gf-analysis-start-field", "style", allow_duplicate=True),
+    Output("gf-analysis-end-field", "style", allow_duplicate=True),
+    Output("gf-period-badge", "children", allow_duplicate=True),
+    Output("gf-granularity-badge", "children", allow_duplicate=True),
+    Output("gf-status-badge", "children", allow_duplicate=True),
+    Output("gf-aggregated-badge", "children", allow_duplicate=True),
+    Output("gf-aggregated-badge", "style", allow_duplicate=True),
+    Input("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    State("filter-options-store", "data"),
+    prevent_initial_call=True,
+)
+def sync_controls_from_store(global_filter, context_cycle_id, filter_options):
+    """Mantém controles UI alinhados quando o store muda por outro callback."""
+    all_cycles = list_cycles()
+    normalized = normalize_filter_state(global_filter, all_cycles, context_cycle_id=context_cycle_id)
+    active = _load_active_cycle(normalized)
+    ap_start, ap_end, ap_opts, ap_opts_end, ap_start_style, ap_end_style = _analysis_period_ui_state(
+        normalized, filter_options,
+    )
+    badges = _badge_children(normalized)
+    return (
+        normalized.get("cycle_id"),
+        active,
+        normalized.get("farm_id"),
+        ap_start,
+        ap_end,
+        normalized.get("view_granularity"),
+        normalized.get("data_mode"),
+        ap_opts,
+        ap_opts_end,
+        ap_start_style,
+        ap_end_style,
+        badges[0],
+        badges[1],
+        badges[2],
+        badges[3],
+        badges[4],
+    )
+
+
+@callback(
+    Output("global-filter-store", "data", allow_duplicate=True),
+    Output("context-cycle-id", "data", allow_duplicate=True),
+    Output("cycle-store", "data", allow_duplicate=True),
+    Output("filter-options-store", "data", allow_duplicate=True),
+    Input("cycle-store", "data"),
+    State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    prevent_initial_call=True,
+)
+def resync_after_pipeline(cycle_data, global_filter, context_cycle_id):
+    """Re-normaliza após pipeline — preserva janela analítica quando possível."""
+    if not cycle_data or not cycle_data.get("cycle_id"):
+        return no_update, no_update, no_update, refresh_filter_options(global_filter)
+    prev = normalize_filter_state(global_filter, list_cycles(), context_cycle_id=context_cycle_id)
+    period = cycle_period(cycle_data)
+    ap_start = prev.get("analysis_period_start")
+    ap_end = prev.get("analysis_period_end")
+    if period and ap_start and ap_end and period_in_analysis_range(period, ap_start, ap_end):
+        pass
+    elif period and (not ap_start or not ap_end):
+        ap_start = ap_start or period
+        ap_end = ap_end or period
+    elif period:
+        ap_start = period
+        ap_end = period
+
+    raw = {
+        "farm_id": cycle_data.get("property_id") or prev.get("farm_id"),
+        "cycle_id": cycle_data.get("cycle_id"),
+        "analysis_period_start": ap_start,
+        "analysis_period_end": ap_end,
+        "view_granularity": prev.get("view_granularity"),
+        "data_mode": prev.get("data_mode"),
+    }
+    normalized = normalize_filter_state(raw, list_cycles(), context_cycle_id=cycle_data.get("cycle_id"))
+    active = _load_active_cycle(normalized) or strip_private_keys(cycle_data)
+    return normalized, normalized.get("cycle_id"), active, refresh_filter_options(normalized)
+
+
+def _get_farm_id(global_filter):
+    from utils.global_filter import get_farm_id
+    return get_farm_id(global_filter)
+
+
+@callback(
+    Output("gf-filter-badge", "children"),
+    Input("global-filter-store", "data"),
+    State("filter-options-store", "data"),
+)
+def update_filter_badge(global_filter, options):
+    return format_filter_badge(global_filter, options or {})
+
+
+@callback(
+    Output("filter-options-store", "data", allow_duplicate=True),
+    Input("global-filter-store", "data"),
+    prevent_initial_call=True,
+)
+def refresh_filter_options_on_store(global_filter):
+    return refresh_filter_options(global_filter)
+
+
+@callback(
+    Output("gf-property-dropdown", "options"),
+    Input("filter-options-store", "data"),
+)
+def sync_property_dropdown_options(options):
+    return _property_options((options or {}).get("properties") or [])
+
+
+def register(_app) -> None:
+    pass

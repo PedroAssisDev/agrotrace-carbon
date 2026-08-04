@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evidence Item Canonical Payload",
+  "type": "object",
+  "required": ["schema_version", "item_id", "item_order", "item_type", "source_reference", "core_hashes"],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["evidence_item_v1"] },
+    "item_id": { "type": "string" },
+    "item_order": { "type": "integer", "minimum": 1 },
+    "item_type": { "type": "string" },
+    "source_reference": { "type": "string" },
+    "core_hashes": { "type": "object" },
+    "period": {
+      "type": "object",
+      "properties": {
+        "period_start": { "type": "string" },
+        "period_end": { "type": "string" },
+        "period_granularity": { "type": "string" }
+      }
+    }
+  }
+}

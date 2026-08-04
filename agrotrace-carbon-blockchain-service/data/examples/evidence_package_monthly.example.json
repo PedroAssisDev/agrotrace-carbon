@@ -1,0 +1,32 @@
+{
+  "schema_version": "evidence_package_v1",
+  "package_id": "pkg-carbon-monthly-2026-08-001",
+  "package_type": "monthly_carbon_result",
+  "package_version": "1.0.0",
+  "period_start": "2026-08-01",
+  "period_end": "2026-08-31",
+  "period_granularity": "monthly",
+  "scope": {
+    "project_id_hash": "0xb1c2d3e4f5a697887766554433221100ffeeddccbbaa99887766554433221100",
+    "farm_id_hash": "0xc1d2e3f4a5b6877866554433221100aa1234567890abcdef1234567890abcdef",
+    "management_unit_id_hash": null
+  },
+  "integrity_context": {
+    "hash_algorithm": "sha256",
+    "canonicalization_method": "json_canonical_v1"
+  },
+  "evidence_items": [
+    {
+      "item_id": "item-001",
+      "item_order": 1,
+      "item_type": "calculation_method_version",
+      "item_hash": "0x111122223333444455556666777788889999aaaabbbbccccddddeeeeffff0000"
+    },
+    {
+      "item_id": "item-002",
+      "item_order": 2,
+      "item_type": "approved_result",
+      "item_hash": "0x3333444455556666777788889999aaaabbbbccccddddeeeeffff000011112222"
+    }
+  ]
+}

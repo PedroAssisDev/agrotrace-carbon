@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evidence Package Canonical Payload",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "package_id",
+    "package_type",
+    "period_start",
+    "period_end",
+    "period_granularity",
+    "evidence_items",
+    "integrity_context"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "enum": ["evidence_package_v1"] },
+    "package_id": { "type": "string" },
+    "package_type": { "type": "string" },
+    "package_version": { "type": "string" },
+    "period_start": { "type": "string" },
+    "period_end": { "type": "string" },
+    "period_granularity": { "type": "string" },
+    "scope": { "type": "object" },
+    "evidence_items": { "type": "array" },
+    "integrity_context": { "type": "object" }
+  }
+}

@@ -1,30 +1,69 @@
-# agrotrace-carbon-blockchain-service
+# Agrotrace Carbon Blockchain Service
 
-## Fase atual: modelagem generica do payload de ancoragem
+Serviço independente responsável por observar eventos do `agrotrace-carbon-traceability-service`, montar pacotes de evidência, gerar hashes determinísticos, Merkle Roots e simular ancoragem local no MVP.
 
-Esta fase estabelece apenas a base de dados para ancoragem futura, com foco em integridade, rastreabilidade e validacao estrutural de payloads JSON.
+## Responsabilidades
 
-Limites desta fase:
+- Observar `audit_outbox_event` do serviço de proveniência
+- Criar `anchor_request`, `evidence_package` e `evidence_item`
+- Gerar payload canônico, `package_hash` e `merkle_root`
+- Simular ancoragem em rede `local_simulated`
+- Verificar integridade dos pacotes
+- Manter banco SQLite próprio
 
-- ainda nao ha integracao com servico de proveniencia;
-- ainda nao ha blockchain real;
-- ainda nao ha provider;
-- ainda nao ha smart contract;
-- o objetivo agora e validar a estrutura dos dados que futuramente serao ancorados;
-- o payload foi desenhado para aceitar hash/Merkle Root obrigatorios e emissao total opcional.
+## Limites do MVP
 
-## Estrutura desta etapa
+- Sem blockchain real
+- Sem smart contract
+- Sem alteração do serviço de proveniência
+- Sem dados sensíveis completos no payload de ancoragem
 
-- `schemas/anchor_payload.schema.json`: schema JSON do payload de ancoragem.
-- `data/examples/anchor_payload_private.example.json`: exemplo sem publicacao de emissao total.
-- `data/examples/anchor_payload_public_summary.example.json`: exemplo com resumo publico habilitado.
-- `data/examples/*.jsonc`: versoes comentadas dos exemplos para leitura humana.
-- `docs/anchor_payload_model.md`: explicacao tecnica e didatica do modelo.
-- `tests/test_anchor_payload_schema.py`: testes de validacao dos exemplos e cenarios invalidos.
+## Setup
 
-## Como rodar os testes
+```bash
+pip install -e ".[dev]"
+python -m app.interfaces.cli init-db
+```
 
-1. Instale a dependencia:
-   - `pip install jsonschema`
-2. Execute:
-   - `python -m unittest tests/test_anchor_payload_schema.py`
+Variáveis de ambiente:
+
+- `BLOCKCHAIN_DATABASE_URL` (default: `./data/blockchain_service.db`)
+- `BLOCKCHAIN_PROVENANCE_DATABASE_URL` (default: path para `../agrotrace-carbon-traceability-service/data/provenance.db`)
+
+## Comandos CLI
+
+```bash
+python -m app.interfaces.cli observe-events
+python -m app.interfaces.cli process-anchor-requests
+python -m app.interfaces.cli build-evidence-package --event-id <outbox_event_id>
+python -m app.interfaces.cli simulate-anchoring --package-id <evidence_package_id>
+python -m app.interfaces.cli verify-package --package-id <evidence_package_id>
+python -m app.interfaces.cli reprocess-failed
+python -m app.interfaces.cli audit-report --package-id <evidence_package_id>
+```
+
+Worker contínuo:
+
+```bash
+python scripts/run_worker_loop.py
+```
+
+## Testes
+
+```bash
+python -m pytest tests/ -q
+python -m unittest tests/test_anchor_payload_schema.py
+```
+
+## Estrutura
+
+- `app/domain` — entidades, serviços de hash/Merkle, portas
+- `app/application` — use cases
+- `app/infrastructure` — SQLite, readers de proveniência, provider simulado
+- `app/interfaces` — CLI e worker
+- `schemas/` — DDL SQLite e JSON Schemas
+- `docs/` — documentação técnica
+
+## Documentação
+
+Consulte `docs/architecture.md`, `docs/provenance_integration.md`, `docs/hash_strategy.md` e `docs/mvp_roadmap.md`.
