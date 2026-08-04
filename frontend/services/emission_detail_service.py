@@ -126,64 +126,102 @@ def build_header_meta(
 
 
 def build_source_details(cycle: dict) -> list[dict[str, Any]]:
-    """Detalhamento por fonte emissora (ciclo ativo)."""
+    """Detalhamento por fonte emissora (ciclo ativo) a partir da explanation canônica."""
+    from services.calculation_explanation_service import get_or_build_explanation
+
     subs = _sub_by_id(cycle)
     calc = cycle.get("calculation") or {}
+    explanation = get_or_build_explanation(cycle)
     inputs = calc.get("inputs") or {}
     factors = calc.get("factors_used") or {}
     gwp = factors.get("gwp") or calc.get("gwp") or {}
     details: list[dict[str, Any]] = []
 
+    expl_by_id = {s.get("source_id"): s for s in (explanation.get("sources") or [])}
+
     enteric = subs.get("enteric", {})
+    enteric_expl = expl_by_id.get("enteric") or {}
     tier_cmp = build_enteric_tier_comparison(cycle)
     details.append({
         "id": "enteric",
         "title": "Fermentação entérica — CH₄",
         "tier_comparison": tier_cmp,
         "subcalculation": enteric,
-        "co2e_t": (enteric.get("co2e_kg") or 0) * _KG_TO_T,
+        "co2e_t": (enteric.get("co2e_kg") or enteric_expl.get("co2e_kg") or 0) * _KG_TO_T,
         "inputs": {
             "headcounts": inputs.get("headcounts_by_category"),
             "gwp_ch4": gwp.get("CH4"),
         },
         "factors": enteric.get("factors") or {"enteric_ch4_kg_per_animal": factors.get("enteric_ch4_kg_per_animal")},
+        "explanation": enteric_expl,
+        "formula_code": enteric_expl.get("formula_code"),
+        "method": explanation.get("method"),
     })
 
     manure = subs.get("manure", {})
+    manure_expl = expl_by_id.get("manure") or {}
     details.append({
         "id": "manure",
         "title": "Manejo de dejetos — CH₄",
         "tier_comparison": None,
         "subcalculation": manure,
-        "co2e_t": (manure.get("co2e_kg") or 0) * _KG_TO_T,
+        "co2e_t": (manure.get("co2e_kg") or manure_expl.get("co2e_kg") or 0) * _KG_TO_T,
         "inputs": {
             "headcounts": inputs.get("headcounts_by_category"),
             "body_weights": inputs.get("body_weight_kg_by_category"),
             "days_in_period": inputs.get("days_in_period") or (calc.get("temporal") or {}).get("days_in_period"),
         },
         "factors": manure.get("factors") or {},
+        "explanation": manure_expl,
+        "formula_code": manure_expl.get("formula_code"),
+        "method": explanation.get("method"),
     })
 
     fertilizer = subs.get("fertilizer", {})
+    fert_expl = expl_by_id.get("fertilizer") or {}
     details.append({
         "id": "fertilizer",
         "title": "Fertilizantes — N₂O",
         "tier_comparison": None,
         "subcalculation": fertilizer,
-        "co2e_t": (fertilizer.get("co2e_kg") or 0) * _KG_TO_T,
+        "co2e_t": (fertilizer.get("co2e_kg") or fert_expl.get("co2e_kg") or 0) * _KG_TO_T,
         "inputs": {"nitrogen_applied_kg": inputs.get("nitrogen_applied_kg")},
         "factors": fertilizer.get("factors") or {"fertilizer_factors": factors.get("fertilizer_factors")},
+        "explanation": fert_expl,
+        "formula_code": fert_expl.get("formula_code"),
+        "method": explanation.get("method"),
     })
 
     energy = subs.get("energy", {})
+    energy_expl = expl_by_id.get("energy") or {}
     details.append({
         "id": "energy",
         "title": "Energia — CO₂",
         "tier_comparison": None,
         "subcalculation": energy,
-        "co2e_t": (energy.get("co2e_kg") or 0) * _KG_TO_T,
+        "co2e_t": (energy.get("co2e_kg") or energy_expl.get("co2e_kg") or 0) * _KG_TO_T,
         "inputs": {"energy_consumption_by_vector": inputs.get("energy_consumption_by_vector")},
         "factors": energy.get("factors") or {"energy_co2_kg_per_unit": factors.get("energy_co2_kg_per_unit")},
+        "explanation": energy_expl,
+        "formula_code": energy_expl.get("formula_code"),
+        "method": explanation.get("method"),
+    })
+
+    total_expl = expl_by_id.get("total") or {}
+    details.append({
+        "id": "total",
+        "title": "Totalização CO₂e",
+        "tier_comparison": None,
+        "subcalculation": subs.get("total") or {},
+        "co2e_t": (calc.get("co2e_total_kg") or total_expl.get("co2e_kg") or 0) * _KG_TO_T,
+        "inputs": {},
+        "factors": {"gwp": gwp},
+        "explanation": total_expl,
+        "formula_code": total_expl.get("formula_code"),
+        "method": explanation.get("method"),
+        "gwp_set": explanation.get("gwp"),
+        "executed_by": explanation.get("executed_by"),
+        "approved_by": explanation.get("approved_by"),
     })
 
     return details

@@ -7,7 +7,7 @@ import logging
 import re
 from typing import Any
 
-from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR, SAVE_FILE_ORIGINALS_DIR
+import config
 from services.property_registry import load_property_catalog
 from utils.file_helpers import list_cycles
 from utils.property_filter import get_all_property_ids, normalize_property_id
@@ -62,8 +62,8 @@ def get_available_periods(farm_id: str | None = None) -> list[str]:
         if isinstance(rp, str) and rp.strip() and "/" in rp:
             periods.add(rp.strip())
 
-    if EVIDENCE_PACKAGES_DIR.exists():
-        for path in EVIDENCE_PACKAGES_DIR.glob("*.json"):
+    if config.EVIDENCE_PACKAGES_DIR.exists():
+        for path in config.EVIDENCE_PACKAGES_DIR.glob("*.json"):
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
             except (json.JSONDecodeError, OSError):
@@ -72,7 +72,7 @@ def get_available_periods(farm_id: str | None = None) -> list[str]:
                 continue
             periods.update(_periods_from_record(data))
 
-    for originals_dir in (SAVE_FILE_ORIGINALS_DIR, RAW_ORIGINALS_DIR):
+    for originals_dir in (config.SAVE_FILE_ORIGINALS_DIR, config.RAW_ORIGINALS_DIR):
         if not originals_dir.exists():
             continue
         for path in originals_dir.glob("*"):

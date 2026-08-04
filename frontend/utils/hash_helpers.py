@@ -4,8 +4,8 @@ Official evidence package / item hashes MUST use the blockchain-service
 canonicalization (`json_canonical_v1`) via `services.direct_imports.sha256_hex`
 or hashes already returned by the service.
 
-Local helpers below are for UI artifact convenience (files/text) and must not
-diverge from the official strategy when computing evidence hashes.
+There is **no** compact-JSON fallback for official hashes (RN-06 / RNF004).
+Use ``ui_preview_hash`` only for mock/display data that never enters evidence.
 """
 
 from __future__ import annotations
@@ -14,6 +14,10 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Any
+
+
+class CanonicalizationUnavailableError(RuntimeError):
+    """Official canonicalization could not be loaded — fail closed."""
 
 
 def sha256_file(path: str | Path) -> str:
@@ -25,33 +29,23 @@ def sha256_file(path: str | Path) -> str:
     return h.hexdigest()
 
 
+def sha256_bytes(content: bytes) -> str:
+    """Calcula SHA-256 hex de bytes em memória (sem prefixo 0x)."""
+    return hashlib.sha256(content).hexdigest()
+
+
 def sha256_text(text: str) -> str:
     """Calcula SHA-256 hex de uma string (sem prefixo 0x)."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def sha256_dict(data: dict[str, Any]) -> str:
-    """Hash de dict para UI.
+    """Hash oficial de dict via ``json_canonical_v1`` (prefixo ``0x``).
 
-    Prefers the official blockchain-service `sha256_hex` (0x-prefixed,
-    json_canonical_v1). Falls back to a local compact JSON hash only when the
-    service is unavailable — that fallback is NOT an official evidence hash.
+    Raises ``CanonicalizationUnavailableError`` if the blockchain-service
+    implementation cannot be loaded. Never falls back to compact JSON.
     """
-    try:
-        from services import direct_imports as di
-
-        if di.sha256_hex is not None:
-            return di.sha256_hex(data)
-    except Exception as exc:
-        import logging
-
-        logging.getLogger("agrotrace.hash").warning(
-            "[FAIL] hash.official_unavailable error=%s — using local UI fallback",
-            exc,
-        )
-    # Fallback UI-only (not official evidence canonicalization)
-    canonical = json.dumps(data, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=str)
-    return sha256_text(canonical)
+    return official_package_hash(data)
 
 
 def official_package_hash(payload: dict[str, Any]) -> str:
@@ -59,8 +53,32 @@ def official_package_hash(payload: dict[str, Any]) -> str:
     from services import direct_imports as di
 
     if di.sha256_hex is None:
-        raise RuntimeError("blockchain-service sha256_hex unavailable for official hash")
-    return di.sha256_hex(payload)
+        raise CanonicalizationUnavailableError(
+            "blockchain-service sha256_hex unavailable for official hash "
+            "(json_canonical_v1 required; no alternate algorithm)"
+        )
+    try:
+        return di.sha256_hex(payload)
+    except Exception as exc:
+        raise CanonicalizationUnavailableError(
+            f"official json_canonical_v1 hash failed: {type(exc).__name__}"
+        ) from exc
+
+
+def ui_preview_hash(data: dict[str, Any]) -> str:
+    """Non-official compact JSON hash for mocks/UI previews only.
+
+    Must never be used for evidence packages, publication hashes that feed
+    blockchain, or integrity verification.
+    """
+    canonical = json.dumps(
+        data,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        default=str,
+    )
+    return sha256_text(canonical)
 
 
 def truncate_hash(value: str, length: int = 12) -> str:

@@ -11,10 +11,16 @@ from utils.hash_helpers import truncate_hash
 
 
 def _artifact_for_step(cycle: dict, step_key: str) -> str:
+    from pathlib import Path
+
+    raw = cycle.get("raw_file") or {}
+    original_name = raw.get("original_filename")
+    if not original_name and raw.get("stored_path"):
+        original_name = Path(str(raw["stored_path"])).name
     mapping = {
-        "raw_upload": (cycle.get("raw_file") or {}).get("original_filename"),
-        "original_file": (cycle.get("raw_file") or {}).get("stored_path"),
-        "raw_hash": (cycle.get("raw_file") or {}).get("sha256"),
+        "raw_upload": original_name,
+        "original_file": original_name,
+        "raw_hash": raw.get("sha256"),
         "wrapper": (cycle.get("wrapper") or {}).get("layout_id"),
         "normalized": f"{len(cycle.get('normalized_data') or [])} registro(s)",
         "canonical": (cycle.get("ontology") or {}).get("ontology_version"),

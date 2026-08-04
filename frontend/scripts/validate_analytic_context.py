@@ -13,8 +13,13 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
+from scripts._validation_env import (  # noqa: E402
+    CheckCollector,
+    isolated_data_root,
+    print_structured_summary,
+    seed_temporal_fixtures,
+)
 from services.page_context import resolve_page_context  # noqa: E402
-from utils.file_helpers import list_cycles  # noqa: E402
 from utils.global_filter import (  # noqa: E402
     DEFAULT_GLOBAL_FILTER,
     cycles_for_analysis,
@@ -30,26 +35,20 @@ from utils.temporal_model import (  # noqa: E402
 )
 
 
-class Validator:
-    def __init__(self) -> None:
-        self.errors: list[str] = []
-
-    def check(self, name: str, condition: bool, detail: str = "") -> None:
-        if condition:
-            print(f"  [OK]   {name}")
-        else:
-            msg = f"{name}{f' — {detail}' if detail else ''}"
-            self.errors.append(msg)
-            print(f"  [FAIL] {msg}")
-
-
 def _gf(all_cycles: list[dict], **kwargs) -> dict:
     return normalize_filter_state({"farm_id": kwargs.pop("farm_id"), **kwargs}, all_cycles)
 
 
 def main() -> int:
-    v = Validator()
-    all_cycles = list_cycles()
+    v = CheckCollector()
+    print("== Analytic context (fixture isolado) ==\n")
+
+    with isolated_data_root():
+        all_cycles = seed_temporal_fixtures(persist=True)
+        return _run(v, all_cycles)
+
+
+def _run(v: CheckCollector, all_cycles: list[dict]) -> int:
     v.check("ciclos carregados", len(all_cycles) >= 3, f"total={len(all_cycles)}")
 
     # Anual 2021–2025, view=auto → 5 pontos; labels anuais; eixo ≠ intervalo consolidado
@@ -89,10 +88,11 @@ def main() -> int:
     v.check("Jan-Jun view=monthly: 6 ciclos", len(jan_jun) == 6, str(len(jan_jun)))
     v.check("Jan-Jun view=monthly: 6 buckets", len(tm_monthly.view_series) == 6, str(len(tm_monthly.view_series)))
 
-    # Diário → calc_base monthly
+    # Diário → calc_base monthly (obrigatório — falha se ausente)
     daily_farm = "FARM-DAILY-001"
     daily_analysis = _gf(all_cycles, farm_id=daily_farm)
     daily_cycles = cycles_for_analysis(all_cycles, daily_analysis, None)
+    v.check("FARM-DAILY presente", len(daily_cycles) >= 6, str(len(daily_cycles)))
     if daily_cycles:
         tm_daily = build_temporal_model(daily_cycles, daily_cycles[0], "auto")
         v.check(
@@ -190,14 +190,7 @@ def main() -> int:
     v.check("DEFAULT view_granularity", DEFAULT_GLOBAL_FILTER.get("view_granularity") == "auto")
     v.check("DEFAULT data_mode", DEFAULT_GLOBAL_FILTER.get("data_mode") == "include_preliminary")
 
-    print()
-    if v.errors:
-        print(f"Analytic context validation: FAIL ({len(v.errors)})")
-        for e in v.errors:
-            print(f"  - {e}")
-        return 1
-    print("Analytic context validation: PASS")
-    return 0
+    return print_structured_summary(v, "Analytic context validation")
 
 
 if __name__ == "__main__":

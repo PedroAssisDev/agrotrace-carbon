@@ -75,13 +75,14 @@ def build_artifact_rows(cycle: dict) -> list[dict[str, Any]]:
     rows: list[dict] = []
 
     if raw.get("filename") or cycle.get("raw_file"):
+        raw_origin = raw.get("filename") or raw.get("artifact_id") or "arquivo bruto"
         rows.append(_artifact_row(
             "Arquivo bruto original",
             "raw_file",
             "operational",
             _step_status_label(cycle, "raw_data"),
             "Frontend / save-file",
-            raw.get("stored_path") or raw.get("filename"),
+            raw_origin,
             raw.get("sha256"),
             raw.get("uploaded_at"),
             _step_mode(cycle, "raw_data"),
@@ -92,7 +93,7 @@ def build_artifact_rows(cycle: dict) -> list[dict[str, Any]]:
             "operational",
             "Disponível" if raw.get("filename") else "Pendente",
             "Frontend",
-            raw.get("filename"),
+            raw.get("artifact_id") or raw.get("filename") or "—",
             None,
             raw.get("uploaded_at"),
             _step_mode(cycle, "raw_data"),

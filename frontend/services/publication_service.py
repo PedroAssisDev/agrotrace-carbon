@@ -14,7 +14,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from config import PUBLICATIONS_DIR, ensure_data_dirs
+import config
 from services.calculation_approval_service import can_finalize
 from services.domain_catalog import (
     PUBLICATION_MILESTONE,
@@ -30,6 +30,37 @@ from utils.pipeline_logging import ids_from_cycle, log_call, timed_op, truncate
 logger = logging.getLogger("agrotrace.publication")
 
 MANIFEST_SCHEMA_VERSION = "1.0.0"
+
+
+class PredictionNotPublishableError(ValueError):
+    """Predições não podem ser publicadas como resultados observados (RF011 / RN-03)."""
+
+
+def _reject_prediction_input(cycle: dict) -> None:
+    """Guarda de domínio: rejeita Prediction / payloads preditivos na publicação."""
+    from services.forecast_inference.types import Prediction, is_prediction_payload
+
+    if isinstance(cycle, Prediction) or is_prediction_payload(cycle):
+        raise PredictionNotPublishableError(
+            "Prediction não pode ser publicada como resultado observado/calculado (RF011/RN-03)"
+        )
+    # Explicit injection probes
+    for key in ("prediction", "forecast_result", "predicted_results"):
+        val = cycle.get(key) if isinstance(cycle, dict) else None
+        if is_prediction_payload(val):
+            raise PredictionNotPublishableError(
+                f"Campo '{key}' contém Prediction e não pode integrar a publicação oficial"
+            )
+    forecast = (cycle.get("forecast") if isinstance(cycle, dict) else None) or {}
+    if isinstance(forecast, dict) and forecast.get("publish_as_calculation"):
+        raise PredictionNotPublishableError(
+            "forecast.publish_as_calculation é proibido — predição ≠ CalculationResult"
+        )
+    approved = (cycle.get("approved_results") if isinstance(cycle, dict) else None) or {}
+    if is_prediction_payload(approved):
+        raise PredictionNotPublishableError(
+            "approved_results não pode ser um payload de Prediction"
+        )
 
 
 @dataclass
@@ -67,6 +98,7 @@ class PublicationManifest:
     schema_version: str = MANIFEST_SCHEMA_VERSION
     status: str = "PUBLISHED"
     methodology: str | None = None
+    version_manifest: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -98,6 +130,7 @@ def _stable_publication_id(cycle_id: str, content_hash: str) -> str:
 
 def build_publication_manifest(cycle: dict) -> PublicationManifest:
     """Monta e valida o manifesto a partir do ciclo aprovado."""
+    _reject_prediction_input(cycle)
     ok, msg = can_finalize(cycle)
     approval = cycle.get("approval") or {}
     if approval.get("decision") != "APPROVED":
@@ -229,6 +262,13 @@ def build_publication_manifest(cycle: dict) -> PublicationManifest:
         "status": "PUBLISHED",
     }
 
+    try:
+        from services.version_manifest_service import attach_version_manifest
+
+        draft["version_manifest"] = attach_version_manifest(cycle)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[PUB] version_manifest skipped: %s", type(exc).__name__)
+
     content_hash = sha256_dict(_hashable_core(draft))
     publication_id = _stable_publication_id(str(cycle.get("cycle_id")), content_hash)
 
@@ -271,9 +311,9 @@ def build_publication_manifest(cycle: dict) -> PublicationManifest:
 
 
 def persist_manifest(manifest: PublicationManifest) -> Path:
-    ensure_data_dirs()
-    PUBLICATIONS_DIR.mkdir(parents=True, exist_ok=True)
-    path = PUBLICATIONS_DIR / f"{manifest.cycle_id}_{manifest.publication_id}.json"
+    config.ensure_data_dirs()
+    config.PUBLICATIONS_DIR.mkdir(parents=True, exist_ok=True)
+    path = config.PUBLICATIONS_DIR / f"{manifest.cycle_id}_{manifest.publication_id}.json"
     path.write_text(
         json.dumps(manifest.to_dict(), indent=2, ensure_ascii=False, sort_keys=True, default=str),
         encoding="utf-8",
@@ -286,6 +326,7 @@ def publish_approved_cycle(cycle: dict) -> dict[str, Any]:
     """Operação oficial de publicação — retorna dict serializável para o ciclo."""
     from services.ontology_adapter import mark_parameters_published
 
+    _reject_prediction_input(cycle)
     log_call(logger, "publication.start", **ids_from_cycle(cycle))
     with timed_op() as timer:
         # Republica OWL final com parâmetros published antes do manifesto

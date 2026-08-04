@@ -1,0 +1,572 @@
+{
+  "generated_at_utc": "2026-08-04T13:27:52.171860+00:00",
+  "python": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "data_root": "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data",
+  "inventory_before": {
+    "label": "before",
+    "timestamp_utc": "2026-08-04T13:04:13.066510+00:00",
+    "data_root_name": "agrotrace-data",
+    "cycle_count": 0,
+    "db_files": []
+  },
+  "inventory_after": {
+    "label": "after",
+    "timestamp_utc": "2026-08-04T13:27:52.122292+00:00",
+    "data_root_name": "agrotrace-data",
+    "cycle_count": 32,
+    "db_files": [
+      "blockchain_service.db",
+      "provenance.db",
+      "provenance.db-shm",
+      "provenance.db-wal"
+    ]
+  },
+  "git": {
+    "commit": null,
+    "status": "skipped_full_status_for_performance",
+    "note": "branch may have no commits yet"
+  },
+  "results": [
+    {
+      "name": "inventory_initial",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "summary": "{\"label\": \"before\", \"timestamp_utc\": \"2026-08-04T13:04:13.066510+00:00\", \"data_root_name\": \"agrotrace-data\", \"cycle_count\": 0, \"db_files\": []}"
+    },
+    {
+      "name": "save-file",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-q"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-save-file",
+      "exit_code": 0,
+      "duration_ms": 986,
+      "summary": "",
+      "stderr_tail": ""
+    },
+    {
+      "name": "wrappers",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-wrappers-service",
+      "exit_code": 0,
+      "duration_ms": 6480,
+      "summary": " | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html | 41 passed, 3 skipped, 2 warnings in 1.87s",
+      "stderr_tail": ""
+    },
+    {
+      "name": "ontology",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-ontology-manager",
+      "exit_code": 0,
+      "duration_ms": 8321,
+      "summary": "..............                                                           [100%] | 14 passed in 2.75s",
+      "stderr_tail": ""
+    },
+    {
+      "name": "calculation",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-calculation-service",
+      "exit_code": 0,
+      "duration_ms": 5572,
+      "summary": ".....................................................                    [100%] | 53 passed in 1.64s",
+      "stderr_tail": ""
+    },
+    {
+      "name": "model-training",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service",
+      "exit_code": 0,
+      "duration_ms": 83636,
+      "summary": "..................................................                       [100%]",
+      "stderr_tail": ""
+    },
+    {
+      "name": "traceability",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-traceability-service",
+      "exit_code": 0,
+      "duration_ms": 47750,
+      "summary": " | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html | 115 passed, 1 warning in 43.95s",
+      "stderr_tail": ""
+    },
+    {
+      "name": "blockchain",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests/",
+        "-m",
+        "not blockchain_local and not sepolia",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-blockchain-service",
+      "exit_code": 0,
+      "duration_ms": 8926,
+      "summary": " | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html | 59 passed, 4 deselected, 1 warning in 5.73s",
+      "stderr_tail": ""
+    },
+    {
+      "name": "forge_build",
+      "command": [
+        "forge",
+        "build"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-blockchain-service\\contracts",
+      "exit_code": 0,
+      "duration_ms": 2614,
+      "summary": "No files changed, compilation skipped",
+      "stderr_tail": ""
+    },
+    {
+      "name": "forge_test",
+      "command": [
+        "forge",
+        "test",
+        "-vvv"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-blockchain-service\\contracts",
+      "exit_code": 0,
+      "duration_ms": 2177,
+      "summary": "Suite result: ok. 9 passed; 0 failed; 0 skipped; finished in 42.04ms (68.17ms CPU time) |  | Ran 1 test suite in 67.55ms (42.04ms CPU time): 9 tests passed, 0 failed, 0 skipped (9 total tests)",
+      "stderr_tail": ""
+    },
+    {
+      "name": "frontend_tests",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests/",
+        "-q",
+        "--tb=line"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 21981,
+      "summary": " | -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html | 70 passed, 32 warnings in 14.33s",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_analytic_context",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_analytic_context.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 4055,
+      "summary": " | --- 19 OK, 0 FAIL --- | Analytic context validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_calculation_review",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_calculation_review.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 9874,
+      "summary": "  [OK]   finalize_file_approval executa |  | --- 36 OK, 0 FAIL ---",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_correction_recalculation",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_correction_recalculation.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 6781,
+      "summary": " | --- 26 OK, 0 FAIL --- | PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_dashboard_indicators",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_dashboard_indicators.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 3727,
+      "summary": "  [OK]   charts vazios sem exceção |  | Dashboard indicators validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_emission_calculation_details",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_emission_calculation_details.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 1,
+      "duration_ms": 127030,
+      "summary": " | === Resultado: 1 falha(s) === |   - série por gás",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_emulated_import",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_emulated_import.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 2619,
+      "summary": " | --- 10 OK, 0 FAIL --- | Emulated import validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_executive_temporal",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_executive_temporal.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 5032,
+      "summary": " | --- 27 OK, 0 FAIL --- | Executive temporal validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_farm_registry",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_farm_registry.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 183,
+      "summary": "  [OK]   catálogo continua listável |  | Farm registry validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_final_pipeline",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_final_pipeline.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 215286,
+      "summary": "  [OK]   37 ciclo recarregado após finalização |  | --- 35 OK, 0 FAIL ---",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_forecast_page",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_forecast_page.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 7881,
+      "summary": "  [OK]   serie temporal real retorna 3 periodos |  | OK — validate_forecast_page",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_frontend_pipeline",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_frontend_pipeline.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 142352,
+      "summary": "  [OK]   13 guard cálculo sem semântica |  | Frontend pipeline validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_general_analysis",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_general_analysis.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 6289,
+      "summary": "  [OK]   layout renderiza |  | General analysis validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_global_filter",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_global_filter.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 4228,
+      "summary": " | --- 26 OK, 0 FAIL --- | Global filter validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_maintainability_extensibility",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_maintainability_extensibility.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 589,
+      "summary": " | --- 8 OK, 0 FAIL --- | PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_ontology_domain_source",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_ontology_domain_source.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 1321,
+      "summary": "  OK:   sem MOCK/defaults em view domain ([]) |  | validate_ontology_domain_source OK",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_ontology_parameter_lifecycle",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_ontology_parameter_lifecycle.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 11363,
+      "summary": "  OK:   OWL final existe: C:\\Users\\PedroAssis\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data\\ontology_exports\\TEST-ONTO-LIFECYCLE-P9\\agromrv_lite_final.owl |  | PASSED",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_pending_approval_seed",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_pending_approval_seed.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 4635,
+      "summary": " | --- 18 OK, 0 FAIL --- | Pending approval seed validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_prediction_separation",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_prediction_separation.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 12088,
+      "summary": " | --- 10 OK, 0 FAIL --- | Prediction separation validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_preliminary_calculation_fix",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_preliminary_calculation_fix.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 1,
+      "duration_ms": 4084,
+      "summary": "=== validate_preliminary_calculation_fix ===",
+      "stderr_tail": "talog)\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\services\\calculation_adapter.py\", line 557, in _resolve_factors\n    raise RuntimeError(\nRuntimeError: Parâmetros obrigatórios ausentes na ontologia (factor_catalog): enteric_ch4_kg_per_animal, manure_kg_per_kg_bw_per_day, manure_ch4_kg_per_kg_manure, energy_co2_kg_per_unit, fertilizer_factors, gwp. Insira defaults como pending antes do cálculo.\n"
+    },
+    {
+      "name": "validate_property_filter",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_property_filter.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 4089,
+      "summary": " | --- 31 OK, 0 FAIL --- | Property filter validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_provenance_queries",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_provenance_queries.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 4056,
+      "summary": " | --- 28 OK, 0 FAIL --- | Provenance queries validation: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_reproducibility",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_reproducibility.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 2699,
+      "summary": "--- 16 OK, 0 FAIL --- | report: reproducibility_report.json | PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_technical_audit",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_technical_audit.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 3922,
+      "summary": " | --- 74 OK, 0 FAIL --- | PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "validate_temporal_model",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\validate_temporal_model.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 2778,
+      "summary": " | --- 42 OK, 0 FAIL --- | Modelo temporal: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "run_pipeline_smoke_test",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\run_pipeline_smoke_test.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 270822,
+      "summary": "  [OK] evento publicação |   [OK] publicação idempotente | Smoke OK.",
+      "stderr_tail": ""
+    },
+    {
+      "name": "test_full_emission_cycle",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\test_full_emission_cycle.py",
+        "--data-root",
+        "C:\\Users\\PEDROA~1\\AppData\\Local\\Temp\\tmp8ler55do\\agrotrace-data"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 357670,
+      "summary": "  [OK]   guard cálculo |   [OK]   guard blockchain | Full emission cycle test: PASS",
+      "stderr_tail": ""
+    },
+    {
+      "name": "scan_secrets",
+      "command": [
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\.venv\\Scripts\\python.exe",
+        "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend\\scripts\\scan_secrets.py"
+      ],
+      "cwd": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\frontend",
+      "exit_code": 0,
+      "duration_ms": 15113,
+      "summary": "=== scan_secrets === root=agrotrace-carbon | findings_count=0",
+      "stderr_tail": ""
+    },
+    {
+      "name": "inventory_final",
+      "exit_code": 0,
+      "duration_ms": 0,
+      "summary": "{\"label\": \"after\", \"timestamp_utc\": \"2026-08-04T13:27:52.122292+00:00\", \"data_root_name\": \"agrotrace-data\", \"cycle_count\": 32, \"db_files\": [\"blockchain_service.db\", \"provenance.db\", \"provenance.db-shm\", \"provenance.db-wal\"]}"
+    }
+  ],
+  "pass_count": 37,
+  "fail_count": 2
+}

@@ -61,20 +61,30 @@ def build_preliminary_result(cycle: dict) -> dict[str, Any]:
 
 
 def build_calculation_parameters(cycle: dict) -> dict[str, Any]:
+    from services.calculation_explanation_service import get_or_build_explanation
+
     c = cycle.get("calculation") or {}
     ont = cycle.get("ontology") or {}
     method = c.get("method") or {}
     temporal = c.get("temporal") or {}
+    explanation = get_or_build_explanation(cycle)
+    gwp_block = explanation.get("gwp") or {}
     return {
         "methodology": c.get("methodology") or method.get("methodology_label", "IPCC / GEE agropecuário"),
-        "method_code": method.get("code", "—"),
-        "method_version": method.get("version", "—"),
+        "method_code": method.get("code") or (explanation.get("method") or {}).get("code") or "—",
+        "method_version": method.get("version") or (explanation.get("method") or {}).get("version") or "—",
         "calculation_version": c.get("calculation_version") or method.get("implementation_version", "—"),
         "gwp": c.get("gwp") or resolve_gwp(),
+        "gwp_assessment_report": gwp_block.get("assessment_report"),
+        "gwp_time_horizon": gwp_block.get("time_horizon"),
         "factors_used": c.get("factors_used") or {},
         "temporal": temporal,
         "inputs": c.get("inputs") or {},
         "canonical_version": ont.get("ontology_version"),
+        "explanation": explanation,
+        "schema_version": explanation.get("schema_version"),
+        "executed_by": explanation.get("executed_by"),
+        "approved_by": explanation.get("approved_by"),
     }
 
 

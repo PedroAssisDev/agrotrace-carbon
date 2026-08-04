@@ -16,6 +16,7 @@ from components.audit import (
     AuditSummaryCards,
     AuditTimeline,
     ProvenanceSqlWorkspace,
+    RawArtifactPanel,
     TechnicalActionsPanel,
 )
 from components.empty_state import EmptyFilterState
@@ -49,6 +50,82 @@ def build_summary_section(ctx: PageContext) -> html.Div:
     if not ctx.active_cycle.get("cycle_id"):
         return _empty(ctx)
     summary = build_audit_summary(ctx)
+    cycle = ctx.active_cycle
+    from components.tables import DataTable
+
+    chain_rows: list[dict] = []
+    try:
+        from services.blockchain_linkage_view_service import build_linkage_rows, build_linkage_trail
+
+        trail = build_linkage_trail(cycle)
+        chain_rows = build_linkage_rows(trail)
+        chain_block = html.Div([
+            html.H6("Cadeia de auditoria", className="mt-3 mb-2"),
+            html.P(
+                "Resultado → publicação → pacote → solicitação → transação → verificação "
+                "(+ histórico de correção quando existir).",
+                className="text-muted small",
+            ),
+            DataTable(chain_rows, columns=["etapa", "identificador", "presente"])
+            if chain_rows
+            else html.P("Sem vínculos ainda.", className="text-muted small"),
+            html.P(
+                f"Versões de resultado: {len(cycle.get('result_versions') or [])} · "
+                f"Correções: {len(cycle.get('corrections') or [])}",
+                className="small mt-2",
+            ),
+            html.P(
+                f"Explicação do cálculo: "
+                f"{'presente' if (cycle.get('calculation') or {}).get('explanation') else 'ausente'}",
+                className="small",
+            ),
+        ])
+    except Exception as exc:
+        from utils.sanitize import safe_error_message
+
+        chain_block = dbc.Alert(f"Cadeia indisponível: {safe_error_message(exc)}", color="warning", className="mt-3")
+
+    vm = cycle.get("version_manifest")
+    if not vm:
+        try:
+            from services.version_manifest_service import build_version_manifest
+
+            vm = build_version_manifest(cycle).to_dict()
+        except Exception:
+            vm = None
+    vm_rows = []
+    if isinstance(vm, dict):
+        for key in (
+            "layout_id",
+            "layout_version",
+            "ontology_version",
+            "method_code",
+            "method_version",
+            "canonicalization_strategy",
+            "blockchain_contract_version",
+            "abi_version",
+            "evidence_schema_version",
+        ):
+            entry = vm.get(key) or {}
+            val = entry.get("value") if isinstance(entry, dict) else entry
+            reason = entry.get("missing_reason") if isinstance(entry, dict) else None
+            vm_rows.append({
+                "campo": key,
+                "valor": str(val) if val is not None else "—",
+                "motivo": reason or "",
+            })
+    vm_block = html.Div([
+        html.H6("VersionManifest (RNF010)", className="mt-3 mb-2"),
+        DataTable(vm_rows, columns=["campo", "valor", "motivo"])
+        if vm_rows
+        else html.P("Manifesto de versões indisponível.", className="text-muted small"),
+        html.P(
+            f"Hash do manifesto: {(vm or {}).get('manifest_hash') or '—'} · "
+            f"Conflitos: {len((vm or {}).get('consistency_conflicts') or [])}",
+            className="small text-aux",
+        ),
+    ]) if vm is not None else html.Div()
+
     return html.Div([
         *_cycle_header(ctx),
         AuditSummaryCards(
@@ -58,6 +135,8 @@ def build_summary_section(ctx: PageContext) -> html.Div:
         ),
         html.Hr(className="my-4"),
         AuditComplianceMatrix((summary.get("compliance") or {}).get("matrix") or []),
+        chain_block,
+        vm_block,
         TechnicalActionsPanel(),
     ])
 
@@ -148,6 +227,7 @@ def build_artifacts_section(ctx: PageContext) -> html.Div:
     mode = detect_integration_mode(cycle)
     return html.Div([
         *_cycle_header(ctx),
+        RawArtifactPanel(cycle),
         AuditArtifactTable(grouped, integration_mode=mode),
     ])
 
@@ -284,4 +364,15 @@ _AUDIT_TAB_BUILDERS = {
 def build_audit_tab(tab_id: str | None, ctx: PageContext) -> html.Div:
     """Renderiza uma aba da Auditoria Técnica pelo id."""
     builder = _AUDIT_TAB_BUILDERS.get(tab_id or "ta-summary", build_summary_section)
-    return builder(ctx)
+    try:
+        return builder(ctx)
+    except Exception as exc:
+        from utils.sanitize import safe_error_message
+
+        return html.Div(
+            dbc.Alert(
+                f"Erro ao carregar a aba {tab_id or 'ta-summary'}: {safe_error_message(exc)}",
+                color="danger",
+            ),
+            className="pt-2",
+        )

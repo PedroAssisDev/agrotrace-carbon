@@ -148,19 +148,15 @@ def reject_item(cycle: dict, item_id: str, *, reviewer: str, justification: str)
 
 
 def request_correction(cycle: dict, item_id: str, *, reviewer: str, justification: str) -> dict:
-    if not justification:
-        raise ValueError("Justificativa obrigatória para solicitar correção.")
-    cycle = _update_item(
-        cycle, item_id,
-        status="CORRECTION_REQUESTED",
-        review_decision="CORRECTION_REQUESTED",
-        reviewed_by=reviewer,
-        reviewed_at=now_iso(),
+    """Marca item + abre solicitação RF010 (evento append-only + proveniência)."""
+    from services.result_correction_service import open_correction_request
+
+    return open_correction_request(
+        cycle,
+        item_id=item_id,
+        reviewer=reviewer,
         justification=justification,
     )
-    emit_calculation_item_correction_requested(cycle, item_id, reviewer, justification)
-    emit_calculation_item_reviewed(cycle, item_id, "CORRECTION_REQUESTED", reviewer)
-    return cycle
 
 
 def save_adjustment(
@@ -362,6 +358,14 @@ def can_finalize(cycle: dict) -> tuple[bool, str]:
     if not items:
         return False, "Nenhum cálculo disponível para revisão."
 
+    try:
+        from services.result_correction_service import has_open_correction
+
+        if has_open_correction(cycle):
+            return False, "Há solicitação de correção aberta."
+    except Exception:
+        pass
+
     for it in items:
         st = it.get("status", "AWAITING_REVIEW")
         if st == "REJECTED":
@@ -451,6 +455,12 @@ def finalize_file_approval(cycle: dict, *, reviewer: str, justification: str = "
     )
     with timed_op() as timer:
         cycle = local_orchestrator.run_auto_pipeline_after_approval(cycle, approval)
+        try:
+            from services.result_correction_service import mark_active_version_approved
+
+            cycle = mark_active_version_approved(cycle)
+        except Exception:
+            pass
         log_decision(
             logger,
             "finalize_file.done",

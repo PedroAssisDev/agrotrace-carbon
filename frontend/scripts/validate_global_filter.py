@@ -13,6 +13,7 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
+from scripts._validation_env import CheckCollector, isolated_data_root, print_structured_summary, seed_temporal_fixtures  # noqa: E402
 from services.filter_service import get_available_filter_options, get_available_periods  # noqa: E402
 from utils.global_filter import (  # noqa: E402
     DEFAULT_GLOBAL_FILTER,
@@ -30,32 +31,28 @@ from utils.global_filter import (  # noqa: E402
 from utils.property_filter import filter_by_selected_properties  # noqa: E402
 
 
-class Validator:
-    def __init__(self) -> None:
-        self.errors: list[str] = []
-
-    def check(self, name: str, condition: bool, detail: str = "") -> None:
-        if condition:
-            print(f"  [OK]   {name}")
-        else:
-            msg = f"{name}{f' — {detail}' if detail else ''}"
-            self.errors.append(msg)
-            print(f"  [FAIL] {msg}")
-
-
 def main() -> int:
-    v = Validator()
+    v = CheckCollector()
+    print("== Global filter (fixture isolado) ==\n")
+
+    with isolated_data_root():
+        seeded = seed_temporal_fixtures(persist=True)
+        return _run(v, seeded)
+
+
+def _run(v: CheckCollector, seeded: list[dict]) -> int:
     options = get_available_filter_options()
     periods = get_available_periods()
 
     v.check("catalogo e lista", isinstance(options.get("properties"), list))
-    v.check("períodos disponíveis", len(periods) >= 1, str(periods[:5]))
+    v.check("períodos disponíveis (fixture)", len(periods) >= 1, str(periods[:5]))
 
     cycles = [
         {"cycle_id": "C1", "property_id": "FARM-001", "reporting_period": "2026-01", "pipeline_run_id": "R1"},
         {"cycle_id": "C2", "property_id": "FARM-002", "reporting_period": "2026-03", "pipeline_run_id": "R2"},
         {"cycle_id": "C3", "property_id": "FARM-001", "reporting_period": "2026-06", "pipeline_run_id": "R3"},
     ]
+    v.check("fixture temporal seedado", len(seeded) >= 23, str(len(seeded)))
 
     default_filter = normalize_global_filter(DEFAULT_GLOBAL_FILTER)
     v.check("default: sem fazenda", not default_filter.get("farm_id"))
@@ -149,14 +146,7 @@ def main() -> int:
     start, end = resolve_analysis_period_bounds(scenario, "2021", "2026")
     v.check("bounds aceita end=2026", end == "2026", str(end))
 
-    print()
-    if v.errors:
-        print("Global filter validation: FAIL")
-        for e in v.errors:
-            print(f"  - {e}")
-        return 1
-    print("Global filter validation: PASS")
-    return 0
+    return print_structured_summary(v, "Global filter validation")
 
 
 if __name__ == "__main__":

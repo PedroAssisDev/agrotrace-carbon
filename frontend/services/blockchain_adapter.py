@@ -21,12 +21,11 @@ from typing import Any
 from uuid import UUID
 
 import config
-from config import EVIDENCE_PACKAGES_DIR
 from services import direct_imports as di
 from services.bootstrap import get_blockchain_container
 from services.mock_data import mock_evidence_package, mock_integrity_check
 from utils.date_helpers import now_iso
-from utils.hash_helpers import sha256_dict
+from utils.hash_helpers import official_package_hash  # noqa: F401 — kept for clarity; sha256_dict removed
 from utils.pipeline_logging import ids_from_cycle, log_call, log_fail, timed_op, truncate
 
 logger = logging.getLogger("agrotrace.blockchain")
@@ -170,7 +169,20 @@ def create_evidence_package(cycle_data: dict) -> dict[str, Any]:
                 "ontology_version": (cycle_data.get("publication") or {}).get("ontology_version"),
                 "calculation_execution_id": cycle_data.get("calculation_execution_id"),
                 "methodology": (cycle_data.get("calculation") or {}).get("methodology", "IPCC/IDF-compatible"),
-                "hashes": cycle_data.get("hashes", {}),
+                "hashes": {
+                    **(cycle_data.get("hashes") or {}),
+                    "calculation_explanation": (
+                        ((cycle_data.get("calculation") or {}).get("explanation") or {}).get("content_hash")
+                    ),
+                },
+                "calculation_explanation_ref": {
+                    "schema_version": ((cycle_data.get("calculation") or {}).get("explanation") or {}).get("schema_version"),
+                    "content_hash": ((cycle_data.get("calculation") or {}).get("explanation") or {}).get("content_hash"),
+                    "calculation_id": cycle_data.get("calculation_execution_id")
+                    or ((cycle_data.get("calculation") or {}).get("explanation") or {}).get("calculation_id"),
+                    "result_id": cycle_data.get("calculation_result_set_id")
+                    or ((cycle_data.get("calculation") or {}).get("explanation") or {}).get("result_id"),
+                },
                 "package_hash": build.package_hash,
                 "merkle_root": build.merkle_root,
                 "created_at": now_iso(),
@@ -308,8 +320,10 @@ def intentional_tamper_demo(package_hash: str, onchain_hash: str | None = None) 
         original_hash = di.sha256_hex(original)
         tampered_hash = di.sha256_hex(tampered)
     else:
-        original_hash = sha256_dict(original)
-        tampered_hash = sha256_dict(tampered)
+        raise RuntimeError(
+            "blockchain-service sha256_hex unavailable for tamper demo "
+            "(official json_canonical_v1 required)"
+        )
     reference = onchain_hash or package_hash
     return {
         "intentional_test": True,
@@ -432,7 +446,12 @@ def verify_integrity(evidence_package: dict, current_artifacts: dict | None = No
 
 def compute_local_hashes(cycle: dict) -> dict[str, str]:
     """Calcula hashes locais dos artefatos do ciclo (prioriza manifesto publicado)."""
-    hasher = di.sha256_hex or sha256_dict
+    if di.sha256_hex is None:
+        raise RuntimeError(
+            "blockchain-service sha256_hex unavailable for local hashes "
+            "(official json_canonical_v1 required; no compact-JSON fallback)"
+        )
+    hasher = di.sha256_hex
     pub = cycle.get("publication") or {}
     try:
         from services.publication_service import evidence_input_from_publication
@@ -448,16 +467,18 @@ def compute_local_hashes(cycle: dict) -> dict[str, str]:
             "final_ontology_hash": pub.get("ontology_hash") or hasher({"ont": 0}),
             "publication_hash": pub.get("publication_hash") or hasher(evidence_in or {"pub": 0}),
         }
+    except RuntimeError:
+        raise
     except Exception:
         return {
-            "raw_file_hash": (cycle.get("raw_file") or {}).get("sha256", sha256_dict({"raw": "empty"})),
-            "normalized_batch_hash": sha256_dict({"normalized": len(cycle.get("normalized_data", []))}),
-            "canonical_dataset_hash": sha256_dict(cycle.get("ontology") or {}),
-            "semantic_validation_hash": sha256_dict(cycle.get("semantic_validation") or {}),
-            "preliminary_result_hash": (cycle.get("calculation") or {}).get("preliminary_hash", ""),
-            "approval_record_hash": sha256_dict(cycle.get("approval") or {}),
-            "final_ontology_hash": (cycle.get("publication") or {}).get("ontology_hash", ""),
-            "publication_hash": (cycle.get("publication") or {}).get("publication_hash", ""),
+            "raw_file_hash": (cycle.get("raw_file") or {}).get("sha256") or hasher({"raw": "empty"}),
+            "normalized_batch_hash": hasher({"normalized": len(cycle.get("normalized_data", []))}),
+            "canonical_dataset_hash": hasher(cycle.get("ontology") or {}),
+            "semantic_validation_hash": hasher(cycle.get("semantic_validation") or {}),
+            "preliminary_result_hash": (cycle.get("calculation") or {}).get("preliminary_hash") or "",
+            "approval_record_hash": hasher(cycle.get("approval") or {}),
+            "final_ontology_hash": (cycle.get("publication") or {}).get("ontology_hash") or "",
+            "publication_hash": (cycle.get("publication") or {}).get("publication_hash") or "",
         }
 
 
@@ -473,9 +494,9 @@ def _short_item_label(item_id: str) -> str:
 
 
 def _persist_package(pkg: dict) -> None:
-    EVIDENCE_PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
+    config.EVIDENCE_PACKAGES_DIR.mkdir(parents=True, exist_ok=True)
     eid = pkg.get("evidence_package_id", "unknown")
-    path = EVIDENCE_PACKAGES_DIR / f"{eid}.json"
+    path = config.EVIDENCE_PACKAGES_DIR / f"{eid}.json"
     path.write_text(json.dumps(pkg, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
 
 

@@ -2,25 +2,27 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 
-from dash import Input, Output, State, callback, no_update
+import dash_bootstrap_components as dbc
+from dash import Input, Output, State, callback, html, no_update
 
-from components.audit.audit_event_explorer import AuditEventExplorer
 from components.audit.audit_integrity_panel import AuditIntegrityPanel
 from components.audit.audit_payload_viewer import AuditPayloadViewer
 from components.payload_viewer import PayloadViewer
-from services import blockchain_adapter, provenance_adapter
+from services import blockchain_adapter, provenance_adapter, save_file_adapter
 from services.audit_event_service import (
     filter_events_for_ui,
     most_recent_event,
     resolve_cycle_events,
-    unique_filter_options,
 )
 from services.audit_payload_service import resolve_payload
 from pages.technical_audit import _chrome_children
 from pages.technical_audit_sections import build_audit_tab
 from services.page_context import resolve_page_context
+from utils.hash_helpers import truncate_hash
+from utils.sanitize import safe_error_message
 
 logger = logging.getLogger("agrotrace.technical_audit")
 
@@ -96,7 +98,7 @@ def update_integrity_panel(selected_cycle_id, cycle_data, global_filter, context
 
 
 @callback(
-    Output("ta-event-explorer", "children"),
+    Output("ta-prov-events-body", "children"),
     Input("ta-prov-phase", "value"),
     Input("ta-prov-service", "value"),
     Input("ta-prov-status", "value"),
@@ -110,11 +112,14 @@ def update_integrity_panel(selected_cycle_id, cycle_data, global_filter, context
 def filter_provenance_events(
     phase, service, status, event_type, search, cycle_data, global_filter, context_cycle_id,
 ):
+    """Atualiza só tabela/timeline — filtros permanecem montados (valores preservados)."""
+    from components.audit.audit_event_explorer import _events_body
+
     ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
     if not ctx_obj.active_cycle.get("cycle_id"):
         return no_update
 
-    events, resolved = _load_events(ctx_obj)
+    events, _resolved = _load_events(ctx_obj)
     filtered = filter_events_for_ui(
         events,
         phase=phase,
@@ -123,12 +128,8 @@ def filter_provenance_events(
         event_type=event_type,
         search=search,
     )
-    opts = unique_filter_options(events)
-    return AuditEventExplorer(
-        filtered,
-        opts,
-        show_global_warning=not resolved["has_cycle_match"] and not events,
-    )
+    body = _events_body(filtered)
+    return body.children
 
 
 @callback(
@@ -239,6 +240,93 @@ def render_technical_audit_tab(
 def persist_technical_audit_tab(active_tab):
     """Persiste aba ativa entre navegações."""
     return active_tab or "ta-summary"
+
+
+@callback(
+    Output("ta-raw-verify-result", "children"),
+    Output("ta-raw-verify-store", "data"),
+    Input("ta-raw-verify-btn", "n_clicks"),
+    State("ta-raw-artifact-select", "value"),
+    State("cycle-store", "data"),
+    State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    prevent_initial_call=True,
+)
+def verify_raw_artifact(n_clicks, selected, cycle_data, global_filter, context_cycle_id):
+    """Verifica integridade do bruto via adapter (sem lógica de storage na UI)."""
+    if not n_clicks:
+        return no_update, no_update
+    ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
+    cycle_id = ctx_obj.active_cycle.get("cycle_id")
+    if not cycle_id:
+        return dbc.Alert("Nenhum ciclo ativo.", color="warning", className="mb-0"), None
+
+    try:
+        if selected:
+            try:
+                retrieved = save_file_adapter.retrieve_original(artifact_id=str(selected))
+            except Exception:
+                retrieved = save_file_adapter.retrieve_by_cycle_id(str(cycle_id))
+        else:
+            retrieved = save_file_adapter.retrieve_by_cycle_id(str(cycle_id))
+        dto = save_file_adapter.to_ui_dto(retrieved)
+        alert = dbc.Alert(
+            [
+                html.Strong("Integridade verificada. "),
+                html.Span(
+                    f"Hash registrado {truncate_hash(dto.get('registered_sha256') or '', 16)} "
+                    f"= recalculado {truncate_hash(dto.get('recomputed_sha256') or '', 16)}."
+                ),
+            ],
+            color="success",
+            className="mb-0",
+        )
+        return alert, dto
+    except Exception as exc:  # noqa: BLE001 — exibir erro de domínio na UI
+        logger.warning("verify_raw_artifact failed: %s", exc)
+        return dbc.Alert(safe_error_message(exc), color="danger", className="mb-0"), None
+
+
+@callback(
+    Output("ta-raw-download", "data"),
+    Input("ta-raw-download-btn", "n_clicks"),
+    State("ta-raw-artifact-select", "value"),
+    State("cycle-store", "data"),
+    State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    prevent_initial_call=True,
+)
+def download_raw_artifact(n_clicks, selected, cycle_data, global_filter, context_cycle_id):
+    """Baixa cópia do original via adapter; filename = nome original (sem path)."""
+    if not n_clicks:
+        return no_update
+    ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
+    cycle_id = ctx_obj.active_cycle.get("cycle_id")
+    if not cycle_id:
+        return no_update
+
+    try:
+        if selected:
+            try:
+                retrieved = save_file_adapter.retrieve_original(artifact_id=str(selected))
+            except Exception:
+                retrieved = save_file_adapter.retrieve_by_cycle_id(str(cycle_id))
+        else:
+            retrieved = save_file_adapter.retrieve_by_cycle_id(str(cycle_id))
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("download_raw_artifact failed: %s", exc)
+        return no_update
+
+    content = retrieved.get("content") or b""
+    if isinstance(content, str):
+        content = content.encode("utf-8")
+    filename = retrieved.get("original_filename") or "original.bin"
+    return dict(
+        content=base64.b64encode(content).decode("ascii"),
+        filename=filename,
+        base64=True,
+        type=retrieved.get("content_type") or "application/octet-stream",
+    )
 
 
 def register(_app) -> None:

@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 
 import config
-from config import LAYOUT_OPTIONS, NORMALIZED_DIR
 from services import direct_imports as di
 from services.result_helpers import decorate_mock
 from services.mock_data import mock_wrapper_result
@@ -19,8 +18,8 @@ logger = logging.getLogger("agrotrace.wrapper")
 
 
 def _resolve_layout(layout_name: str) -> str:
-    if layout_name in LAYOUT_OPTIONS:
-        return LAYOUT_OPTIONS[layout_name]
+    if layout_name in config.LAYOUT_OPTIONS:
+        return config.LAYOUT_OPTIONS[layout_name]
     if ":" in layout_name:
         return layout_name
     return f"{layout_name}:v1"
@@ -55,7 +54,7 @@ def run_wrapper(raw_file_path: str, layout_name: str, period: str, *, year: int 
             meta = result.metadata or {}
             rejected = result.rejected_records or []
 
-            out_path = NORMALIZED_DIR / f"{Path(raw_file_path).stem}_normalized.json"
+            out_path = config.NORMALIZED_DIR / f"{Path(raw_file_path).stem}_normalized.json"
             out_path.parent.mkdir(parents=True, exist_ok=True)
             out_path.write_text(json.dumps(normalized, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
 

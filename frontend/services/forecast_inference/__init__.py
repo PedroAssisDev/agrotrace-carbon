@@ -9,6 +9,12 @@ from services.forecast_inference.errors import (
     RegistryEmptyError,
     RegistryNotFoundError,
 )
+from services.forecast_inference.types import (
+    Prediction,
+    PredictionNotPublishableError,
+    is_prediction_payload,
+    prediction_from_inference_dict,
+)
 
 __all__ = [
     "PredictionFacade",
@@ -19,4 +25,8 @@ __all__ = [
     "OutOfDomainPredictionError",
     "RegistryEmptyError",
     "RegistryNotFoundError",
+    "Prediction",
+    "PredictionNotPublishableError",
+    "is_prediction_payload",
+    "prediction_from_inference_dict",
 ]

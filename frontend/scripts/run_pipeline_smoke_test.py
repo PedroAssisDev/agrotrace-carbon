@@ -11,6 +11,10 @@ if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
 import config  # noqa: E402
+from utils.data_root_cli import apply_data_root_from_argv  # noqa: E402
+
+apply_data_root_from_argv()
+
 from services import local_orchestrator as orch  # noqa: E402
 from services.blockchain_view_service import is_blockchain_unlocked  # noqa: E402
 from services.bootstrap import bootstrap_all  # noqa: E402

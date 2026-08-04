@@ -210,6 +210,29 @@ ORDER BY hr.computed_at DESC
 LIMIT 100""",
     },
     {
+        "id": "blockchain_anchors_for_run",
+        "title": "Ancoragens espelhadas do pipeline_run",
+        "description": "Espelho RF006 em audit_blockchain_anchor (somente provenance.db).",
+        "sql": """SELECT
+    ba.blockchain_anchor_id,
+    ba.evidence_package_external_id,
+    ba.package_hash,
+    ba.merkle_root,
+    ba.blockchain_network,
+    ba.chain_id,
+    ba.transaction_hash,
+    ba.block_number,
+    ba.anchor_status,
+    ba.submitted_at,
+    ba.confirmed_at,
+    ba.anchor_provider,
+    ba.anchor_mode
+FROM audit_blockchain_anchor ba
+WHERE ba.pipeline_run_id = '{{pipeline_run_id}}'
+ORDER BY ba.submitted_at DESC
+LIMIT 100""",
+    },
+    {
         "id": "full_farm_cycle",
         "title": "Ciclo completo da fazenda ativa",
         "description": "Resumo de runs, artefatos e eventos da fazenda.",

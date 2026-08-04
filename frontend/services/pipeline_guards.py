@@ -64,6 +64,27 @@ def can_publish_final_ontology(cycle: dict) -> tuple[bool, str]:
     approval = cycle.get("approval") or {}
     if approval.get("decision") != "APPROVED":
         return False, "Decisão de aprovação não é APPROVED."
+    try:
+        from services.result_correction_service import (
+            get_active_version,
+            has_open_correction,
+            has_pending_reapproval,
+        )
+
+        if has_open_correction(cycle):
+            return False, "Há solicitação de correção aberta; finalize a correção antes de publicar."
+        if has_pending_reapproval(cycle):
+            return False, "Nova versão preliminar pendente de reaprovação."
+        active = get_active_version(cycle)
+        if active and active.get("status") == "superseded":
+            return False, "Versão ativa inválida (superseded); não é permitido publicar versão anterior."
+        if active and active.get("status") not in {"approved", "preliminary"}:
+            # preliminary só publica após aprovação humana (já checada acima via step)
+            pass
+        if active and active.get("status") == "preliminary" and approval.get("decision") != "APPROVED":
+            return False, "Versão preliminar ainda não aprovada."
+    except Exception:
+        pass
     return True, ""
 
 

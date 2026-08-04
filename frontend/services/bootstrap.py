@@ -8,30 +8,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from config import (
-    BLOCKCHAIN_DB_PATH,
-    BLOCKCHAIN_SERVICE_DIR,
-    CALCULATION_SERVICE_DIR,
-    CYCLES_DIR,
-    EVIDENCE_PACKAGES_DIR,
-    MODEL_TRAINING_SERVICE_DIR,
-    NORMALIZED_DIR,
-    ONTOLOGY_DIR,
-    ONTOLOGY_EXPORTS_DIR,
-    ONTOLOGY_SERVICE_DIR,
-    PROPERTIES_DIR,
-    PROV_DB_PATH,
-    PUBLICATIONS_DIR,
-    RAW_ORIGINALS_DIR,
-    REPORTS_DIR,
-    SAMPLE_DATA_DIR,
-    SAVE_FILE_EMULATED_UPLOADS_DIR,
-    SAVE_FILE_ORIGINALS_DIR,
-    SAVE_FILE_SERVICE_DIR,
-    TRACEABILITY_SRC_DIR,
-    WRAPPERS_SERVICE_DIR,
-    ensure_data_dirs,
-)
+import config
 
 logger = logging.getLogger("agrotrace.bootstrap")
 
@@ -51,7 +28,7 @@ def _install_wrappers_alias() -> None:
     import importlib.abc
     import importlib.util
 
-    service_root = WRAPPERS_SERVICE_DIR
+    service_root = config.WRAPPERS_SERVICE_DIR
 
     class _WrappersAliasFinder(importlib.abc.MetaPathFinder):
         def find_spec(self, fullname, path, target=None):
@@ -81,23 +58,77 @@ def _install_wrappers_alias() -> None:
 def configure_paths() -> None:
     """Adiciona raízes dos serviços ao sys.path."""
     _install_wrappers_alias()
-    _add_to_path(SAVE_FILE_SERVICE_DIR)
-    _add_to_path(WRAPPERS_SERVICE_DIR)
-    _add_to_path(CALCULATION_SERVICE_DIR)
-    _add_to_path(ONTOLOGY_SERVICE_DIR)
-    _add_to_path(BLOCKCHAIN_SERVICE_DIR)
-    _add_to_path(TRACEABILITY_SRC_DIR)
+    _add_to_path(config.SAVE_FILE_SERVICE_DIR)
+    _add_to_path(config.WRAPPERS_SERVICE_DIR)
+    _add_to_path(config.CALCULATION_SERVICE_DIR)
+    _add_to_path(config.ONTOLOGY_SERVICE_DIR)
+    _add_to_path(config.BLOCKCHAIN_SERVICE_DIR)
+    _add_to_path(config.TRACEABILITY_SRC_DIR)
     # Necessário para unpickle de forecasters (model.joblib de séries temporais).
-    _add_to_path(MODEL_TRAINING_SERVICE_DIR / "src")
+    _add_to_path(config.MODEL_TRAINING_SERVICE_DIR / "src")
 
 
 def configure_env() -> None:
     """Define variáveis de ambiente das DBs."""
-    ensure_data_dirs()
-    prov_url = f"sqlite:///{PROV_DB_PATH.as_posix()}"
+    config.ensure_data_dirs()
+    prov_url = f"sqlite:///{config.PROV_DB_PATH.as_posix()}"
     os.environ["PROV_DATABASE_URL"] = prov_url
-    os.environ["BLOCKCHAIN_DATABASE_URL"] = f"sqlite:///{BLOCKCHAIN_DB_PATH.as_posix()}"
-    os.environ["BLOCKCHAIN_PROVENANCE_DATABASE_URL"] = str(PROV_DB_PATH)
+    os.environ["BLOCKCHAIN_DATABASE_URL"] = f"sqlite:///{config.BLOCKCHAIN_DB_PATH.as_posix()}"
+    os.environ["BLOCKCHAIN_PROVENANCE_DATABASE_URL"] = str(config.PROV_DB_PATH)
+
+
+def reset_runtime_state() -> None:
+    """Limpa flags/caches para permitir trocar o data root sem reiniciar o processo."""
+    global _BOOTSTRAPPED, _PROV_READY, _BLOCKCHAIN_READY
+    _BOOTSTRAPPED = False
+    _PROV_READY = False
+    _BLOCKCHAIN_READY = False
+
+    try:
+        from provenance_service.infrastructure.config import get_settings
+        from provenance_service.infrastructure.db import clear_engine_cache
+
+        clear_engine_cache()
+        get_settings.cache_clear()
+    except Exception:
+        pass
+
+    try:
+        from app.shared.config import get_settings as get_chain_settings
+
+        get_chain_settings.cache_clear()
+    except Exception:
+        pass
+
+    try:
+        import services.provenance_adapter as provenance_adapter
+
+        provenance_adapter._recorder = None
+        provenance_adapter._uow_factory = None
+        provenance_adapter._reviewer_agent_id = None
+    except Exception:
+        pass
+
+    try:
+        import services.save_file_adapter as save_file_adapter
+
+        save_file_adapter._service_cache = None
+    except Exception:
+        pass
+
+    try:
+        from utils.file_helpers import invalidate_cycle_cache
+
+        invalidate_cycle_cache()
+    except Exception:
+        pass
+
+    try:
+        import utils.logging_config as logging_config
+
+        logging_config.reset_logging_for_data_root()
+    except Exception:
+        pass
 
 
 def init_provenance_db() -> bool:
@@ -129,7 +160,7 @@ def init_provenance_db() -> bool:
             install_sqlite_append_only(conn)
         engine.dispose()
         _PROV_READY = True
-        logger.info("Provenance DB inicializada: %s", PROV_DB_PATH)
+        logger.info("Provenance DB inicializada: %s", config.PROV_DB_PATH)
         return True
     except Exception as exc:
         logger.warning("Falha ao inicializar provenance DB: %s", exc)
@@ -146,8 +177,8 @@ def init_blockchain_db() -> tuple[Any | None, bool]:
 
             get_settings.cache_clear()
             settings = Settings(
-                database_url=f"sqlite:///{BLOCKCHAIN_DB_PATH.as_posix()}",
-                provenance_database_url=str(PROV_DB_PATH),
+                database_url=f"sqlite:///{config.BLOCKCHAIN_DB_PATH.as_posix()}",
+                provenance_database_url=str(config.PROV_DB_PATH),
             )
             return ServiceContainer(settings), True
         except Exception:
@@ -159,13 +190,13 @@ def init_blockchain_db() -> tuple[Any | None, bool]:
 
         get_settings.cache_clear()
         settings = Settings(
-            database_url=f"sqlite:///{BLOCKCHAIN_DB_PATH.as_posix()}",
-            provenance_database_url=str(PROV_DB_PATH),
+            database_url=f"sqlite:///{config.BLOCKCHAIN_DB_PATH.as_posix()}",
+            provenance_database_url=str(config.PROV_DB_PATH),
         )
         container = ServiceContainer(settings)
         init_database(container.settings)
         _BLOCKCHAIN_READY = True
-        logger.info("Blockchain DB inicializada: %s", BLOCKCHAIN_DB_PATH)
+        logger.info("Blockchain DB inicializada: %s", config.BLOCKCHAIN_DB_PATH)
         return container, True
     except Exception as exc:
         logger.warning("Falha ao inicializar blockchain DB: %s", exc)
@@ -192,57 +223,28 @@ def _wipe_directory(directory: Path) -> int:
 
 def wipe_all_test_data(*, recreate_dbs: bool = True) -> dict[str, Any]:
     """Apaga todos os artefatos locais de teste do protótipo."""
-    global _BOOTSTRAPPED, _PROV_READY, _BLOCKCHAIN_READY
-
-    ensure_data_dirs()
-    _PROV_READY = False
-    _BLOCKCHAIN_READY = False
-    _BOOTSTRAPPED = False
-
-    try:
-        from provenance_service.infrastructure.config import get_settings
-        from provenance_service.infrastructure.db import clear_engine_cache
-
-        clear_engine_cache()
-        get_settings.cache_clear()
-    except Exception:
-        pass
-
-    try:
-        from app.shared.config import get_settings as get_chain_settings
-
-        get_chain_settings.cache_clear()
-    except Exception:
-        pass
-
-    try:
-        import services.provenance_adapter as provenance_adapter
-
-        provenance_adapter._recorder = None
-        provenance_adapter._uow_factory = None
-        provenance_adapter._reviewer_agent_id = None
-    except Exception:
-        pass
+    config.ensure_data_dirs()
+    reset_runtime_state()
 
     wiped: dict[str, int] = {}
     for directory in (
-        CYCLES_DIR,
-        RAW_ORIGINALS_DIR,
-        SAVE_FILE_ORIGINALS_DIR,
-        SAVE_FILE_EMULATED_UPLOADS_DIR,
-        NORMALIZED_DIR,
-        ONTOLOGY_DIR,
-        ONTOLOGY_EXPORTS_DIR,
-        EVIDENCE_PACKAGES_DIR,
-        PUBLICATIONS_DIR,
-        REPORTS_DIR,
-        SAMPLE_DATA_DIR / "seed",
+        config.CYCLES_DIR,
+        config.RAW_ORIGINALS_DIR,
+        config.SAVE_FILE_ORIGINALS_DIR,
+        config.SAVE_FILE_EMULATED_UPLOADS_DIR,
+        config.NORMALIZED_DIR,
+        config.ONTOLOGY_DIR,
+        config.ONTOLOGY_EXPORTS_DIR,
+        config.EVIDENCE_PACKAGES_DIR,
+        config.PUBLICATIONS_DIR,
+        config.REPORTS_DIR,
+        config.SAMPLE_DATA_DIR / "seed",
     ):
         wiped[str(directory.name)] = _wipe_directory(directory)
 
-    wiped["properties"] = _wipe_directory(PROPERTIES_DIR)
+    wiped["properties"] = _wipe_directory(config.PROPERTIES_DIR)
 
-    for db_path in (PROV_DB_PATH, BLOCKCHAIN_DB_PATH):
+    for db_path in (config.PROV_DB_PATH, config.BLOCKCHAIN_DB_PATH):
         if db_path.exists():
             try:
                 db_path.unlink()

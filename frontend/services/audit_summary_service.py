@@ -12,6 +12,16 @@ from services.page_context import PageContext
 from utils.global_filter import period_in_analysis_range
 
 
+def _ontology_display_name(cycle: dict) -> str:
+    from pathlib import Path
+
+    ont = cycle.get("ontology") or {}
+    raw = ont.get("published_ontology_path") or (ont.get("export_paths") or {}).get("owl") or ""
+    if not raw:
+        return "—"
+    return Path(str(raw).replace("\\", "/")).name or "—"
+
+
 def detect_integration_mode(cycle: dict) -> str:
     """Detecta modo real / mock / mixed varrendo steps e artefatos."""
     modes: set[str] = set()
@@ -194,7 +204,7 @@ def build_summary_cards(ctx: PageContext) -> list[dict[str, Any]]:
             "Vínculo ontológico",
             ((cycle.get("ontology") or {}).get("ontology_version") or "—")[:40],
             (
-                f"path={(cycle.get('ontology') or {}).get('published_ontology_path') or ((cycle.get('ontology') or {}).get('export_paths') or {}).get('owl') or '—'} "
+                f"arquivo={_ontology_display_name(cycle)} "
                 f"• hash={((cycle.get('ontology') or {}).get('ontology_hash') or '—')[:16]}"
             ),
             "ontology-manager",

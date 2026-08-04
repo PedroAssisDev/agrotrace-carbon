@@ -126,7 +126,7 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
         ZeroAssumptionAlert(item),
         CalculationFactorSelector(cycle, item),
         html.Hr(className="my-3"),
-        CalculationApprovalActions(item),
+        CalculationApprovalActions(item, cycle),
     ])
 
     return dbc.Card(dbc.CardBody(sections), className="agro-card cr-detail-panel h-100")

@@ -365,13 +365,20 @@ def build_factor_params(cycle: dict, group: str, values: dict[str, Any], *, prof
 
 
 def build_factor_rows_for_display(cycle: dict, item: dict) -> list[dict[str, Any]]:
-    """Linhas atuais dos fatores do item (prioriza factor_catalog da ontologia)."""
+    """Linhas dos fatores aplicados do item (não o catálogo anual bruto)."""
+    from services.calculation_explanation_service import (
+        applied_factors_from_explanation,
+        factor_origin_map,
+        get_or_build_explanation,
+    )
+
     formula_id = item.get("formula_id") or ""
     sub_id = resolve_sub_id(item)
     sub = _subcalculation(cycle, sub_id)
     sub_factors: dict[str, Any] = (sub or {}).get("factors") or {}
     catalog = (cycle.get("ontology") or {}).get("factor_catalog") or {}
     catalog_statuses = catalog.get("_statuses") or {}
+    explanation = get_or_build_explanation(cycle)
 
     rows: list[dict[str, Any]] = []
     fert_labels = {
@@ -380,12 +387,14 @@ def build_factor_rows_for_display(cycle: dict, item: dict) -> list[dict[str, Any
         "fraction_n_volatilized": "Fração N volatilizada",
     }
     for group in get_factor_groups_for_formula(formula_id):
-        data = catalog.get(group)
-        if data is None:
-            data = sub_factors.get(group)
-        if data is None:
+        # Prioridade: explanation aplicada → sub.factors → factors_used (nunca catalog como valor em uso)
+        data = applied_factors_from_explanation(explanation, group)
+        if not data:
+            data = sub_factors.get(group) or {}
+        if not data:
             data = _factors_used(cycle).get(group) or {}
         data = _filter_factor_data_for_sub(group, dict(data) if isinstance(data, dict) else {}, sub)
+        origins = factor_origin_map(explanation, group)
         group_st = catalog_statuses.get(group) or {}
         for k, v in data.items():
             if str(k).startswith("_"):
@@ -396,8 +405,9 @@ def build_factor_rows_for_display(cycle: dict, item: dict) -> list[dict[str, Any
                 "grupo": _FACTOR_GROUP_LABELS.get(group, group),
                 "chave": fert_labels.get(k, k) if group == "fertilizer_factors" else k,
                 "valor": v,
-                "status": group_st.get(k) or "pending",
-                "source": catalog.get("_source") or "calculation",
+                "status": group_st.get(k) or "applied",
+                "origin": origins.get(k) or "configured",
+                "source": "applied_calculation",
             })
     return rows
 

@@ -552,7 +552,10 @@ def _resolve_factors(
         "fertilizer_factors",
         "gwp",
     )
-    missing = [k for k in required if catalog.get(k) is None]
+    missing = [k for k in required if not isinstance(catalog.get(k), dict) or not any(
+        not str(kk).startswith("_") and vv is not None
+        for kk, vv in dict(catalog.get(k) or {}).items()
+    )]
     if missing:
         raise RuntimeError(
             "Parâmetros obrigatórios ausentes na ontologia (factor_catalog): "
@@ -670,10 +673,9 @@ def _build_subcalculations(
             "unit": "kg CO2e",
             "co2e_kg": flat.get("co2e_total_kg", 0),
             "inputs": {},
-            "factors": {"gwp": factors.get("gwp")},
+            "factors": {"gwp": gwp},
         },
     ]
-
     if flat.get("co2e_intensity_per_milk_liter"):
         subs.append({
             "id": "intensity_liter",
@@ -699,8 +701,146 @@ def _build_subcalculations(
             "inputs": {"milk_kg_fpcm": inputs.get("milk_kg_fpcm"), "co2e_total_kg": flat.get("co2e_total_kg")},
             "factors": {},
         })
-
     return subs
+
+
+def _factor_origins_for_explanation(
+    factors_used: dict[str, Any],
+    factor_sources: dict[str, str],
+    *,
+    scope_label: str,
+    auto_prorate: bool,
+    factor_catalog: dict[str, Any] | None = None,
+) -> dict[str, dict[str, str]]:
+    """Deriva origin por chave de fator (configured/default/inferred/absent)."""
+    from services.factor_catalog_materialization_service import status_to_explanation_origin
+
+    origins: dict[str, dict[str, str]] = {}
+    catalog = factor_catalog or {}
+    statuses = catalog.get("_statuses") or {}
+
+    for group, data in factors_used.items():
+        if not isinstance(data, dict):
+            continue
+        group_st = statuses.get(group) or {}
+        src = (factor_sources.get(group) or "").lower()
+        group_origins: dict[str, str] = {}
+        for k in data:
+            if str(k).startswith("_"):
+                continue
+            st = group_st.get(k)
+            if st is not None:
+                base = status_to_explanation_origin(st)
+            elif src in {"manual", "calculation_params", "user"}:
+                base = "configured"
+            elif src in {"ontology", "catalog"} and group == "enteric_ch4_kg_per_animal" and auto_prorate and str(scope_label).lower() in {"monthly", "month"}:
+                base = "inferred"
+            elif src in {"ontology", "catalog", "pipeline"}:
+                base = "configured"
+            elif src in {"ipcc", "default", ""}:
+                base = "default"
+            else:
+                base = "configured"
+            # Proration mensal de enteric pending → inferred sobre default anual
+            if (
+                base == "default"
+                and group == "enteric_ch4_kg_per_animal"
+                and auto_prorate
+                and str(scope_label).lower() in {"monthly", "month"}
+            ):
+                base = "inferred"
+            group_origins[str(k)] = base
+        origins[group] = group_origins
+    return origins
+
+
+def _build_result_explanation(
+    *,
+    bundle: Any,
+    flat: dict[str, float],
+    inputs: dict[str, Any],
+    factors_used: dict[str, Any],
+    gwp: dict[str, float],
+    method: dict[str, str],
+    scope_label: str,
+    period: str | None,
+    factor_sources: dict[str, str],
+    auto_prorate: bool,
+    cycle_id: str | None,
+    source_artifact_id: str | None,
+    executed_by: str | None,
+    factor_catalog: dict[str, Any] | None = None,
+) -> dict[str, Any] | None:
+    """Obtém/reconstrói explanation canônica a partir do calculation-service."""
+    artifacts = []
+    if source_artifact_id:
+        artifacts.append({"kind": "raw_file", "artifact_id": str(source_artifact_id), "label": "source_artifact"})
+
+    factor_origins = _factor_origins_for_explanation(
+        factors_used,
+        factor_sources,
+        scope_label=scope_label,
+        auto_prorate=auto_prorate,
+        factor_catalog=factor_catalog,
+    )
+
+    # Prefer bundle.explanation when the service already attached one; rebuild with FE context.
+    build_fn = getattr(di, "build_calculation_explanation", None)
+    if build_fn is None and hasattr(bundle, "attach_explanation"):
+        try:
+            from emissions.explanation import (  # type: ignore
+                OriginArtifactRef,
+                build_calculation_explanation as build_fn,
+            )
+        except Exception:
+            build_fn = None
+
+    if build_fn is not None:
+        try:
+            origin_refs = None
+            try:
+                from emissions.explanation import OriginArtifactRef  # type: ignore
+
+                origin_refs = [
+                    OriginArtifactRef(kind=a["kind"], artifact_id=a.get("artifact_id"), label=a.get("label"))
+                    for a in artifacts
+                ]
+            except Exception:
+                origin_refs = None
+            expl = build_fn(
+                flat=flat,
+                inputs=inputs,
+                factors_used=factors_used,
+                gwp=gwp,
+                method_code=method.get("code") or "ECOFARM-T1-DAIRY",
+                method_version=method.get("version") or "1.0.0",
+                implementation_version=method.get("implementation_version") or "0.3.1",
+                methodology_label=method.get("methodology_label") or "IPCC/IDF-compatible",
+                temporal_granularity=scope_label,
+                period=period,
+                days_in_period=inputs.get("days_in_period"),
+                factor_origins=factor_origins,
+                factor_sources=factor_sources,
+                origin_artifacts=origin_refs,
+                cycle_id=cycle_id,
+                executed_by=executed_by,
+            )
+            data = expl.to_dict() if hasattr(expl, "to_dict") else dict(expl)
+            if artifacts and not data.get("origin_artifacts"):
+                data["origin_artifacts"] = artifacts
+            return data
+        except Exception as exc:
+            logger.warning("explanation build failed: %s", exc)
+
+    if hasattr(bundle, "to_explanation_dict"):
+        data = bundle.to_explanation_dict()
+        if data:
+            data["cycle_id"] = cycle_id or data.get("cycle_id")
+            data["executed_by"] = executed_by or data.get("executed_by")
+            if artifacts:
+                data["origin_artifacts"] = artifacts
+            return data
+    return None
 
 
 def _mock(canonical_dataset: dict, params: dict, reason: str | None = None) -> dict[str, Any]:
@@ -792,6 +932,23 @@ def run_emission_calculation(canonical_dataset: dict, params: dict | None = None
 
             subcalculations = _build_subcalculations(bundle, flat, inputs, factors_used, gwp)
 
+            explanation = _build_result_explanation(
+                bundle=bundle,
+                flat=flat,
+                inputs=inputs,
+                factors_used=factors_used,
+                gwp=gwp,
+                method=method,
+                scope_label=scope_label,
+                period=params.get("reporting_period") or canonical_dataset.get("reporting_period"),
+                factor_sources=factors.get("factor_sources") or {},
+                auto_prorate=bool(factors.get("auto_prorate_factors")),
+                cycle_id=canonical_dataset.get("cycle_id") or params.get("cycle_id"),
+                source_artifact_id=canonical_dataset.get("source_artifact_id"),
+                executed_by=params.get("executed_by") or canonical_dataset.get("uploaded_by"),
+                factor_catalog=factor_catalog if isinstance(factor_catalog, dict) else None,
+            )
+
             result = {
                 "source": "real",
                 "mode": "real",
@@ -803,6 +960,7 @@ def run_emission_calculation(canonical_dataset: dict, params: dict | None = None
                 "factors_used": factors_used,
                 "factor_sources": factors.get("factor_sources") or {},
                 "subcalculations": subcalculations,
+                "explanation": explanation,
                 "ch4_enteric_kg": flat.get("ch4_enteric_kg", 0),
                 "ch4_manure_kg": flat.get("ch4_manure_kg", 0),
                 "n2o_fertilizer_kg": flat.get("n2o_fertilizer_kg", 0),
@@ -832,8 +990,13 @@ def run_emission_calculation(canonical_dataset: dict, params: dict | None = None
                 "factors_used": result["factors_used"],
                 "subcalculations": result["subcalculations"],
                 "co2e_total_kg": result["co2e_total_kg"],
+                "explanation_content_hash": (explanation or {}).get("content_hash"),
             }
             result["preliminary_hash"] = sha256_dict(hash_payload)
+            if explanation is not None:
+                explanation["calculation_id"] = explanation.get("calculation_id") or result["preliminary_hash"]
+                explanation["result_id"] = explanation.get("result_id") or result["preliminary_hash"]
+                result["explanation"] = explanation
             log_call(
                 logger,
                 "calculation.done",

@@ -38,13 +38,15 @@ def build_raw_data_view(cycle: dict) -> dict[str, Any]:
     raw = cycle.get("raw_file") or {}
     return {
         "filename": raw.get("original_filename"),
-        "property_id": cycle.get("property_id"),
-        "period": cycle.get("reporting_period"),
-        "layout": raw.get("layout_id"),
-        "size_bytes": raw.get("size_bytes"),
-        "extension": raw.get("extension"),
-        "uploaded_at": raw.get("stored_at"),
+        "property_id": cycle.get("property_id") or raw.get("property_id"),
+        "period": cycle.get("reporting_period") or raw.get("reporting_period"),
+        "layout": raw.get("layout_id") or cycle.get("layout_id"),
+        "size_bytes": raw.get("file_size_bytes") if raw.get("file_size_bytes") is not None else raw.get("size_bytes"),
+        "extension": raw.get("file_extension") or raw.get("extension"),
+        "uploaded_at": raw.get("uploaded_at") or raw.get("stored_at"),
         "sha256": raw.get("sha256"),
+        "artifact_id": raw.get("artifact_id"),
+        # Path absoluto não deve ir para a UI; mantido só para consumidores internos.
         "stored_path": raw.get("stored_path"),
     }
 

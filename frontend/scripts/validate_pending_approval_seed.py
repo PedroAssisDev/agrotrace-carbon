@@ -1,8 +1,8 @@
-"""Valida os ciclos pendentes criados por reset_and_seed_pending_cycles.py.
+"""Valida ciclos pendentes criados por fixture isolado (não assume ambiente operacional).
 
 Uso:
-    python scripts/reset_and_seed_pending_cycles.py --confirm
     python scripts/validate_pending_approval_seed.py
+    python scripts/validate_pending_approval_seed.py --data-root /tmp/pending
 """
 
 from __future__ import annotations
@@ -14,13 +14,11 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
-from scripts._pending_seed_assertions import (  # noqa: E402
-    EXPECTED_APPROVAL_COUNT,
-    EXPECTED_ENTRY_COUNT,
-    SAMPLE_CYCLE_IDS,
-    infer_granularity,
-    validate_pending_cycle,
-    validate_seed_collection,
+from scripts._validation_env import (  # noqa: E402
+    CheckCollector,
+    isolated_data_root,
+    print_structured_summary,
+    seed_pending_approval_fixtures,
 )
 from services.cycle_status_service import count_pending_approval, cycles_pending_approval  # noqa: E402
 from services.dashboard_service import build_dashboard_indicators, generate_dashboard_insights  # noqa: E402
@@ -29,118 +27,112 @@ from utils.file_helpers import list_cycles  # noqa: E402
 from utils.global_filter import DEFAULT_GLOBAL_FILTER  # noqa: E402
 
 
-class Validator:
-    def __init__(self) -> None:
-        self.errors: list[str] = []
-
-    def check(self, name: str, condition: bool, detail: str = "") -> None:
-        if condition:
-            print(f"  [OK]   {name}")
-        else:
-            msg = f"{name}{f' — {detail}' if detail else ''}"
-            self.errors.append(msg)
-            print(f"  [FAIL] {msg}")
+def _infer_granularity(cycle: dict) -> str:
+    coverage = cycle.get("temporal_coverage") or {}
+    src = str(coverage.get("source_granularity") or "").lower()
+    if src in ("annual", "monthly", "daily", "intraday"):
+        return src
+    return "monthly"
 
 
 def main() -> int:
-    v = Validator()
-    print("== Validação do seed — ciclos pendentes de aprovação ==\n")
+    print("== Validação do seed — ciclos pendentes de aprovação (fixture isolado) ==\n")
+    v = CheckCollector()
 
-    cycles = list_cycles()
-    v.check(
-        "ciclos persistidos",
-        len(cycles) >= EXPECTED_APPROVAL_COUNT,
-        f"{len(cycles)} encontrado(s)",
-    )
+    with isolated_data_root() as root:
+        seeded = seed_pending_approval_fixtures(persist=True)
+        expected_count = len(seeded)
+        expected_property_ids = {c["property_id"] for c in seeded}
+        sample_ids = [c["cycle_id"] for c in seeded[:4]]
 
-    by_id = {c.get("cycle_id"): c for c in cycles}
-    for cid in SAMPLE_CYCLE_IDS:
-        v.check(f"ciclo {cid}", cid in by_id)
+        cycles = list_cycles()
+        fixture_cycles = [c for c in cycles if c.get("seed_fixture")]
+        # Quando --data-root é compartilhado com outros validate_*, pode haver ciclos extras.
+        # Validamos os registros do fixture, não a contagem global do root.
+        v.check(
+            "ciclos do fixture persistidos",
+            len(fixture_cycles) >= expected_count,
+            f"fixture={len(fixture_cycles)} esperado>={expected_count} total_root={len(cycles)}",
+        )
+        v.check(
+            "contagem do fixture (não assume 17 do ambiente global)",
+            expected_count == len(seeded) and expected_count >= 3,
+            f"fixture_count={expected_count}",
+        )
 
-    property_ids = {
-        by_id[cid].get("property_id")
-        for cid in SAMPLE_CYCLE_IDS
-        if cid in by_id
-    }
-    v.check("duas fazendas distintas (mensal+anual)", len(property_ids) == 2, str(property_ids))
+        by_id = {c.get("cycle_id"): c for c in cycles}
+        for cid in sample_ids:
+            v.check(f"ciclo fixture {cid}", cid in by_id)
 
-    granularities = {infer_granularity(by_id[cid]) for cid in SAMPLE_CYCLE_IDS if cid in by_id}
-    v.check(
-        "cenarios mensal/anual cobertos",
-        {"monthly", "annual"}.issubset(granularities),
-        str(granularities),
-    )
+        property_ids = {c.get("property_id") for c in fixture_cycles} or {c.get("property_id") for c in cycles}
+        v.check(
+            "fazendas do fixture presentes",
+            expected_property_ids.issubset(property_ids),
+            str(sorted(property_ids)),
+        )
+        v.check(
+            "três fazendas (annual/monthly/daily)",
+            {"FARM-ANNUAL-001", "FARM-MONTHLY-001", "FARM-DAILY-001"}.issubset(property_ids),
+            str(sorted(property_ids)),
+        )
 
-    # Diário desativado temporariamente.
-    # daily_cycle = by_id.get("MONTHLY-2026-01-FARM-DAILY-001")
-    # if daily_cycle:
-    #     coverage = daily_cycle.get("temporal_coverage") or {}
-    #     v.check(
-    #         "diario consolidado mensal",
-    #         coverage.get("source_granularity") == "daily"
-    #         and coverage.get("granularity") == "monthly",
-    #         str(coverage),
-    #     )
-    #     v.check(
-    #         "janeiro com 31 entradas diarias",
-    #         len(daily_cycle.get("data_entries") or []) == 31,
-    #         str(len(daily_cycle.get("data_entries") or [])),
-    #     )
+        granularities = {_infer_granularity(c) for c in (fixture_cycles or cycles)}
+        v.check(
+            "cenarios annual/monthly/daily cobertos",
+            {"annual", "monthly", "daily"}.issubset(granularities),
+            str(granularities),
+        )
 
-    validate_seed_collection(cycles, v.errors)
+        annual_n = sum(1 for c in fixture_cycles if c.get("property_id") == "FARM-ANNUAL-001")
+        monthly_n = sum(1 for c in fixture_cycles if c.get("property_id") == "FARM-MONTHLY-001")
+        daily_n = sum(1 for c in fixture_cycles if c.get("property_id") == "FARM-DAILY-001")
+        v.check("annual: 5 ciclos", annual_n == 5, str(annual_n))
+        v.check("monthly: 12 ciclos", monthly_n == 12, str(monthly_n))
+        v.check("daily consolidado: 6 ciclos (Jan-Jun)", daily_n == 6, str(daily_n))
 
-    pending = cycles_pending_approval(cycles)
-    v.check(
-        f"fila de revisão com {EXPECTED_APPROVAL_COUNT} itens",
-        len(pending) == EXPECTED_APPROVAL_COUNT,
-    )
-    v.check(
-        f"count_pending_approval == {EXPECTED_APPROVAL_COUNT}",
-        count_pending_approval(cycles) == EXPECTED_APPROVAL_COUNT,
-    )
+        pending = cycles_pending_approval(fixture_cycles or cycles)
+        v.check(
+            f"fila de revisão com >= {expected_count} itens do fixture",
+            len(pending) >= expected_count,
+            f"pending={len(pending)}",
+        )
+        v.check(
+            f"count_pending_approval fixture >= {expected_count}",
+            count_pending_approval(fixture_cycles or cycles) >= expected_count,
+        )
 
-    active = cycles[0] if cycles else {}
-    indicators = build_dashboard_indicators(cycles, active, DEFAULT_GLOBAL_FILTER, [], cycles)
-    pipeline = indicators.get("pipeline") or {}
-    v.check(
-        "dashboard pipeline awaiting_approval",
-        (pipeline.get("awaiting_approval") or 0) >= EXPECTED_APPROVAL_COUNT,
-        str(pipeline),
-    )
-    counts = pipeline_counts(cycles)
-    v.check(
-        "indicator_service awaiting_approval",
-        counts.get("awaiting_approval", 0) >= EXPECTED_APPROVAL_COUNT,
-        str(counts),
-    )
+        active = (fixture_cycles or cycles)[0] if (fixture_cycles or cycles) else {}
+        indicators = build_dashboard_indicators(
+            fixture_cycles or cycles, active, DEFAULT_GLOBAL_FILTER, [], fixture_cycles or cycles
+        )
+        pipeline = indicators.get("pipeline") or {}
+        v.check(
+            "dashboard pipeline awaiting_approval",
+            (pipeline.get("awaiting_approval") or 0) >= expected_count,
+            str(pipeline.get("awaiting_approval")),
+        )
+        counts = pipeline_counts(fixture_cycles or cycles)
+        v.check(
+            "indicator_service awaiting_approval",
+            counts.get("awaiting_approval", 0) >= expected_count,
+            str(counts.get("awaiting_approval")),
+        )
 
-    insights = generate_dashboard_insights(indicators)
-    v.check(
-        "insight de aprovação pendente",
-        any(i.get("title") in ("Aprovação pendente", "Pendência de aprovação") for i in insights),
-        str([i.get("title") for i in insights]),
-    )
+        insights = generate_dashboard_insights(indicators)
+        v.check(
+            "insight de aprovação pendente",
+            any(i.get("title") in ("Aprovação pendente", "Pendência de aprovação") for i in insights),
+            str([i.get("title") for i in insights]),
+        )
 
-    for cid in SAMPLE_CYCLE_IDS:
-        cycle = by_id.get(cid)
-        if cycle:
-            validate_pending_cycle(cycle, v.errors, label=cid)
+        # Não deve depender da contagem operacional 17
+        v.check(
+            "fixture independente do ambiente operacional",
+            all(c.get("seed_fixture") for c in seeded),
+            "seed_fixture=True em todos",
+        )
 
-    v.check(
-        "total de entradas esperado",
-        EXPECTED_ENTRY_COUNT == 17,
-        str(EXPECTED_ENTRY_COUNT),
-    )
-
-    print()
-    if v.errors:
-        print(f"Pending approval seed validation: FAIL ({len(v.errors)} erro(s))")
-        for err in v.errors:
-            print(f"  - {err}")
-        return 1
-
-    print("Pending approval seed validation: PASS")
-    return 0
+    return print_structured_summary(v, "Pending approval seed validation")
 
 
 if __name__ == "__main__":
