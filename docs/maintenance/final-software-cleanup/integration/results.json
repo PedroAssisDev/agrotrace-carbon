@@ -1,1 +1,14 @@
-﻿{}
+﻿{
+  "classification": "PRONTO COM LIMITAÇÕES DECLARADAS",
+  "branch": "refactor/final-software-cleanup",
+  "baseline_pass": 39,
+  "baseline_fail": 2,
+  "legacy_active_count": 0,
+  "projects_versioned": "1.0.0",
+  "external_transactions": false,
+  "limitations": [
+    "full_regression_post_legacy_pending",
+    "sepolia_historical_only",
+    "tags_not_created"
+  ]
+}

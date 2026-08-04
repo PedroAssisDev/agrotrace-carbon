@@ -90,3 +90,7 @@ agrotrace-carbon-blockchain-service/contracts/lib/
 .venv-test/
 .venv-packaging-test/
 
+
+# Generated release package (use scripts/build_software_release.py)
+software-release/
+
