@@ -1,4 +1,5 @@
 from provenance_service.application.services.provenance_recorder import (
+    ConfirmBlockchainAnchorCommand,
     ProvenanceRecorder,
     RecordBlockchainAnchorCommand,
     RecordCalculationExecutionCommand,
@@ -9,6 +10,7 @@ from provenance_service.application.services.provenance_recorder import (
     RecordCalculationReviewCommand,
     RecordCanonicalSnapshotCommand,
     RecordHashCommand,
+    RecordIntegrityVerificationCommand,
     RecordNormalizedBatchCommand,
     RecordOntologyResourceLinkCommand,
     RecordResultPublicationCommand,
@@ -24,6 +26,7 @@ from provenance_service.application.services.provenance_recorder import (
 )
 
 __all__ = [
+    "ConfirmBlockchainAnchorCommand",
     "ProvenanceRecorder",
     "RecordBlockchainAnchorCommand",
     "RecordCalculationExecutionCommand",
@@ -34,6 +37,7 @@ __all__ = [
     "RecordCalculationReviewCommand",
     "RecordCanonicalSnapshotCommand",
     "RecordHashCommand",
+    "RecordIntegrityVerificationCommand",
     "RecordNormalizedBatchCommand",
     "RecordOntologyResourceLinkCommand",
     "RecordResultPublicationCommand",

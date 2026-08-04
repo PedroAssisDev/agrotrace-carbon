@@ -535,7 +535,7 @@ def test_hash_record_stores_canonicalization_and_scope(uow_factory, recorder) ->
         hashes = uow.hash_records.list_by_pipeline_run(run.pipeline_run_id)
     assert hashes
     hr = hashes[0]
-    assert hr.canonicalization_method == "json_canonical_v1"
+    assert hr.canonicalization_method == "prov_canonical_v1"
     assert hr.hash_scope is not None
 
 

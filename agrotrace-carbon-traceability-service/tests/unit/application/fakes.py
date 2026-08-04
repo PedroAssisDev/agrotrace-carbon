@@ -222,8 +222,11 @@ class FakeProvBundleRepo(_BaseRepo):
         return [b for b in self.items.values() if b.pipeline_run_id == pipeline_run_id]
 
     def close(self, bundle_id: UUID) -> None:  # pragma: no cover - unused in unit tests
-        b = self.items[bundle_id]
-        self.items[bundle_id] = replace(b, closed_at=None)
+        from provenance_service.domain.shared.errors import AppendOnlyViolationError
+
+        raise AppendOnlyViolationError(
+            f"prov_bundle {bundle_id} is append-only; close via a new revision/event"
+        )
 
 
 class FakeProvEntityRepo(_BaseRepo):
@@ -302,6 +305,9 @@ class FakeProvRelationRepo:
 
     def list_associations_for_activity(self, activity_id: UUID) -> list[ProvAssociatedWith]:
         return [a for a in self.associated_with if a.activity_id == activity_id]
+
+    def list_revisions_for_pipeline_run(self, pipeline_run_id: UUID) -> list[ProvRevision]:
+        return [r for r in self.revisions if r.pipeline_run_id == pipeline_run_id]
 
 
 class FakeProvAttributeRepo:
@@ -612,6 +618,67 @@ class FakeBlockchainAnchorRepo(_BaseRepo):
         return [
             a for a in self.items.values() if a.pipeline_run_id == pipeline_run_id
         ]
+
+    def find_by_evidence_package_external_id(
+        self,
+        evidence_package_external_id: str,
+        *,
+        pipeline_run_id: UUID | None = None,
+    ) -> BlockchainAnchor | None:
+        matches = [
+            a
+            for a in self.items.values()
+            if a.evidence_package_external_id == evidence_package_external_id
+            and (pipeline_run_id is None or a.pipeline_run_id == pipeline_run_id)
+        ]
+        if not matches:
+            return None
+        matches.sort(
+            key=lambda a: a.submitted_at or a.anchored_at or a.confirmed_at,
+            reverse=True,
+        )
+        return matches[0]
+
+    def update_status(
+        self,
+        blockchain_anchor_id: UUID,
+        *,
+        anchor_status: str,
+        transaction_hash: str | None = None,
+        block_number: str | None = None,
+        confirmations: int | None = None,
+        anchored_at: object | None = None,
+        chain_id: str | None = None,
+        verification_uri: str | None = None,
+        confirmed_at: object | None = None,
+        failed_reason: str | None = None,
+        metadata: dict | None = None,
+    ) -> None:
+        from dataclasses import replace
+
+        from provenance_service.domain.shared.enums import BlockchainAnchorStatus
+
+        current = self.items[blockchain_anchor_id]
+        updates: dict = {"anchor_status": BlockchainAnchorStatus(anchor_status)}
+        if transaction_hash is not None:
+            updates["transaction_hash"] = transaction_hash
+        if block_number is not None:
+            updates["block_number"] = block_number
+        if confirmations is not None:
+            updates["confirmations"] = confirmations
+        if anchored_at is not None:
+            updates["anchored_at"] = anchored_at
+        if chain_id is not None:
+            updates["chain_id"] = chain_id
+        if verification_uri is not None:
+            updates["verification_uri"] = verification_uri
+        if confirmed_at is not None:
+            updates["confirmed_at"] = confirmed_at
+        if failed_reason is not None:
+            updates["failed_reason"] = failed_reason
+        if metadata is not None:
+            updates["metadata"] = dict(metadata)
+        self.items[blockchain_anchor_id] = replace(current, **updates)
 
 
 class FakeOutboxRepo:

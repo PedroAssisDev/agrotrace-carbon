@@ -21,7 +21,7 @@ from provenance_service.domain.prov_core.relations import (
     ProvRevision,
     ProvUsed,
 )
-from provenance_service.domain.shared.enums import ProvBundleStatus
+from provenance_service.domain.shared.errors import AppendOnlyViolationError
 from provenance_service.domain.shared.time import utcnow
 from provenance_service.infrastructure.db.models.prov_core import (
     ProvActivityModel,
@@ -72,12 +72,11 @@ class SqlAlchemyProvBundleRepository:
         return [M.from_prov_bundle_model(m) for m in rows]
 
     def close(self, bundle_id: UUID) -> None:
-        stmt = (
-            update(ProvBundleModel)
-            .where(ProvBundleModel.bundle_id == bundle_id)
-            .values(status=ProvBundleStatus.CLOSED.value, closed_at=utcnow())
+        # Bundles are ledger facts (SQLite append-only). Closing would UPDATE status.
+        raise AppendOnlyViolationError(
+            f"prov_bundle {bundle_id} is append-only; close via a new revision/event, "
+            "not an in-place status update"
         )
-        self._session.execute(stmt)
 
 
 class SqlAlchemyProvEntityRepository:

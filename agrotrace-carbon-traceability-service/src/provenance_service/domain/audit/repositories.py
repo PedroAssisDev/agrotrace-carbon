@@ -26,6 +26,12 @@ class BlockchainAnchorRepository(Protocol):
     def add(self, anchor: BlockchainAnchor) -> None: ...
     def get(self, blockchain_anchor_id: UUID) -> BlockchainAnchor | None: ...
     def list_by_pipeline_run(self, pipeline_run_id: UUID) -> list[BlockchainAnchor]: ...
+    def find_by_evidence_package_external_id(
+        self,
+        evidence_package_external_id: str,
+        *,
+        pipeline_run_id: UUID | None = None,
+    ) -> BlockchainAnchor | None: ...
     def update_status(
         self,
         blockchain_anchor_id: UUID,
@@ -35,6 +41,11 @@ class BlockchainAnchorRepository(Protocol):
         block_number: str | None = None,
         confirmations: int | None = None,
         anchored_at: object | None = None,
+        chain_id: str | None = None,
+        verification_uri: str | None = None,
+        confirmed_at: object | None = None,
+        failed_reason: str | None = None,
+        metadata: dict | None = None,
     ) -> None: ...
 
 
