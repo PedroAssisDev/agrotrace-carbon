@@ -5,7 +5,7 @@
 - ``active_cycle`` / ``operational_cycle_id`` — ciclo operacional (wizard, auditoria).
 - ``analysis_cycles`` / ``filtered_analysis_cycles`` — escopo analítico multi-ciclo.
 
-Ver docs/conceptual_model_mrv.md e docs/filter_architecture_mrv.md.
+Ver docs/architecture/data-lifecycle.md e docs/modules/frontend.md.
 """
 
 from __future__ import annotations

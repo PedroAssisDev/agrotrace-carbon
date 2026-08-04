@@ -2,6 +2,8 @@
 
 Ledger append-only de proveniência do ciclo MRV.
 
+> Documento canônico do módulo: [../docs/modules/traceability-service.md](../docs/modules/traceability-service.md).
+
 ## Uso no protótipo Dash
 
 O frontend consome o pacote Python `provenance_service` via Unit of Work / `ProvenanceRecorder` (chamada direta). O banco padrão no protótipo fica em `frontend/data/db/provenance.db`.

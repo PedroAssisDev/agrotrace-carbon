@@ -2,6 +2,8 @@
 
 Lightweight, self-contained domain ontology for semantic integration of dairy MRV data.
 
+> Documento canônico do módulo: [../docs/modules/ontology-manager.md](../docs/modules/ontology-manager.md).
+
 ## Install
 
 ```bash

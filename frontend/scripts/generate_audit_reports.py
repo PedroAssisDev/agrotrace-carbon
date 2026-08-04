@@ -1,4 +1,8 @@
-"""Gera relatórios finais em docs/auditoria-capitulo-5/final/ a partir de regressao.json.
+"""Regenera o snapshot HISTÓRICO da auditoria do Capítulo 5 a partir de regressao.json.
+
+Saída em docs/audits/archive/2026-08-03-capitulo-5/final/. Este é um artefato
+histórico preservado para rastreabilidade; a auditoria atual vive em
+docs/audits/current/ (ver docs/audits/current/_gen_reports.py).
 
 Contagens de status são DERIVADAS automaticamente — sem edição manual.
 """
@@ -14,9 +18,10 @@ from pathlib import Path
 from typing import Any
 
 REPO = Path(__file__).resolve().parents[2]
-DEFAULT_MAP = REPO / "docs" / "auditoria-capitulo-5" / "requirements_map.yaml"
-DEFAULT_REG = REPO / "docs" / "auditoria-capitulo-5" / "final" / "regressao.json"
-OUT_DIR = REPO / "docs" / "auditoria-capitulo-5" / "final"
+_ARCHIVE = REPO / "docs" / "audits" / "archive" / "2026-08-03-capitulo-5"
+DEFAULT_MAP = _ARCHIVE / "requirements_map.yaml"
+DEFAULT_REG = _ARCHIVE / "final" / "regressao.json"
+OUT_DIR = _ARCHIVE / "final"
 
 
 def _load_yaml(path: Path) -> dict:

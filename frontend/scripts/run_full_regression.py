@@ -2,7 +2,7 @@
 
 Uso:
     python scripts/run_full_regression.py
-    python scripts/run_full_regression.py --out docs/auditoria-capitulo-5/final/regressao.json
+    python scripts/run_full_regression.py --out docs/audits/current/regressao.json
 """
 
 from __future__ import annotations
@@ -110,7 +110,7 @@ def main() -> int:
     parser.add_argument(
         "--out",
         type=Path,
-        default=REPO_ROOT / "docs" / "auditoria-capitulo-5" / "final" / "regressao.json",
+        default=REPO_ROOT / "docs" / "audits" / "current" / "regressao.json",
     )
     parser.add_argument("--skip-forge", action="store_true")
     parser.add_argument("--quick", action="store_true", help="Skip long e2e (smoke/full cycle)")

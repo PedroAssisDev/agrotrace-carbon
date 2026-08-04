@@ -5,7 +5,7 @@ Camadas:
 - ``calculation_base_granularity`` — resolução oficial do cálculo (monthly | annual).
 - ``view_granularity`` — agrupamento para gráficos (não cria novos ciclos aprovados).
 
-Documentação: docs/conceptual_model_mrv.md (seções 4–7, 11–12).
+Documentação: docs/domain/temporal-and-organizational-granularity.md e docs/architecture/data-lifecycle.md.
 """
 
 from __future__ import annotations
