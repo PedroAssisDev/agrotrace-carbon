@@ -6,6 +6,9 @@ __pycache__/
 .venv/
 venv/
 .env
+.env.*
+!.env.example
+models/
 artifacts/**
 !artifacts/.gitkeep
 data/input/**
