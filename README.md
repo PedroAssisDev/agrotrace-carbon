@@ -44,6 +44,71 @@ python main.py
 # UI: http://127.0.0.1:8050
 ```
 
+## Dados de demonstração (simulados + Embrapa)
+
+Operação **destrutiva**: apaga ciclos/DBs locais e reimporta. Exige `--confirm`.
+
+```bash
+cd frontend
+
+# Fluxo completo: wipe → simulados (FARM-*) → Embrapa monthly (P-*) + annual (BR-*)
+python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --profile demo
+
+# Só simulados (não carrega pastas Embrapa)
+python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --skip-embrapa
+
+# Ano dos inventários anuais Embrapa (default: 2022)
+python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --embrapa-year 2022
+```
+
+| Flag | Função |
+|------|--------|
+| `--confirm` | Obrigatório; sem ele o script aborta |
+| `--seed` | Semente RNG dos CSVs simulados (default `42`) — mesma semente ⇒ mesmos dados |
+| `--profile demo\|full` | `demo` = 17 entradas/ciclos (padrão); `full` = perfis extras |
+| `--skip-embrapa` | Não importa Embrapa; só FARM-* |
+| `--embrapa-year` | Ano dos anuais BR-* (default `2022`) |
+
+Status esperado dos ciclos após o seed: pendentes de aprovação (blockchain ainda bloqueado).
+
+## Aprovação em massa
+
+Avança cada ciclo pendente: revisão → aprovação → publicação final → evidências → blockchain.
+Também exige `--confirm` (exceto em dry-run).
+
+```bash
+cd frontend
+
+# Ver o que seria aprovado (não altera dados)
+python scripts/approve_all_pending_cycles.py --dry-run
+
+# Aprovar todos os pendentes
+python scripts/approve_all_pending_cycles.py --confirm
+
+# Por prefixo: só simulados, só Embrapa mensal ou só anual
+python scripts/approve_all_pending_cycles.py --confirm --property-prefix FARM-
+python scripts/approve_all_pending_cycles.py --confirm --property-prefix P-
+python scripts/approve_all_pending_cycles.py --confirm --property-prefix BR-
+
+# Uma propriedade específica: liste no dry-run e copie um property_id
+python scripts/approve_all_pending_cycles.py --dry-run
+# Exemplo (simulado oficial):
+python scripts/approve_all_pending_cycles.py --confirm --property-id FARM-MONTHLY-001
+# Exemplo (qualquer outra do dry-run — troque pelo id listado, ex. Embrapa P-* / BR-*):
+python scripts/approve_all_pending_cycles.py --confirm --property-id BR-12
+
+# Limitar quantidade
+python scripts/approve_all_pending_cycles.py --confirm --limit 10
+```
+
+| Flag | Função |
+|------|--------|
+| `--dry-run` | Lista ciclos sem alterar |
+| `--confirm` | Executa a aprovação em massa |
+| `--property-prefix` | Filtra por prefixo (`FARM-`, `P-`, `BR-`) |
+| `--property-id` | Filtra por propriedade exata |
+| `--limit` | Processa só N ciclos (`0` = todos) |
+
 ## Regressão completa
 
 ```bash
