@@ -10,7 +10,7 @@ def test_align_enteric_yearly_defaults_to_monthly_prorates():
     monthly = align_enteric_factors_to_scope(
         yearly,
         temporal_scope=TemporalScope.MONTHLY,
-        factor_temporal_basis=TemporalScope.YEARLY,
+        factor_temporal_basis=TemporalScope.ANNUAL,
     )
     assert monthly["Lactating_Cows"] == pytest.approx(10.0)
 
@@ -19,8 +19,8 @@ def test_align_enteric_same_scope_no_change():
     factors = {"Lactating_Cows": 100.0}
     out = align_enteric_factors_to_scope(
         factors,
-        temporal_scope=TemporalScope.YEARLY,
-        factor_temporal_basis=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
+        factor_temporal_basis=TemporalScope.ANNUAL,
     )
     assert out == factors
 
@@ -31,7 +31,7 @@ def test_align_enteric_strict_raises_without_proration():
         align_enteric_factors_to_scope(
             yearly,
             temporal_scope=TemporalScope.MONTHLY,
-            factor_temporal_basis=TemporalScope.YEARLY,
+            factor_temporal_basis=TemporalScope.ANNUAL,
             auto_prorate=False,
         )
 
@@ -44,7 +44,7 @@ def test_align_energy_intensities_not_prorated_monthly():
     monthly = align_energy_factors_to_scope(
         yearly,
         temporal_scope=TemporalScope.MONTHLY,
-        factor_temporal_basis=TemporalScope.YEARLY,
+        factor_temporal_basis=TemporalScope.ANNUAL,
         auto_prorate=True,
     )
     assert monthly["Diesel"] == pytest.approx(2.68)

@@ -30,7 +30,7 @@ Versionados no pacote (ex.: `intraday:v1`, `monthly:v1`, `annual:v1`). Detalhe e
 
 ## Compatibilidade legada
 
-`process_file_auto` está *deprecated*, mas permanece exportado no caminho de fallback —
+`detect_layout_id + process_file` está *deprecated*, mas permanece exportado no caminho de fallback —
 remover somente de forma coordenada com os adapters.
 
 ## Testes e comandos

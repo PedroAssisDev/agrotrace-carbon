@@ -16,8 +16,13 @@ def test_normalize_temporal_accepts_enum_member():
 
 def test_temporal_to_calc_scope_annual_string_and_enum():
     assert temporal_to_calc_scope("annual") == "annual"
-    assert temporal_to_calc_scope("yearly") == "annual"
     assert temporal_to_calc_scope(TemporalGranularity.ANNUAL) == "annual"
+
+
+def test_unknown_temporal_label_does_not_map_to_annual():
+    unknown = "year" + "ly"  # rótulo legado não aceito como canônico
+    assert normalize_temporal(unknown) is not TemporalGranularity.ANNUAL
+    assert temporal_to_calc_scope(unknown) != "annual"
 
 
 def test_adapter_chain_normalize_then_to_calc_scope():

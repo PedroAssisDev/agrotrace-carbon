@@ -1,1 +1,30 @@
-﻿{}
+﻿{
+  "module": "calculation-service",
+  "status": "PROJETO PRONTO COM LIMITAÇÕES",
+  "version": "1.0.0",
+  "distribution_name": "ecofarm-calculations",
+  "validated_at": "2026-08-04",
+  "install": {
+    "command": "pip install -e \".[test]\"",
+    "editable": true,
+    "pip_check": "No broken requirements found."
+  },
+  "tests": {
+    "command": "pytest -q",
+    "passed": 53,
+    "skipped": 0,
+    "failed": 0
+  },
+  "import_check": {
+    "module": "emissions",
+    "version": "1.0.0"
+  },
+  "limitations": [
+    "TemporalScope.YEARLY mantido como alias legado de leitura até migração para ANNUAL"
+  ],
+  "artifacts_added": [
+    ".gitignore",
+    "pyproject.toml version bump 0.3.0 -> 1.0.0 with build-system",
+    "__version__ in emissions/__init__.py"
+  ]
+}

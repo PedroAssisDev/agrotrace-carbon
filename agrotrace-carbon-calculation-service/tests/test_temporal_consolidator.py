@@ -23,7 +23,7 @@ def test_consolidate_twelve_monthly_enteric_results():
     monthly = [_monthly_ch4(10.0) for _ in range(12)]
     consolidated = consolidate_monthly_calculation_results(monthly)
     assert consolidated.component.value == pytest.approx(120.0)
-    assert consolidated.component.temporal_scope is TemporalScope.YEARLY
+    assert consolidated.component.temporal_scope is TemporalScope.ANNUAL
     assert consolidated.consolidation_type is ConsolidationType.SUM_OF_MONTHLY
     assert consolidated.source_count == 12
 
@@ -46,4 +46,4 @@ def test_consolidate_monthly_ghg_totals():
     ]
     consolidated = consolidate_monthly_ghg_totals(monthly_totals)
     assert consolidated.total.co2e_kg == pytest.approx(1200.0)
-    assert consolidated.total.temporal_scope is TemporalScope.YEARLY
+    assert consolidated.total.temporal_scope is TemporalScope.ANNUAL

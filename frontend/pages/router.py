@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dash import dcc, html
+from dash import html
 
 from pages import (
     approval_review,
@@ -26,26 +26,6 @@ ROUTES = {
     "/settings": settings.layout,
 }
 
-LEGACY_REDIRECTS = {
-    "/farm": "/",
-    "/farms": "/",
-    "/emission-cycles": "/technical-audit",
-    "/data": "/technical-audit",
-    "/raw-data": "/technical-audit",
-    "/wrappers": "/technical-audit",
-    "/normalized-data": "/technical-audit",
-    "/ontology": "/technical-audit",
-    "/semantic-validation": "/technical-audit",
-    "/provenance": "/technical-audit",
-    "/blockchain": "/technical-audit",
-    "/immutability": "/technical-audit",
-    "/approvals": "/approval",
-    "/final-publication": "/approval",
-    "/dashboard": "/",
-    "/reports": "/indicators",
-}
-
-
 def render_page(
     pathname: str | None,
     cycle: dict | None,
@@ -57,14 +37,6 @@ def render_page(
 ) -> html.Div:
     cycle = cycle or {}
     path = pathname or "/"
-
-    if path in LEGACY_REDIRECTS:
-        target = LEGACY_REDIRECTS[path]
-        if target != path:
-            return html.Div([
-                dcc.Location(id="legacy-redirect", pathname=target, refresh=True),
-                html.P(f"Redirecionando para {target}…", className="text-muted p-4"),
-            ])
 
     if path == "/data-entry":
         return data_entry.layout(

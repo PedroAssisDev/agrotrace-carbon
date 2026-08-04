@@ -95,7 +95,7 @@ def main() -> int:
             "FARM-ANNUAL-001", "Fazenda Santa Clara Sustentável",
         ),
     ]
-    gf = {**DEFAULT_GLOBAL_FILTER, "property_ids": ["FARM-MONTHLY-001", "FARM-ANNUAL-001"]}
+    gf = {**DEFAULT_GLOBAL_FILTER, "farm_id": "FARM-MONTHLY-001"}
     active = cycles[-1]
 
     ind = build_dashboard_indicators(cycles, active, gf, provenance_events=[], all_cycles=cycles)

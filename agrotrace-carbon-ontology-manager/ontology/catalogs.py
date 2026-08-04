@@ -143,7 +143,7 @@ CALCULATION_METHODS: list[dict[str, Any]] = [
     {
         "name": "legacy_default_configuration_provider",
         "class": "DefaultConfigurationProvider",
-        "function_name": "default_enteric_ch4_kg_per_animal_yearly",
+        "function_name": "default_enteric_ch4_kg_per_animal_annual",
         "module_path": "emissions/defaults.py",
         "result_unit": "dimensionless",
         "software_component": "defaults_component",
@@ -192,7 +192,7 @@ GWP_PARAMETER_SET_EXAMPLE = {
 
 # Espelhos numéricos de emissions.defaults (fonte de documentação semântica na ontologia).
 # Mantidos aqui para o ontology-manager não depender do calculation-service no import.
-_DEFAULT_ENTERIC_YEARLY = {
+_DEFAULT_ENTERIC_ANNUAL = {
     "Lactating_Cows": 100.0,
     "Dry_Cows": 50.0,
     "Heifers": 30.0,
@@ -316,7 +316,7 @@ def populate_catalogs(onto: object) -> None:
 
         # EmissionFactor individuals (defaults Tier-1 / EcoFarm)
         ef_individuals: list[object] = []
-        for key, value in _DEFAULT_ENTERIC_YEARLY.items():
+        for key, value in _DEFAULT_ENTERIC_ANNUAL.items():
             ef_individuals.append(
                 _add_emission_factor(
                     onto,

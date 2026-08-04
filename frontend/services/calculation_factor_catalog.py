@@ -27,8 +27,8 @@ def _pending_statuses_for_catalog(catalog: dict[str, Any]) -> dict[str, dict[str
 def build_default_factor_catalog(*, source: str = "defaults") -> dict[str, Any]:
     """Monta o catálogo numérico a partir de ``emissions.defaults`` (fonte oficial)."""
     from emissions.defaults import (
-        default_energy_co2_kg_per_unit_yearly_basis,
-        default_enteric_ch4_kg_per_animal_yearly,
+        default_energy_co2_kg_per_unit_annual_basis,
+        default_enteric_ch4_kg_per_animal_annual,
         default_fertilizer_factors,
         default_manure_ch4_kg_per_kg_manure,
         default_manure_kg_per_kg_bw_per_day,
@@ -38,10 +38,10 @@ def build_default_factor_catalog(*, source: str = "defaults") -> dict[str, Any]:
     catalog = {
         "_source": source,
         "_version": "defaults.py:ECOFARM-T1-DAIRY",
-        "enteric_ch4_kg_per_animal": dict(default_enteric_ch4_kg_per_animal_yearly()),
+        "enteric_ch4_kg_per_animal": dict(default_enteric_ch4_kg_per_animal_annual()),
         "manure_kg_per_kg_bw_per_day": dict(default_manure_kg_per_kg_bw_per_day()),
         "manure_ch4_kg_per_kg_manure": dict(default_manure_ch4_kg_per_kg_manure()),
-        "energy_co2_kg_per_unit": dict(default_energy_co2_kg_per_unit_yearly_basis()),
+        "energy_co2_kg_per_unit": dict(default_energy_co2_kg_per_unit_annual_basis()),
         "fertilizer_factors": dict(default_fertilizer_factors()),
         "gwp": dict(gwp_ipcc_ar4()),
     }

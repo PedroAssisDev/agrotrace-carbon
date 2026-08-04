@@ -72,14 +72,11 @@ def emit_pipeline_event(
     payload: dict,
     *,
     emit_fn,
-    include_legacy: bool = False,
 ) -> None:
-    """Emite um único evento canônico. Aliases legados não são gravados (somente leitura)."""
+    """Emite um único evento canônico."""
     payload = dict(payload)
     payload.setdefault("cycle_id", cycle.get("cycle_id"))
     if cycle.get("pipeline_run_id"):
         payload.setdefault("pipeline_run_id", cycle["pipeline_run_id"])
 
     emit_fn(cycle, event_type, payload)
-    # include_legacy mantido na assinatura por compatibilidade; não emite duplicatas.
-    _ = include_legacy

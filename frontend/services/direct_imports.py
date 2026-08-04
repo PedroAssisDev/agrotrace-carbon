@@ -13,12 +13,11 @@ bootstrap_all()
 
 # ── Wrappers ────────────────────────────────────────────────────────────────
 try:
-    from wrappers import process_file, process_file_auto
+    from wrappers import process_file
     from wrappers.contracts import ProcessingResult, ProcessingStatus
 except Exception as exc:
     logger.warning("wrappers indisponível: %s", exc)
     process_file = None
-    process_file_auto = None
     ProcessingResult = None
     ProcessingStatus = None
 

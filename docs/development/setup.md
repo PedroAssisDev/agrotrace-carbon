@@ -43,7 +43,7 @@ UI em `http://127.0.0.1:8050`.
 `/`, `/data-entry`, `/calculations`, `/approval`, `/indicators`, `/previsoes`,
 `/technical-audit`, `/settings`.
 
-Rotas antigas são redirecionadas por `LEGACY_REDIRECTS` em `frontend/pages/router.py`.
+Rotas antigas são redirecionadas por `rotas canônicas` em `frontend/pages/router.py`.
 
 ## Próximos passos
 

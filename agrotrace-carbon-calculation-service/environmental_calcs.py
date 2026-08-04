@@ -28,7 +28,7 @@ def _default_days_in_period(temporal_scope: TemporalScope) -> int:
 def calculate_total_emissions_bundle(
     farm_data: Mapping[str, float],
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     days_in_period: int | None = None,
     gwp: Mapping[str, float] | None = None,
     enteric_ch4_kg_per_animal: Mapping[str, float] | None = None,
@@ -56,7 +56,7 @@ def calculate_total_emissions_bundle(
 def calculate_enteric_fermentation(
     farm_data: Mapping[str, float],
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     ch4_kg_per_animal_in_period: Mapping[str, float] | None = None,
     auto_prorate_factors: bool = True,
 ) -> float:
@@ -72,7 +72,7 @@ def calculate_enteric_fermentation(
 def calculate_manure_management(
     farm_data: Mapping[str, float],
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     days_in_period: int | None = None,
     manure_kg_per_kg_body_weight_per_day: Mapping[str, float] | None = None,
     ch4_kg_per_kg_manure: Mapping[str, float] | None = None,
@@ -92,7 +92,7 @@ def calculate_manure_management(
 def calculate_fertilizer_emissions(
     farm_data: Mapping[str, float],
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     fertilizer_factors: Mapping[str, float] | None = None,
     auto_prorate_factors: bool = True,
 ) -> float:
@@ -108,7 +108,7 @@ def calculate_fertilizer_emissions(
 def calculate_energy_emissions(
     farm_data: Mapping[str, float],
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     co2_kg_per_unit_consumption: Mapping[str, float] | None = None,
     auto_prorate_factors: bool = True,
 ) -> float:
@@ -124,7 +124,7 @@ def calculate_energy_emissions(
 def calculate_total_emissions(
     farm_data: Mapping[str, float],
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     days_in_period: int | None = None,
     gwp: Mapping[str, float] | None = None,
     enteric_ch4_kg_per_animal: Mapping[str, float] | None = None,
@@ -159,6 +159,6 @@ if __name__ == "__main__":
     final_data = run_csv_pipeline(
         input_file_path,
         output_file_path,
-        temporal_scope=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
     )
     print(final_data)

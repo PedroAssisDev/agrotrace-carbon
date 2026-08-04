@@ -104,8 +104,8 @@ def _emit(cycle: dict, event_type: str, payload: dict) -> None:
     cycle.setdefault("provenance_events", []).append(evt)
 
 
-def _emit_canonical(cycle: dict, event_type: str, payload: dict, *, include_legacy: bool = True) -> None:
-    emit_pipeline_event(cycle, event_type, payload, emit_fn=_emit, include_legacy=include_legacy)
+def _emit_canonical(cycle: dict, event_type: str, payload: dict) -> None:
+    emit_pipeline_event(cycle, event_type, payload, emit_fn=_emit)
 
 
 def _layout_key_from_id(layout_id: str | None) -> str:
@@ -198,7 +198,7 @@ def run_wrapper_step(cycle: dict, layout_name: str = "monthly", **_: Any) -> dic
     set_pipeline_progress(cycle, "wrapper", "Executando wrapper")
     set_step(cycle, "wrapper", status="RUNNING")
     _log_step(cycle, "wrapper", "start", layout=layout_name)
-    _emit_canonical(cycle, "WRAPPER_EXECUTION_STARTED", {"layout": layout_name}, include_legacy=False)
+    _emit_canonical(cycle, "WRAPPER_EXECUTION_STARTED", {"layout": layout_name})
 
     with timed_op() as timer:
         raw_path = cycle["raw_file"]["stored_path"]
@@ -215,12 +215,12 @@ def run_wrapper_step(cycle: dict, layout_name: str = "monthly", **_: Any) -> dic
         cycle["wrapper_execution_id"] = prov.get("wrapper_execution_id")
 
         set_pipeline_progress(cycle, "normalized", "Gerando lote normalizado")
-        _emit_canonical(cycle, "WRAPPER_EXECUTED", {"layout": wrapper_result.get("layout_id")}, include_legacy=False)
+        _emit_canonical(cycle, "WRAPPER_EXECUTED", {"layout": wrapper_result.get("layout_id")})
         _emit(cycle, "NORMALIZED_BATCH_CREATED", {"rows": wrapper_result.get("rows_valid")})
         _emit_canonical(cycle, "NORMALIZED_DATA_DERIVED_FROM_RAW_DATA", {
             "source_hash": cycle["raw_file"].get("sha256"),
             "batch_hash": wrapper_result.get("content_hash"),
-        }, include_legacy=False)
+        })
         set_milestone(cycle, "WRAPPER_EXECUTED")
         set_milestone(cycle, "NORMALIZED_BATCH_CREATED")
 
@@ -256,7 +256,7 @@ def run_ontology_step(cycle: dict, **_: Any) -> dict[str, Any]:
     set_pipeline_progress(cycle, "ontology", "Populando ontologia / modelo canônico")
     set_step(cycle, "ontology", status="RUNNING")
     _log_step(cycle, "ontology", "start")
-    _emit_canonical(cycle, "CANONICAL_MODEL_POPULATION_STARTED", {}, include_legacy=False)
+    _emit_canonical(cycle, "CANONICAL_MODEL_POPULATION_STARTED", {})
 
     with timed_op() as timer:
         ontology_result = ontology_adapter.publish_to_canonical_model({
@@ -330,7 +330,7 @@ def run_semantic_step(cycle: dict, **_: Any) -> dict[str, Any]:
     set_pipeline_progress(cycle, "semantic", "Validando semanticamente")
     set_step(cycle, "semantic", status="RUNNING")
     _log_step(cycle, "semantic", "start")
-    _emit_canonical(cycle, "SEMANTIC_VALIDATION_STARTED", {}, include_legacy=False)
+    _emit_canonical(cycle, "SEMANTIC_VALIDATION_STARTED", {})
 
     with timed_op() as timer:
         dataset = dict(cycle.get("ontology", {}))
@@ -343,7 +343,7 @@ def run_semantic_step(cycle: dict, **_: Any) -> dict[str, Any]:
         critical = validation.get("critical_errors", 0)
         warns = validation.get("warnings", 0)
 
-        _emit_canonical(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical}, include_legacy=False)
+        _emit_canonical(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical})
         _emit(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical})
 
         if critical:
@@ -427,7 +427,7 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
         return cycle
 
     _log_step(cycle, "calculation", "start")
-    _emit_canonical(cycle, "CALCULATION_EXECUTION_STARTED", {"gwp": params.get("gwp")}, include_legacy=False)
+    _emit_canonical(cycle, "CALCULATION_EXECUTION_STARTED", {"gwp": params.get("gwp")})
 
     calc_input = {
         **(cycle.get("ontology") or {}),
@@ -522,7 +522,7 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
                 except Exception as exc:
                     logger.warning("ensure_v1 falhou: %s", exc)
 
-        _emit_canonical(cycle, "CALCULATION_EXECUTED", {"co2e_total_kg": calculation.get("co2e_total_kg")}, include_legacy=False)
+        _emit_canonical(cycle, "CALCULATION_EXECUTED", {"co2e_total_kg": calculation.get("co2e_total_kg")})
         _emit_canonical(cycle, "PRELIMINARY_RESULT_CREATED", {
             "co2e_total_kg": calculation.get("co2e_total_kg"),
             "preliminary_hash": calculation.get("preliminary_hash"),
@@ -569,7 +569,7 @@ def run_approval_step(cycle: dict, approval: dict | None = None, **_: Any) -> di
             )
 
         if decision == "APPROVED":
-            _emit_canonical(cycle, "CALCULATION_APPROVED", {"decision": decision}, include_legacy=False)
+            _emit_canonical(cycle, "CALCULATION_APPROVED", {"decision": decision})
             _emit(cycle, "CALCULATION_APPROVED", {"decision": decision})
             set_step(cycle, "approval", status="APPROVED", mode=_mode_of(prov),
                      summary=f"Aprovado por {approval.get('approver')}.")
@@ -688,7 +688,7 @@ def run_evidence_step(cycle: dict, **_: Any) -> dict[str, Any]:
 
     with timed_op() as timer:
         cycle["hashes"] = blockchain_adapter.compute_local_hashes(cycle)
-        _emit_canonical(cycle, "ARTIFACT_HASHES_CREATED", {"hashes": list(cycle["hashes"].keys())}, include_legacy=False)
+        _emit_canonical(cycle, "ARTIFACT_HASHES_CREATED", {"hashes": list(cycle["hashes"].keys())})
 
         try:
             evidence = blockchain_adapter.create_evidence_package(cycle)
@@ -701,7 +701,7 @@ def run_evidence_step(cycle: dict, **_: Any) -> dict[str, Any]:
 
         cycle["evidence_package"] = evidence
         mode = _mode_of(evidence)
-        _emit_canonical(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")}, include_legacy=False)
+        _emit_canonical(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")})
         _emit(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")})
         _emit_canonical(cycle, "MERKLE_ROOT_CREATED", {"merkle_root": evidence.get("merkle_root")})
         _emit(cycle, "LOCAL_HASH_CREATED", {"merkle_root": evidence.get("merkle_root")})
@@ -742,7 +742,7 @@ def run_anchoring_step(cycle: dict, **_: Any) -> dict[str, Any]:
     set_step(cycle, "blockchain", status="RUNNING")
     pkg_id = cycle["evidence_package"].get("evidence_package_id", "")
     _log_step(cycle, "blockchain", "start", package_id=truncate(pkg_id))
-    _emit_canonical(cycle, "ANCHOR_REQUEST_CREATED", {"package_id": pkg_id}, include_legacy=False)
+    _emit_canonical(cycle, "ANCHOR_REQUEST_CREATED", {"package_id": pkg_id})
 
     try:
         from services import provenance_adapter as _prov
@@ -800,7 +800,7 @@ def run_anchoring_step(cycle: dict, **_: Any) -> dict[str, Any]:
             logger.warning("Espelho de confirmação de ancoragem falhou: %s", exc)
 
         event_name = "ANCHORING_SIMULATED" if is_simulated else "BLOCKCHAIN_ANCHOR_CREATED"
-        _emit_canonical(cycle, event_name, {"tx": anchor.get("transaction_id"), "network": anchor.get("network")}, include_legacy=False)
+        _emit_canonical(cycle, event_name, {"tx": anchor.get("transaction_id"), "network": anchor.get("network")})
         _emit(cycle, event_name, {"tx": anchor.get("transaction_id")})
         set_milestone(cycle, event_name)
 
@@ -852,12 +852,12 @@ def run_verification_step(cycle: dict, tamper: bool = False, **_: Any) -> dict[s
         except Exception as exc:
             logger.warning("Espelho de verificação de integridade falhou: %s", exc)
 
-        _emit_canonical(cycle, "INTEGRITY_VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")}, include_legacy=False)
+        _emit_canonical(cycle, "INTEGRITY_VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")})
         _emit(cycle, "VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")})
         set_milestone(cycle, "INTEGRITY_VERIFICATION_EXECUTED")
 
         if integrity.get("is_valid"):
-            _emit_canonical(cycle, "PROVENANCE_CHAIN_VERIFIED", {"cycle_id": cycle.get("cycle_id")}, include_legacy=False)
+            _emit_canonical(cycle, "PROVENANCE_CHAIN_VERIFIED", {"cycle_id": cycle.get("cycle_id")})
             set_milestone(cycle, "PROVENANCE_CHAIN_VERIFIED")
             set_milestone(cycle, "VERIFIED")
             set_step(cycle, "verification", status="VERIFIED", mode=mode, summary="Pacote íntegro.")

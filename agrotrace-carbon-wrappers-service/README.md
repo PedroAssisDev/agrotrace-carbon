@@ -23,7 +23,7 @@ pip install -r wrappers/requirements.txt
 | `layouts/<família>/v1/layout.yaml` | Definição do layout (físico, schema, validação, mapeamento canônico). |
 | `layouts/annual/v1/numeric_fields.yaml` | Lista de campos numéricos do anual (extensível). |
 | `registry/file_registry.py` | Descobre e carrega todos os `layout.yaml`. |
-| `core/pipeline.py` | **API principal:** `process_file(uri, layout_id, **options)`; secundária: `process_file_auto`. |
+| `core/pipeline.py` | **API principal:** `process_file(uri, layout_id, **options)`; secundária: `detect_layout_id + process_file`. |
 | `core/field_mapping.py` | Mapeamento de cabeçalhos compartilhado (pipeline + detector). |
 | `processors/csv_processor.py` | Leitura CSV parametrizada. |
 | `validators/` | `library.py` (regras) + `engine.py` (execução por `ref`). |
@@ -38,7 +38,7 @@ pip install -r wrappers/requirements.txt
 | Entrada | Uso |
 |---------|-----|
 | **`process_file(uri, layout_id)`** | Caminho oficial em produção (layout explícito). |
-| `process_file_auto(uri)` | Conveniência com detecção de layout (emite `DeprecationWarning`). |
+| `detect_layout_id + process_file(uri)` | Conveniência com detecção de layout (emite `DeprecationWarning`). |
 | `LayoutPipeline` | Casos avançados / testes internos. |
 
 ## Uso (layout explícito)

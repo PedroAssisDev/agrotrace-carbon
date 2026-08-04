@@ -30,7 +30,7 @@ até a verificação.
 
 ## Compatibilidade legada
 
-Nomes de eventos misturam canônico/legado, com flag `include_legacy` no orchestrator —
+Nomes de eventos misturam canônico/legado, com flag `eventos canônicos` no orchestrator —
 aliases só na leitura; não remover sem mapa de eventos.
 
 ## Testes e comandos

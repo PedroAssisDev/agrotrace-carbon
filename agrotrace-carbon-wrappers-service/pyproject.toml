@@ -18,17 +18,15 @@ test = ["pytest>=7.0"]
 
 [tool.setuptools]
 package-dir = {"wrappers" = "."}
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = [
-    "core*",
-    "registry*",
-    "normalizers*",
-    "processors*",
-    "validators*",
-    "mappers*",
-    "export*",
+packages = [
+    "wrappers",
+    "wrappers.core",
+    "wrappers.registry",
+    "wrappers.normalizers",
+    "wrappers.processors",
+    "wrappers.validators",
+    "wrappers.mappers",
+    "wrappers.export",
 ]
 
 [tool.setuptools.package-data]

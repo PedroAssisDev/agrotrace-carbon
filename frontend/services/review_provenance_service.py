@@ -34,7 +34,7 @@ def _emit(cycle: dict, event_type: str, payload: dict) -> None:
         else:
             events.append({"event_type": evt, **pl})
 
-    emit_pipeline_event(cycle, event_type, payload, emit_fn=_fn, include_legacy=True)
+    emit_pipeline_event(cycle, event_type, payload, emit_fn=_fn)
 
 
 def emit_review_started(cycle: dict, reviewer: str) -> None:

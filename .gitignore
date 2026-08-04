@@ -86,3 +86,7 @@ agrotrace-carbon-blockchain-service/contracts/lib/
 **/contracts/cache/
 **/contracts/out/
 **/broadcast/
+
+.venv-test/
+.venv-packaging-test/
+

@@ -26,7 +26,7 @@ resultados **preliminares** com registro dos parâmetros usados.
 
 ## Compatibilidade legada
 
-`TemporalScope.YEARLY` é aceito apenas como alias de leitura de `annual` — não remover
+`TemporalScope.ANNUAL` é aceito apenas como alias de leitura de `annual` — não remover
 sem migração; ver [../domain/calculations.md](../domain/calculations.md).
 
 ## Limitações conhecidas

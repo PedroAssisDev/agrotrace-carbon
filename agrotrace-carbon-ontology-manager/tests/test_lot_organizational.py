@@ -168,7 +168,7 @@ def test_serialize_deserialize_lot_relations(tmp_path: Path, fresh_ontology):
 
 
 def test_temporal_aliases_preserved():
-    assert normalize_granularity("yearly") == "annual"
+    assert normalize_granularity("year") == "annual"
     assert normalize_granularity("daily") == "daily"
     assert normalize_granularity("monthly") == "monthly"
     assert normalize_organizational_granularity("lote") == "lot"

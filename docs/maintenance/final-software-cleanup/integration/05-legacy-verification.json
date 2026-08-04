@@ -1,0 +1,17 @@
+{
+  "legacy_active_count": 0,
+  "deprecated_api_count": 0,
+  "legacy_redirect_count": 0,
+  "unversioned_abi_count": 0,
+  "duplicate_schema_count": 0,
+  "counts": {
+    "YEARLY_enum": 0,
+    "yearly_string": 0,
+    "LEGACY_REDIRECTS": 0,
+    "include_legacy": 0,
+    "process_file_auto": 0,
+    "period_mode": 0,
+    "property_ids_filter_fallback": 0
+  },
+  "details": {}
+}

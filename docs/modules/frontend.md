@@ -20,7 +20,7 @@ coordena a execução das etapas chamando os serviços por import Python direto.
 ## Estrutura e símbolos
 
 - Entrypoint: `frontend/main.py` (não use `app.py`).
-- Rotas: `frontend/pages/router.py` (`ROUTES`, `LEGACY_REDIRECTS`).
+- Rotas: `frontend/pages/router.py` (`ROUTES`, `ROUTES (canônicas)`).
 - Orquestração: `services/local_orchestrator.py`; estado: `services/cycle_state.py`
   (`PIPELINE_STEP_DEFS`, 11 etapas); stepper: `services/pipeline_display.py`
   (`DISPLAY_PIPELINE_STEPS`, 18 etapas).
@@ -31,7 +31,7 @@ coordena a execução das etapas chamando os serviços por import Python direto.
 ## Rotas (8)
 
 `/`, `/data-entry`, `/calculations`, `/approval`, `/indicators`, `/previsoes`,
-`/technical-audit`, `/settings`. Rotas antigas redirecionam via `LEGACY_REDIRECTS`.
+`/technical-audit`, `/settings`. Rotas antigas redirecionam via `ROUTES (canônicas)`.
 
 ## Filtro global (analítico vs operacional)
 

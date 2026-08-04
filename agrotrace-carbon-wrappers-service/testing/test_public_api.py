@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
-import sys
-import warnings
 from pathlib import Path
 
-import pytest
-
 import wrappers
-from wrappers import process_file, process_file_auto
+from wrappers import detect_layout_id, process_file
 from wrappers.contracts import ProcessingStatus
 
 
 def test_public_all_exports_core_symbols() -> None:
   expected = {
       "process_file",
-      "process_file_auto",
       "LayoutPipeline",
       "ProcessingResult",
       "ExportConfiguration",
@@ -25,6 +20,7 @@ def test_public_all_exports_core_symbols() -> None:
       "detect_layout_id",
   }
   assert expected <= set(wrappers.__all__)
+  assert "process_file_auto" not in wrappers.__all__
 
 
 def test_process_file_metadata_layout_family(tmp_path: Path) -> None:
@@ -65,11 +61,10 @@ def test_to_dict_backfills_layout_family_from_wrapper_id() -> None:
     assert r.to_dict()["metadata"]["layout_family"] == "monthly"
 
 
-def test_process_file_auto_emits_deprecation_warning(tmp_path: Path) -> None:
+def test_detect_layout_then_process_file(tmp_path: Path) -> None:
     p = tmp_path / "in.csv"
     p.write_text("Date,Tag,Milk,Weight\n2021-01-01,A1,10.5,500\n", encoding="utf-8")
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        r = process_file_auto(str(p))
+    layout_id = detect_layout_id(str(p))
+    assert layout_id == "intraday:v1"
+    r = process_file(str(p), layout_id)
     assert r.processing_status == ProcessingStatus.SUCCESS
-    assert any(issubclass(w.category, DeprecationWarning) for w in caught)

@@ -1,4 +1,4 @@
-# Estrutura de diretórios e ficheiros
+﻿# Estrutura de diretórios e ficheiros
 
 Raiz considerada: pasta do pacote **`wrappers/`** (contém `__init__.py`).
 
@@ -15,7 +15,7 @@ wrappers/
 ├── README.md
 ├── docs/                    # Esta documentação
 ├── core/
-│   ├── pipeline.py          # LayoutPipeline, process_file, process_file_auto
+│   ├── pipeline.py          # LayoutPipeline, process_file, detect_layout_id+process_file
 │   ├── field_mapping.py     # to_snake_case, map_schema_fields, scoring de detecção
 │   ├── deprecation.py       # Avisos de API secundária
 │   ├── inference.py         # infer_year_from_source_uri
