@@ -32,6 +32,14 @@ from emissions.factor_alignment import (
     align_energy_factors_to_scope,
     align_enteric_factors_to_scope,
 )
+from emissions.explanation import (
+    SCHEMA_VERSION as EXPLANATION_SCHEMA_VERSION,
+    CalculationExplanation,
+    ValueOrigin,
+    build_calculation_explanation,
+    compute_explanation_hash,
+    explanation_from_dict,
+)
 from emissions.farm_period import FarmPeriodInput
 from emissions.fertilizer import calculate_fertilizer_n2o
 from emissions.ghg_total import calculate_total_ghg_co2e
@@ -48,18 +56,22 @@ from emissions.temporal_scope import TemporalScope, normalize_temporal_label, re
 __all__ = [
     "ANIMAL_CATEGORIES",
     "ENERGY_VECTORS",
+    "EXPLANATION_SCHEMA_VERSION",
     "MILK_KG_FPCM_COLUMN",
     "MILK_LITERS_COLUMN",
     "NITROGEN_APPLIED_KG_COLUMN",
     "CalculationBundle",
+    "CalculationExplanation",
     "CalculationResult",
     "ConsolidationType",
     "FarmPeriodInput",
     "ProvenanceMetadata",
     "TemporalScope",
     "TotalGhgResult",
+    "ValueOrigin",
     "align_energy_factors_to_scope",
     "align_enteric_factors_to_scope",
+    "build_calculation_explanation",
     "build_milk_intensity_indicators",
     "calculate_emission_intensity_per_milk_fpcm",
     "calculate_emission_intensity_per_milk_liter",
@@ -68,6 +80,7 @@ __all__ = [
     "calculate_fertilizer_n2o",
     "calculate_manure_management_ch4",
     "calculate_total_ghg_co2e",
+    "compute_explanation_hash",
     "consolidate_monthly_calculation_results",
     "consolidate_monthly_ghg_totals",
     "default_days_in_period",
@@ -76,6 +89,7 @@ __all__ = [
     "default_fertilizer_factors",
     "default_manure_ch4_kg_per_kg_manure",
     "default_manure_kg_per_kg_bw_per_day",
+    "explanation_from_dict",
     "extract_body_weights_kg",
     "extract_energy_consumption",
     "extract_headcounts",
