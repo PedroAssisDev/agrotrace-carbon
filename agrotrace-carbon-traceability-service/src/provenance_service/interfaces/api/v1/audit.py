@@ -64,7 +64,14 @@ def register_blockchain_anchor(
         RegisterBlockchainAnchor, Depends(provide_register_blockchain_anchor)
     ],
 ) -> BlockchainAnchorResponse:
-    cmd = RecordBlockchainAnchorCommand(**payload.model_dump())
+    data = payload.model_dump()
+    mode = data.get("anchor_mode")
+    if mode is not None and hasattr(mode, "value"):
+        data["anchor_mode"] = mode.value
+    status = data.get("anchor_status")
+    if status is not None and hasattr(status, "value"):
+        data["anchor_status"] = status  # enum accepted by dataclass via BlockchainAnchorStatus
+    cmd = RecordBlockchainAnchorCommand(**data)
     anchor = use_case.execute(cmd)
     return BlockchainAnchorResponse.model_validate(anchor)
 

@@ -40,15 +40,37 @@ SKIP_DIR_NAMES = {
 # Only scan these extensions
 SCAN_SUFFIXES = {".py", ".md", ".txt", ".yml", ".yaml", ".json", ".toml", ".ini", ".cfg", ".env", ".example", ".sol"}
 
+# Patterns that require credential context (avoid matching SHA-256 hashes)
+_CREDENTIAL_KEY_RE = re.compile(
+    r"(?i)(private[_-]?key|mnemonic|seed[_-]?phrase|secret[_-]?key|wallet[_-]?key|eth[_-]?key)"
+)
+_HASH_FIELD_RE = re.compile(
+    r"(?i)(package_hash|merkle_root|item_hash|content_hash|sha256|checksum|abi_checksum|"
+    r"publication_hash|ontology_hash|preliminary_hash|validation_hash|manifest_hash|"
+    r"tx_hash|transaction_hash|block_hash|evidence_key|hash_record)"
+)
+
 # Patterns: (tipo, regex) — groups never printed
 PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("private_key_hex", re.compile(r"0x[a-fA-F0-9]{64}")),
     ("private_key_env_assignment", re.compile(r"(?i)(BLOCKCHAIN_.*PRIVATE_KEY|PRIVATE_KEY)\s*=\s*\S+")),
     ("bearer_token", re.compile(r"(?i)bearer\s+[A-Za-z0-9\-._~+/]+=*")),
     ("authorization_header", re.compile(r"(?i)authorization\s*[:=]\s*\S+")),
     ("rpc_url_with_userinfo", re.compile(r"https?://[^/\s]+:[^/@\s]+@[^\s]+")),
     ("infura_alchemy_path_token", re.compile(r"(?i)(infura\.io|alchemy\.com)/v\d+/[A-Za-z0-9_\-]{20,}")),
 ]
+
+# Contextual: 64-hex only when near a credential key name
+_HEX64_RE = re.compile(r"(?:0x)?[a-fA-F0-9]{64}")
+
+
+def _is_contextual_private_key(line: str) -> bool:
+    """True only when 64-hex appears with a credential-like key, not a hash field."""
+    if not _HEX64_RE.search(line):
+        return False
+    if _HASH_FIELD_RE.search(line) and not _CREDENTIAL_KEY_RE.search(line):
+        return False
+    return bool(_CREDENTIAL_KEY_RE.search(line))
+
 
 ALLOWLIST_PATH_FRAGMENTS = (
     ".env.example",
@@ -118,7 +140,13 @@ def scan_tree(root: Path) -> list[dict]:
                         "type": kind,
                         "allowlisted": False,
                     })
-                    break
+            if _is_contextual_private_key(line):
+                findings.append({
+                    "file": str(path.relative_to(root)).replace("\\", "/"),
+                    "line": i,
+                    "type": "private_key_hex",
+                    "allowlisted": False,
+                })
     return findings
 
 

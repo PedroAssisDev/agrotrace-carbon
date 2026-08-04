@@ -2,6 +2,13 @@
 
 This is the single source of truth for generating official package/item hashes.
 Frontend and other modules must import these functions rather than reimplementing.
+
+Versioned registry
+------------------
+``CANONICALIZATION_METHODS`` maps method name → serializer. Verification of
+historical packages MUST dispatch via ``to_canonical_json_for(method, payload)``.
+Unknown methods raise ``UnknownCanonicalizationError`` (fail closed).
+Packages without a stored method default to ``json_canonical_v1`` (historical).
 """
 
 from __future__ import annotations
@@ -9,13 +16,21 @@ from __future__ import annotations
 import json
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Callable
 
 from app.shared.clock import format_instant
+
+CANONICALIZATION_METHOD_V1 = "json_canonical_v1"
+CANONICALIZATION_VERSION_V1 = "1"
+DEFAULT_CANONICALIZATION_METHOD = CANONICALIZATION_METHOD_V1
 
 
 class CanonicalizationError(ValueError):
     """Raised when a value cannot be safely canonicalized."""
+
+
+class UnknownCanonicalizationError(CanonicalizationError):
+    """Raised when a stored/requested canonicalization method is not registered."""
 
 
 def _normalize_number(value: int | float | Decimal) -> int | str:
@@ -86,3 +101,42 @@ def parse_canonical_json(payload_json: str) -> dict:
     if not isinstance(loaded, dict):
         raise CanonicalizationError("canonical payload root must be an object")
     return loaded
+
+
+# Registry of official methods. Only add a new entry when introducing a new
+# versioned strategy; never silently change the semantics of an existing key.
+CANONICALIZATION_METHODS: dict[str, Callable[[dict], str]] = {
+    CANONICALIZATION_METHOD_V1: to_canonical_json,
+}
+
+
+def resolve_canonicalization_method(method: str | None) -> str:
+    """Resolve stored method; None/empty → historical default json_canonical_v1."""
+    if method is None or str(method).strip() == "":
+        return DEFAULT_CANONICALIZATION_METHOD
+    return str(method).strip()
+
+
+def to_canonical_json_for(method: str | None, payload: dict) -> str:
+    """Dispatch canonicalization by method name.
+
+    - Unknown method → ``UnknownCanonicalizationError`` (fail closed).
+    - Missing/None method → ``json_canonical_v1`` (historical packages).
+    """
+    resolved = resolve_canonicalization_method(method)
+    fn = CANONICALIZATION_METHODS.get(resolved)
+    if fn is None:
+        raise UnknownCanonicalizationError(
+            f"unknown canonicalization method: {resolved!r}; "
+            f"known={sorted(CANONICALIZATION_METHODS)}"
+        )
+    return fn(payload)
+
+
+def official_strategy_fields() -> dict[str, str]:
+    """Fields for VersionManifest / evidence metadata."""
+    return {
+        "canonicalization_strategy": CANONICALIZATION_METHOD_V1,
+        "canonicalization_version": CANONICALIZATION_VERSION_V1,
+        "canonicalization_method": CANONICALIZATION_METHOD_V1,
+    }

@@ -25,12 +25,15 @@ except Exception as exc:
 # ── Cálculos ─────────────────────────────────────────────────────────────────
 try:
     from emissions.defaults import gwp_ipcc_ar4
+    from emissions.explanation import build_calculation_explanation, explanation_from_dict
     from emissions.farm_period import FarmPeriodInput
     from emissions.temporal_scope import TemporalScope
     from orchestration.pipeline import compute_farm_period_emissions, compute_row_emissions
 except Exception as exc:
     logger.warning("calculation-service indisponível: %s", exc)
     gwp_ipcc_ar4 = None
+    build_calculation_explanation = None
+    explanation_from_dict = None
     FarmPeriodInput = None
     TemporalScope = None
     compute_farm_period_emissions = None
@@ -75,6 +78,7 @@ except Exception as exc:
 try:
     from provenance_service.application.services import (
         ProvenanceRecorder,
+        RecordBlockchainAnchorCommand,
         RecordCalculationExecutionCommand,
         RecordCalculationMethodCommand,
         RecordCalculationMethodVersionCommand,
@@ -83,6 +87,8 @@ try:
         RecordCalculationReviewCommand,
         RecordCanonicalSnapshotCommand,
         RecordHashCommand,
+        ConfirmBlockchainAnchorCommand,
+        RecordIntegrityVerificationCommand,
         RecordNormalizedBatchCommand,
         RecordReportingPeriodCommand,
         RecordResultPublicationCommand,
@@ -120,6 +126,9 @@ except Exception as exc:
     RecordCalculationReviewCommand = None
     RecordResultPublicationCommand = None
     RecordHashCommand = None
+    ConfirmBlockchainAnchorCommand = None
+    RecordIntegrityVerificationCommand = None
+    RecordBlockchainAnchorCommand = None
     ResultItemInput = None
     ParameterValueInput = None
     RecordCalculationMethodCommand = None

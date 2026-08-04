@@ -15,6 +15,10 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
+from utils.data_root_cli import apply_data_root_from_argv  # noqa: E402
+
+apply_data_root_from_argv()
+
 from pages.approval_review import layout as approval_layout  # noqa: E402
 from services.blockchain_view_service import is_blockchain_unlocked  # noqa: E402
 from services.calculation_approval_service import (  # noqa: E402

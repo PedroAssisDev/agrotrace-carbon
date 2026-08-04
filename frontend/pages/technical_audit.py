@@ -64,13 +64,18 @@ def layout(
         dcc.Store(id="ta-prov-query-history", storage_type="local"),
         dcc.Store(id="ta-prov-last-result"),
         dcc.Download(id="ta-prov-csv-download"),
+        dcc.Download(id="ta-raw-download"),
         dbc.Tabs(
             [dbc.Tab(label=label, tab_id=tab_id) for tab_id, label in _AUDIT_TABS],
             id="technical-audit-tabs",
             active_tab=tab_id,
             className="agro-tabs",
         ),
-        html.Div(id="ta-tab-content", className="pt-3"),
+        dcc.Loading(
+            html.Div(id="ta-tab-content", className="pt-3"),
+            type="default",
+            className="ta-tab-loading",
+        ),
     ]
 
     return html.Div(body, className="page-technical-audit page-content-inner")

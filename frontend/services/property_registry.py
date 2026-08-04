@@ -15,7 +15,6 @@ import re
 from typing import Any
 
 import config
-from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR, SAVE_FILE_ORIGINALS_DIR
 from utils.file_helpers import list_cycles
 from utils.property_filter import get_all_property_ids
 
@@ -107,7 +106,7 @@ def _derive_from_raw_originals() -> dict[str, dict[str, Any]]:
     """Extrai property_id dos nomes de arquivo dos originais (save-file + legado)."""
     found: dict[str, dict[str, Any]] = {}
     pattern = re.compile(r"^([A-Za-z0-9_-]+)_\d{4}-\d{2}_")
-    for originals_dir in (SAVE_FILE_ORIGINALS_DIR, RAW_ORIGINALS_DIR):
+    for originals_dir in (config.SAVE_FILE_ORIGINALS_DIR, config.RAW_ORIGINALS_DIR):
         if not originals_dir.exists():
             continue
         for path in originals_dir.glob("*"):
@@ -122,9 +121,9 @@ def _derive_from_raw_originals() -> dict[str, dict[str, Any]]:
 def _derive_from_evidence() -> dict[str, dict[str, Any]]:
     """Extrai propriedades dos pacotes de evidência persistidos."""
     found: dict[str, dict[str, Any]] = {}
-    if not EVIDENCE_PACKAGES_DIR.exists():
+    if not config.EVIDENCE_PACKAGES_DIR.exists():
         return found
-    for path in EVIDENCE_PACKAGES_DIR.glob("*.json"):
+    for path in config.EVIDENCE_PACKAGES_DIR.glob("*.json"):
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):

@@ -15,8 +15,16 @@ MANIFEST_CONTRACT_NAME = "VersionManifest"
 MANIFEST_CONTRACT_VERSION = "1.0.0"
 PUBLICATION_SCHEMA_VERSION = "1.0.0"
 EVIDENCE_SCHEMA_VERSION = "evidence_package_v1"
-CANONICALIZATION_STRATEGY = "json_canonical_v1"
-CANONICALIZATION_VERSION = "1"
+
+try:
+    from app.domain.services.canonical_json_service import official_strategy_fields
+
+    _strategy = official_strategy_fields()
+    CANONICALIZATION_STRATEGY = _strategy["canonicalization_strategy"]
+    CANONICALIZATION_VERSION = _strategy["canonicalization_version"]
+except Exception:
+    CANONICALIZATION_STRATEGY = "json_canonical_v1"
+    CANONICALIZATION_VERSION = "1"
 
 METHOD_CODE_DEFAULT = "ECOFARM-T1-DAIRY"
 METHOD_VERSION_DEFAULT = "1.0.0"

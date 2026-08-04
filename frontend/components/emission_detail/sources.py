@@ -82,7 +82,7 @@ def EmissionSourceLineChart(
         ),
         ScopeBadge(consolidated=True),
     ]
-    if chart:
+    if chart is not None:
         body.append(dbc.Card(dbc.CardBody([chart]), className="agro-card mb-0"))
     else:
         body.append(html.P(

@@ -5,7 +5,9 @@ from ontology.catalogs import populate_catalogs
 from ontology.cycle_model import (
     list_cycle_observations,
     set_cycle_status,
+    upsert_animal,
     upsert_emission_cycle,
+    upsert_lot,
     upsert_observation,
     upsert_property,
 )
@@ -37,6 +39,8 @@ __all__ = [
     "set_groups_status",
     "extract_factor_catalog_with_statuses",
     "upsert_property",
+    "upsert_lot",
+    "upsert_animal",
     "upsert_emission_cycle",
     "upsert_observation",
     "list_cycle_observations",

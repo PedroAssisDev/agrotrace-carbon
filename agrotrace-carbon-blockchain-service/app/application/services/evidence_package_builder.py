@@ -314,7 +314,18 @@ class EvidencePackageBuilder:
             "anchor_request_id": str(anchor_request_id),
             "event_type": event.event_type,
             "source_event_id": event.outbox_event_id,
+            "evidence_schema_version": SCHEMA_VERSION_EVIDENCE_PACKAGE,
+            "canonicalization_strategy": "json_canonical_v1",
+            "canonicalization_version": "1",
         }
+        # Optional VersionManifest summary when present on event payload
+        vm = (event.payload or {}).get("version_manifest_ref") if isinstance(getattr(event, "payload", None), dict) else None
+        if isinstance(vm, dict):
+            metadata_payload["version_manifest_ref"] = {
+                k: vm.get(k)
+                for k in ("cycle_id", "manifest_hash", "contract_version")
+                if vm.get(k) is not None
+            }
         metadata_hash = sha256_hex(metadata_payload)
 
         package = EvidencePackage(

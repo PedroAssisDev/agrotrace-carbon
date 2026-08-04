@@ -81,6 +81,25 @@ class SqlAlchemyBlockchainAnchorRepository:
         ).all()
         return [M.from_blockchain_anchor_model(m) for m in rows]
 
+    def find_by_evidence_package_external_id(
+        self,
+        evidence_package_external_id: str,
+        *,
+        pipeline_run_id: UUID | None = None,
+    ) -> BlockchainAnchor | None:
+        filters = [
+            BlockchainAnchorModel.evidence_package_external_id
+            == evidence_package_external_id
+        ]
+        if pipeline_run_id is not None:
+            filters.append(BlockchainAnchorModel.pipeline_run_id == pipeline_run_id)
+        m = self._session.scalar(
+            select(BlockchainAnchorModel)
+            .where(*filters)
+            .order_by(BlockchainAnchorModel.submitted_at.desc())
+        )
+        return M.from_blockchain_anchor_model(m) if m else None
+
     def update_status(
         self,
         blockchain_anchor_id: UUID,
@@ -90,6 +109,11 @@ class SqlAlchemyBlockchainAnchorRepository:
         block_number: str | None = None,
         confirmations: int | None = None,
         anchored_at: datetime | None = None,
+        chain_id: str | None = None,
+        verification_uri: str | None = None,
+        confirmed_at: datetime | None = None,
+        failed_reason: str | None = None,
+        metadata: dict | None = None,
     ) -> None:
         # blockchain_anchor is intentionally NOT in the append-only list (it has a
         # lifecycle: pending -> submitted -> confirmed/failed). It is not protected by
@@ -103,12 +127,25 @@ class SqlAlchemyBlockchainAnchorRepository:
             values["confirmations"] = confirmations
         if anchored_at is not None:
             values["anchored_at"] = anchored_at
+        if chain_id is not None:
+            values["chain_id"] = chain_id
+        if verification_uri is not None:
+            values["verification_uri"] = verification_uri
+        if confirmed_at is not None:
+            values["confirmed_at"] = confirmed_at
+        if failed_reason is not None:
+            values["failed_reason"] = failed_reason
+        if metadata is not None:
+            values["extra_metadata"] = dict(metadata)
         stmt = (
             update(BlockchainAnchorModel)
             .where(BlockchainAnchorModel.blockchain_anchor_id == blockchain_anchor_id)
             .values(**values)
         )
         self._session.execute(stmt)
+        cached = self._session.get(BlockchainAnchorModel, blockchain_anchor_id)
+        if cached is not None:
+            self._session.refresh(cached)
 
 
 class SqlAlchemyOutboxRepository:

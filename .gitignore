@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg
 *.egg-info/
 build/
@@ -13,65 +14,75 @@ dist/
 htmlcov/
 .venv/
 venv/
+env/
 
 # IDE / OS
 .idea/
 .vscode/
 .cursor/
 *.swp
+*~
 Thumbs.db
 .DS_Store
 
-# Logs
+# Logs / temporários
 *.log
 logs/
+**/logs/
+*.bak
+*.tmp
+*.temp
+**/tmp/
+**/temp/
 
-# Frontend generated data (reproduzível via seed/reset)
-frontend/data/cycles/*.json
-frontend/data/normalized/*
-frontend/data/publications/*
-frontend/data/evidence_packages/*
-frontend/data/ontology_exports/*
-frontend/data/properties/*
-frontend/data/db/*.db
-frontend/data/db/*.db-*
-frontend/data/logs/*
-frontend/data/raw_originals/*
-frontend/data/reports/*
+# Frontend: tudo sob data/ é runtime (seed/reset regenera)
+frontend/data/**
 !frontend/data/**/.gitkeep
 
-# Save-file generated
-agrotrace-carbon-save-file/data/originals/*
-agrotrace-carbon-save-file/data/emulated_uploads/*
+# Save-file: datasets, originais, emulados e staging local
+agrotrace-carbon-save-file/data/**
 !agrotrace-carbon-save-file/data/**/.gitkeep
+agrotrace-carbon-save-file/save_file/data/**
+!agrotrace-carbon-save-file/save_file/data/**/.gitkeep
 
-# Runtime local na raiz (não versionar)
-/data/logs/
-/data/input/
-/data/processed/
-/data/rejected/
-/data/validation_reports/
-/data/*.csv
-/data/*.db
-!/data/seed/
-!/data/seed/**/.gitkeep
+# Runtime local na raiz
+/data/**
 
-# Service local DBs
+# Model training: artefatos gerados (path real fica sob configs/)
+agrotrace-carbon-model-training-service/artifacts/**
+agrotrace-carbon-model-training-service/configs/artifacts/**
+agrotrace-carbon-model-training-service/data/input/**
+agrotrace-carbon-model-training-service/data/processed/**
+*.joblib
+*.keras
+
+# Blockchain: runs locais de validação Sepolia (não são código)
+agrotrace-carbon-blockchain-service/evidence/**
+!agrotrace-carbon-blockchain-service/evidence/**/.gitkeep
+
+# Service local DBs / SQLite operacional
 **/*.sqlite
 **/*.db
-**/*.csv
-**/*.md
+**/*.db-wal
+**/*.db-shm
+**/*.db-journal
 
-# Env / secrets
+# Env / secrets / chaves
 .env
 .env.*
 !.env.example
 *.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
 
-# Foundry / Solidity artifacts
+# Foundry / Solidity artifacts (+ lib vendored via forge install)
 agrotrace-carbon-blockchain-service/contracts/cache/
 agrotrace-carbon-blockchain-service/contracts/out/
 agrotrace-carbon-blockchain-service/contracts/broadcast/
+agrotrace-carbon-blockchain-service/contracts/lib/
 **/contracts/cache/
 **/contracts/out/
 **/broadcast/

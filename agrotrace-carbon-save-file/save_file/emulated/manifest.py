@@ -96,5 +96,14 @@ class EmulatedManifest:
 
 
 def default_emulated_dir() -> Path:
-    """Pasta canônica: agrotrace-carbon-save-file/data/emulated_uploads/."""
+    """Pasta canônica de uploads emulados.
+
+    Com ``AGROTRACE_DATA_ROOT``: ``{root}/save_file/emulated_uploads``.
+    Sem root: ``agrotrace-carbon-save-file/data/emulated_uploads/``.
+    """
+    import os
+
+    raw = os.environ.get("AGROTRACE_DATA_ROOT", "").strip()
+    if raw:
+        return Path(raw).expanduser().resolve() / "save_file" / "emulated_uploads"
     return Path(__file__).resolve().parents[2] / "data" / "emulated_uploads"

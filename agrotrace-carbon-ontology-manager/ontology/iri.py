@@ -54,6 +54,10 @@ def animal_iri(animal_id: str) -> str:
     return f"animal_{normalize_token(animal_id)}"
 
 
+def lot_iri(lot_id: str) -> str:
+    return f"lot_{normalize_token(lot_id)}"
+
+
 def individual_name(prefix: str, *parts: str) -> str:
     tokens = [normalize_token(p) for p in parts if p]
     name = "_".join([normalize_token(prefix), *tokens]) if tokens else normalize_token(prefix)

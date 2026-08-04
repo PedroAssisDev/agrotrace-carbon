@@ -1,6 +1,9 @@
 from provenance_service.application.use_cases.compute_and_record_hash import (
     ComputeAndRecordHash,
 )
+from provenance_service.application.use_cases.confirm_blockchain_anchor import (
+    ConfirmBlockchainAnchor,
+)
 from provenance_service.application.use_cases.get_bundle_graph import GetBundleGraph
 from provenance_service.application.use_cases.get_pipeline_run import GetPipelineRun
 from provenance_service.application.use_cases.get_pipeline_run_trace import (
@@ -16,6 +19,9 @@ from provenance_service.application.use_cases.list_pipeline_runs import (
     ListPipelineRuns,
     ListPipelineRunsQuery,
     ListPipelineRunsResult,
+)
+from provenance_service.application.use_cases.record_integrity_verification import (
+    RecordIntegrityVerification,
 )
 from provenance_service.application.use_cases.register_blockchain_anchor import (
     RegisterBlockchainAnchor,
@@ -80,6 +86,7 @@ from provenance_service.application.use_cases.verify_integrity import (
 
 __all__ = [
     "ComputeAndRecordHash",
+    "ConfirmBlockchainAnchor",
     "GetBundleGraph",
     "GetPipelineRun",
     "GetPipelineRunTrace",
@@ -91,6 +98,7 @@ __all__ = [
     "ListPipelineRunsResult",
     "PipelineRunTraceData",
     "IntegrityReport",
+    "RecordIntegrityVerification",
     "RegisterBlockchainAnchor",
     "RegisterCalculationExecution",
     "RegisterCalculationMethod",

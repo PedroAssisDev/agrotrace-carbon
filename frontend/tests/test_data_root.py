@@ -42,6 +42,15 @@ def test_custom_data_root_redirects_all_operational_paths(
     assert config.SAVE_FILE_EMULATED_UPLOADS_DIR == (
         agrotrace_data_root / "save_file" / "emulated_uploads"
     )
+    assert config.MODEL_TRAINING_ARTIFACTS_DIR == (
+        agrotrace_data_root / "model_training" / "artifacts"
+    )
+    assert config.MODEL_TRAINING_PROCESSED_DIR == (
+        agrotrace_data_root / "model_training" / "processed"
+    )
+    assert config.MODEL_REGISTRY_PATH == (
+        agrotrace_data_root / "model_training" / "artifacts" / "registry.jsonl"
+    )
 
 
 def test_isolation_between_two_data_roots(

@@ -471,6 +471,47 @@ class RecordBlockchainAnchorCommand:
     confirmations: int | None = None
     anchored_at: datetime | None = None
     verification_uri: str | None = None
+    anchor_provider: str | None = None
+    anchor_mode: str | None = None
+    evidence_package_external_id: str | None = None
+    package_hash: str | None = None
+    metadata_hash: str | None = None
+    submitted_at: datetime | None = None
+    confirmed_at: datetime | None = None
+    failed_reason: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class ConfirmBlockchainAnchorCommand:
+    """Atualiza um espelho PENDING/SUBMITTED para CONFIRMED (ou FAILED)."""
+
+    blockchain_anchor_id: UUID | None = None
+    evidence_package_external_id: str | None = None
+    pipeline_run_id: UUID | None = None
+    anchor_status: BlockchainAnchorStatus = BlockchainAnchorStatus.CONFIRMED
+    chain_id: str | None = None
+    transaction_hash: str | None = None
+    block_number: str | None = None
+    confirmations: int | None = None
+    anchored_at: datetime | None = None
+    confirmed_at: datetime | None = None
+    verification_uri: str | None = None
+    failed_reason: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class RecordIntegrityVerificationCommand:
+    """Registra verificação de integridade como audit_event (append-only)."""
+
+    pipeline_run_id: UUID
+    blockchain_anchor_id: UUID
+    verification_id: str
+    result: str  # match | divergence
+    local_values: dict[str, Any] = field(default_factory=dict)
+    recovered_values: dict[str, Any] = field(default_factory=dict)
+    verified_at: datetime | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -2449,6 +2490,33 @@ class ProvenanceRecorder:
                     "blockchain_anchor requires an existing hash_record",
                     details={"hash_record_id": str(cmd.hash_record_id)},
                 )
+
+            request_id = (cmd.metadata or {}).get("request_id")
+            if cmd.evidence_package_external_id:
+                existing = uow.blockchain_anchors.find_by_evidence_package_external_id(
+                    cmd.evidence_package_external_id,
+                    pipeline_run_id=cmd.pipeline_run_id,
+                )
+                if existing is not None:
+                    existing_request = (existing.metadata or {}).get("request_id")
+                    same_request = request_id and existing_request == request_id
+                    same_pending = (
+                        existing.anchor_status
+                        in (BlockchainAnchorStatus.PENDING, BlockchainAnchorStatus.SUBMITTED)
+                        and cmd.anchor_status
+                        in (BlockchainAnchorStatus.PENDING, BlockchainAnchorStatus.SUBMITTED)
+                    )
+                    if same_request or same_pending:
+                        PROVENANCE_RECORDS.labels(
+                            kind="blockchain_anchor", outcome="idempotent"
+                        ).inc()
+                        return existing
+
+            submitted_at = cmd.submitted_at
+            if submitted_at is None and cmd.anchor_status is BlockchainAnchorStatus.PENDING:
+                submitted_at = utcnow()
+
+            meta = dict(cmd.metadata)
             anchor = BlockchainAnchor(
                 blockchain_anchor_id=new_uuid7(),
                 pipeline_run_id=cmd.pipeline_run_id,
@@ -2462,7 +2530,15 @@ class ProvenanceRecorder:
                 confirmations=cmd.confirmations,
                 anchored_at=cmd.anchored_at,
                 verification_uri=cmd.verification_uri,
-                metadata=dict(cmd.metadata),
+                anchor_provider=cmd.anchor_provider,
+                anchor_mode=cmd.anchor_mode,
+                evidence_package_external_id=cmd.evidence_package_external_id,
+                package_hash=cmd.package_hash,
+                metadata_hash=cmd.metadata_hash,
+                submitted_at=submitted_at,
+                confirmed_at=cmd.confirmed_at,
+                failed_reason=cmd.failed_reason,
+                metadata=meta,
             )
             uow.blockchain_anchors.add(anchor)
 
@@ -2471,17 +2547,207 @@ class ProvenanceRecorder:
                 aggregate_kind="blockchain_anchor",
                 aggregate_id=anchor.blockchain_anchor_id,
                 event_type=f"blockchain_anchor.{cmd.anchor_status.value}",
+                pipeline_run_id=cmd.pipeline_run_id,
                 payload={
                     "blockchain_anchor_id": str(anchor.blockchain_anchor_id),
                     "hash_record_id": str(cmd.hash_record_id),
                     "blockchain_network": cmd.blockchain_network,
                     "transaction_hash": cmd.transaction_hash,
+                    "evidence_package_id": cmd.evidence_package_external_id,
+                    "package_hash": cmd.package_hash,
+                    "merkle_root": cmd.merkle_root,
+                    "network_code": cmd.blockchain_network,
+                    "request_id": request_id,
+                    "cycle_id": meta.get("cycle_id"),
+                    "publication_id": meta.get("publication_id"),
                 },
             )
             PROVENANCE_RECORDS.labels(
                 kind="blockchain_anchor", outcome=cmd.anchor_status.value
             ).inc()
             return anchor
+
+    def confirm_blockchain_anchor(
+        self, uow: UnitOfWork, cmd: ConfirmBlockchainAnchorCommand
+    ) -> BlockchainAnchor:
+        with record_recorder_duration("confirm_blockchain_anchor"):
+            anchor = self._resolve_blockchain_anchor(
+                uow,
+                blockchain_anchor_id=cmd.blockchain_anchor_id,
+                evidence_package_external_id=cmd.evidence_package_external_id,
+                pipeline_run_id=cmd.pipeline_run_id,
+            )
+            if (
+                anchor.anchor_status is BlockchainAnchorStatus.CONFIRMED
+                and cmd.transaction_hash
+                and anchor.transaction_hash == cmd.transaction_hash
+            ):
+                PROVENANCE_RECORDS.labels(
+                    kind="blockchain_anchor", outcome="idempotent_confirm"
+                ).inc()
+                return anchor
+
+            confirmed_at = cmd.confirmed_at or utcnow()
+            merged_meta = dict(anchor.metadata or {})
+            merged_meta.update(cmd.metadata or {})
+
+            uow.blockchain_anchors.update_status(
+                anchor.blockchain_anchor_id,
+                anchor_status=cmd.anchor_status.value,
+                transaction_hash=cmd.transaction_hash,
+                block_number=cmd.block_number,
+                confirmations=cmd.confirmations,
+                anchored_at=cmd.anchored_at or confirmed_at,
+                chain_id=cmd.chain_id,
+                verification_uri=cmd.verification_uri,
+                confirmed_at=confirmed_at,
+                failed_reason=cmd.failed_reason,
+                metadata=merged_meta,
+            )
+            refreshed = uow.blockchain_anchors.get(anchor.blockchain_anchor_id)
+            if refreshed is None:
+                raise NotFoundError(
+                    f"BlockchainAnchor {anchor.blockchain_anchor_id} not found after update"
+                )
+
+            self._enqueue_event(
+                uow,
+                aggregate_kind="blockchain_anchor",
+                aggregate_id=refreshed.blockchain_anchor_id,
+                event_type=f"blockchain_anchor.{cmd.anchor_status.value}",
+                pipeline_run_id=refreshed.pipeline_run_id,
+                payload={
+                    "blockchain_anchor_id": str(refreshed.blockchain_anchor_id),
+                    "hash_record_id": str(refreshed.hash_record_id),
+                    "blockchain_network": refreshed.blockchain_network,
+                    "transaction_hash": refreshed.transaction_hash,
+                    "evidence_package_id": refreshed.evidence_package_external_id,
+                    "package_hash": refreshed.package_hash,
+                    "merkle_root": refreshed.merkle_root,
+                    "network_code": refreshed.blockchain_network,
+                    "chain_id": refreshed.chain_id,
+                    "block_number": refreshed.block_number,
+                    "cycle_id": merged_meta.get("cycle_id"),
+                    "publication_id": merged_meta.get("publication_id"),
+                    "contract_address": merged_meta.get("contract_address"),
+                    "receipt_status": merged_meta.get("receipt_status"),
+                    "event_identifier": merged_meta.get("event_identifier"),
+                    "confirmed_at": confirmed_at.isoformat(),
+                },
+            )
+            PROVENANCE_RECORDS.labels(
+                kind="blockchain_anchor", outcome=cmd.anchor_status.value
+            ).inc()
+            return refreshed
+
+    def record_integrity_verification(
+        self, uow: UnitOfWork, cmd: RecordIntegrityVerificationCommand
+    ) -> AuditEvent:
+        with record_recorder_duration("record_integrity_verification"):
+            self._require_pipeline_run(uow, cmd.pipeline_run_id)
+            anchor = uow.blockchain_anchors.get(cmd.blockchain_anchor_id)
+            if anchor is None:
+                raise NotFoundError(
+                    f"BlockchainAnchor {cmd.blockchain_anchor_id} not found"
+                )
+
+            result_norm = (cmd.result or "").strip().lower()
+            if result_norm not in ("match", "divergence"):
+                raise InvariantViolationError(
+                    "integrity verification result must be 'match' or 'divergence'",
+                    details={"result": cmd.result},
+                )
+
+            existing_events = uow.audit_events.list_for_subject(
+                "blockchain_anchor", cmd.blockchain_anchor_id
+            )
+            for ev in existing_events:
+                if (ev.payload or {}).get("verification_id") == cmd.verification_id:
+                    PROVENANCE_RECORDS.labels(
+                        kind="integrity_verification", outcome="idempotent"
+                    ).inc()
+                    return ev
+
+            verified_at = cmd.verified_at or utcnow()
+            payload = {
+                "verification_id": cmd.verification_id,
+                "result": result_norm,
+                "local_values": dict(cmd.local_values or {}),
+                "recovered_values": dict(cmd.recovered_values or {}),
+                "verified_at": verified_at.isoformat(),
+                "evidence_package_id": anchor.evidence_package_external_id,
+                "pipeline_run_id": str(cmd.pipeline_run_id),
+                **{
+                    k: v
+                    for k, v in (cmd.metadata or {}).items()
+                    if k
+                    in (
+                        "cycle_id",
+                        "publication_id",
+                        "package_hash",
+                        "merkle_root",
+                        "agent",
+                        "service",
+                    )
+                },
+            }
+            event = AuditEvent(
+                audit_event_id=new_uuid7(),
+                event_type=f"integrity_verification.{result_norm}",
+                actor_agent_id=None,
+                subject_kind="blockchain_anchor",
+                subject_id=cmd.blockchain_anchor_id,
+                payload=payload,
+                recorded_at=verified_at,
+            )
+            uow.audit_events.add(event)
+            self._enqueue_event(
+                uow,
+                aggregate_kind="integrity_verification",
+                aggregate_id=event.audit_event_id,
+                event_type=f"integrity_verification.{result_norm}",
+                pipeline_run_id=cmd.pipeline_run_id,
+                payload={
+                    "audit_event_id": str(event.audit_event_id),
+                    "blockchain_anchor_id": str(cmd.blockchain_anchor_id),
+                    "verification_id": cmd.verification_id,
+                    "result": result_norm,
+                    "evidence_package_id": anchor.evidence_package_external_id,
+                    "cycle_id": payload.get("cycle_id"),
+                    "verified_at": verified_at.isoformat(),
+                },
+            )
+            PROVENANCE_RECORDS.labels(
+                kind="integrity_verification", outcome=result_norm
+            ).inc()
+            return event
+
+    def _resolve_blockchain_anchor(
+        self,
+        uow: UnitOfWork,
+        *,
+        blockchain_anchor_id: UUID | None,
+        evidence_package_external_id: str | None,
+        pipeline_run_id: UUID | None,
+    ) -> BlockchainAnchor:
+        if blockchain_anchor_id is not None:
+            anchor = uow.blockchain_anchors.get(blockchain_anchor_id)
+            if anchor is None:
+                raise NotFoundError(f"BlockchainAnchor {blockchain_anchor_id} not found")
+            return anchor
+        if evidence_package_external_id:
+            anchor = uow.blockchain_anchors.find_by_evidence_package_external_id(
+                evidence_package_external_id,
+                pipeline_run_id=pipeline_run_id,
+            )
+            if anchor is None:
+                raise NotFoundError(
+                    "BlockchainAnchor not found for evidence_package_external_id",
+                )
+            return anchor
+        raise InvariantViolationError(
+            "confirm_blockchain_anchor requires blockchain_anchor_id or evidence_package_external_id"
+        )
 
     # --------------- revision ---------------
 

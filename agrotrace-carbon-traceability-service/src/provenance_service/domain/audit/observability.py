@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from provenance_service.domain.shared.enums import (
+    CANONICALIZATION_METHOD_ALIASES,
     CANONICALIZATION_METHOD_V1,
     HashScope,
     HashSubjectKind,
@@ -49,4 +50,12 @@ def hash_scope_for_subject(subject_kind: HashSubjectKind) -> HashScope:
 
 
 def default_canonicalization_method() -> str:
+    """Emit ``prov_canonical_v1`` for new provenance hash records."""
     return CANONICALIZATION_METHOD_V1
+
+
+def is_known_canonicalization_method(method: str | None) -> bool:
+    """Accept current label and historical ``json_canonical_v1`` alias on read."""
+    if not method:
+        return False
+    return str(method).strip() in CANONICALIZATION_METHOD_ALIASES

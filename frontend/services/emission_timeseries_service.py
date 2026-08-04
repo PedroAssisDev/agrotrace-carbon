@@ -181,13 +181,39 @@ def _prorate_by_source(cycle_sources: dict[str, float], ratio: float) -> dict[st
     return {src: float(val or 0) * ratio for src, val in cycle_sources.items()}
 
 
+def _prorate_by_gas(cycle_gases: dict[str, float], ratio: float) -> dict[str, float]:
+    if ratio <= 0 or not cycle_gases:
+        return {}
+    return {gas: float(val or 0) * ratio for gas, val in cycle_gases.items()}
+
+
+def _point_ratio(
+    row: dict,
+    cycle: dict,
+    cycle_total_kg: float | None,
+) -> float | None:
+    """Razão ponto/ciclo para rateio (CO₂e, depois leite). None = usar total do ciclo."""
+    point_co2e = _num(row.get("co2e_kg"))
+    if point_co2e is not None and cycle_total_kg and cycle_total_kg > 0:
+        return point_co2e / cycle_total_kg
+    point_milk = _num(row.get("milk_liters"))
+    cycle_milk = _cycle_total_milk(cycle)
+    if point_milk is not None and cycle_milk and cycle_milk > 0:
+        return point_milk / cycle_milk
+    return None
+
+
 def _resolve_point_by_source(
     row: dict,
     cycles: list[dict],
     by_period: dict[str, list[dict]],
     calc_base: str,
 ) -> dict[str, float]:
-    """Resolve by_source para um ponto temporal (ciclo, registros ou rateio)."""
+    """Resolve by_source para um ponto temporal (ciclo, registros ou rateio).
+
+    Preferência: calculation.by_source / subcalculations do ciclo. Records parciais
+    (ex.: só enteric_tco2e) não descartam fontes declaradas no cálculo.
+    """
     point_cycles = _cycles_for_point(row, cycles, by_period, calc_base)
     if not point_cycles:
         return {}
@@ -200,34 +226,23 @@ def _resolve_point_by_source(
     row_key = _normalize_period_key(str(period_key) if period_key else None, calc_base)
     cycle_key = _normalize_period_key(cycle_period(cycle), calc_base)
 
-    records = _records_for_period_key(cycle, str(period_key or ""), calc_base) if period_key else []
-    from_records = _extract_by_source_from_records(records)
-
-    point_co2e = _num(row.get("co2e_kg"))
     cycle_co2e = _num((cycle.get("calculation") or {}).get("co2e_total_kg"))
     if cycle_co2e is None and cycle_sources:
         cycle_co2e = sum(cycle_sources.values())
 
-    if from_records:
-        if cycle_sources and point_co2e and cycle_co2e and cycle_co2e > 0:
-            return _prorate_by_source(cycle_sources, point_co2e / cycle_co2e)
-        return from_records
-
-    if not cycle_sources:
-        return {}
-
-    if row_key and cycle_key and row_key == cycle_key:
+    if cycle_sources:
+        if row_key and cycle_key and row_key == cycle_key:
+            return cycle_sources
+        ratio = _point_ratio(row, cycle, cycle_co2e)
+        if ratio is not None:
+            return _prorate_by_source(cycle_sources, ratio)
         return cycle_sources
 
-    if point_co2e and cycle_co2e and cycle_co2e > 0:
-        return _prorate_by_source(cycle_sources, point_co2e / cycle_co2e)
-
-    point_milk = _num(row.get("milk_liters"))
-    cycle_milk = _cycle_total_milk(cycle)
-    if point_milk and cycle_milk and cycle_milk > 0:
-        return _prorate_by_source(cycle_sources, point_milk / cycle_milk)
-
-    return cycle_sources
+    records = _records_for_period_key(cycle, str(period_key or ""), calc_base) if period_key else []
+    from_records = _extract_by_source_from_records(records)
+    if from_records:
+        return from_records
+    return {}
 
 
 def _point_by_gas(point_sources: dict[str, float]) -> dict[str, float]:
@@ -243,6 +258,49 @@ def _point_by_gas(point_sources: dict[str, float]) -> dict[str, float]:
         else:
             out["CH4"] += kg
     return {k: v for k, v in out.items() if v > 0}
+
+
+def _resolve_point_by_gas(
+    row: dict,
+    cycles: list[dict],
+    by_period: dict[str, list[dict]],
+    calc_base: str,
+    point_sources: dict[str, float] | None = None,
+) -> dict[str, float]:
+    """Resolve by_gas para um ponto: calculation.by_gas primeiro; fallback por fonte.
+
+    Preserva gases declarados no ciclo (CH4/N2O/CO2 e chaves desconhecidas).
+    Não inventa valores: rateia o mapa existente ou infere só a partir de fontes.
+    """
+    point_cycles = _cycles_for_point(row, cycles, by_period, calc_base)
+    if not point_cycles:
+        return _point_by_gas(point_sources or {})
+
+    if len(point_cycles) > 1:
+        return _aggregate_by_gas(point_cycles)
+
+    cycle = point_cycles[0]
+    cycle_gases = _calculation_by_gas(cycle)
+    period_key = row.get("period_key") or row.get("period")
+    row_key = _normalize_period_key(str(period_key) if period_key else None, calc_base)
+    cycle_key = _normalize_period_key(cycle_period(cycle), calc_base)
+
+    cycle_co2e = _num((cycle.get("calculation") or {}).get("co2e_total_kg"))
+    if cycle_co2e is None and cycle_gases:
+        cycle_co2e = sum(cycle_gases.values())
+
+    if cycle_gases:
+        if row_key and cycle_key and row_key == cycle_key:
+            return cycle_gases
+        ratio = _point_ratio(row, cycle, cycle_co2e)
+        if ratio is not None:
+            return _prorate_by_gas(cycle_gases, ratio)
+        return cycle_gases
+
+    src = point_sources if point_sources is not None else _resolve_point_by_source(
+        row, cycles, by_period, calc_base,
+    )
+    return _point_by_gas(src)
 
 
 def _cycles_for_point(
@@ -407,7 +465,9 @@ def _build_series_from_rows(
         milk_liters.append(_num(row.get("milk_liters")))
         src = _resolve_point_by_source(row, work, by_period, calc_base)
         point_sources.append(src)
-        point_gases.append(_point_by_gas(src) if src else _aggregate_by_gas(_cycles_for_point(row, work, by_period, calc_base)))
+        point_gases.append(
+            _resolve_point_by_gas(row, work, by_period, calc_base, point_sources=src)
+        )
 
     return labels, total_t, intensity, milk_liters, point_sources, point_gases
 

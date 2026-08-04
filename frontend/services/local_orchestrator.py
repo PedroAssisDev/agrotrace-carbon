@@ -406,6 +406,26 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
         params["gwp"] = di.gwp_ipcc_ar4()
     cycle["calculation_params"] = params
 
+    # Materialização oficial do catálogo (defaults pending) antes do adapter
+    try:
+        from services.factor_catalog_materialization_service import (
+            ensure_factor_catalog_for_calculation,
+        )
+        from services import provenance_adapter as _prov_cat
+
+        factor_catalog = ensure_factor_catalog_for_calculation(cycle)
+        if cycle.get("pipeline_run_id"):
+            _prov_cat.record_factor_catalog_materialization(
+                cycle["pipeline_run_id"], cycle, factor_catalog,
+            )
+    except Exception as exc:
+        add_error(cycle, "calculation", str(exc))
+        set_step(cycle, "calculation", status="ERROR")
+        set_milestone(cycle, "FAILED")
+        _log_step(cycle, "calculation", "failed", error=str(exc))
+        save_cycle(cycle)
+        return cycle
+
     _log_step(cycle, "calculation", "start")
     _emit_canonical(cycle, "CALCULATION_EXECUTION_STARTED", {"gwp": params.get("gwp")}, include_legacy=False)
 
@@ -417,7 +437,7 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
         "frequency": cycle.get("frequency") or cycle.get("granularity"),
         "wrapper": cycle.get("wrapper") or {},
         "calculation_params": params,
-        "factor_catalog": (cycle.get("ontology") or {}).get("factor_catalog"),
+        "factor_catalog": factor_catalog,
         "ontology": cycle.get("ontology") or {},
     }
     with timed_op() as timer:
@@ -455,13 +475,52 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
         cycle["calculation"] = calculation
         mode = _mode_of(calculation)
 
-        if cycle.get("canonical_snapshot_id") and cycle.get("reporting_period_id"):
-            prov = provenance_adapter.record_calculation_flow(
-                cycle["pipeline_run_id"], cycle["canonical_snapshot_id"],
-                cycle["reporting_period_id"], calculation,
-            )
-            cycle["calculation_execution_id"] = prov.get("calculation_execution_id")
-            cycle["calculation_result_set_id"] = prov.get("calculation_result_set_id")
+        pending_corr = cycle.get("_pending_correction") or {}
+        supersedes_id = pending_corr.get("supersedes_id") or None
+        correction_reason = pending_corr.get("correction_reason")
+
+        if cycle.get("canonical_snapshot_id") and cycle.get("reporting_period_id") and cycle.get("pipeline_run_id"):
+            try:
+                prov = provenance_adapter.record_calculation_flow(
+                    cycle["pipeline_run_id"], cycle["canonical_snapshot_id"],
+                    cycle["reporting_period_id"], calculation,
+                    supersedes_id=supersedes_id,
+                    correction_reason=correction_reason,
+                )
+                cycle["calculation_execution_id"] = prov.get("calculation_execution_id")
+                cycle["calculation_result_set_id"] = prov.get("calculation_result_set_id")
+                if prov.get("prov_entity_id"):
+                    cycle["_last_result_prov_entity_id"] = prov.get("prov_entity_id")
+
+                if supersedes_id and prov.get("calculation_result_set_id"):
+                    try:
+                        rev = provenance_adapter.record_result_revision(
+                            supersedes_id,
+                            prov["calculation_result_set_id"],
+                            reason=correction_reason or "correction_recalculation",
+                            invalidate_previous=False,
+                        )
+                        cycle.setdefault("provenance_mirrors", {})["result_revision"] = rev
+                    except Exception as exc:
+                        logger.warning("record_result_revision falhou: %s", exc)
+            except Exception as exc:
+                logger.warning("record_calculation_flow falhou (espelho soft): %s", exc)
+
+            if pending_corr:
+                try:
+                    from services.result_correction_service import register_recalculated_version
+
+                    cycle = register_recalculated_version(cycle, pending_corr)
+                    cycle.pop("_pending_correction", None)
+                except Exception as exc:
+                    logger.warning("register_recalculated_version falhou: %s", exc)
+            elif not cycle.get("result_versions"):
+                try:
+                    from services.result_correction_service import _ensure_v1
+
+                    cycle = _ensure_v1(cycle)
+                except Exception as exc:
+                    logger.warning("ensure_v1 falhou: %s", exc)
 
         _emit_canonical(cycle, "CALCULATION_EXECUTED", {"co2e_total_kg": calculation.get("co2e_total_kg")}, include_legacy=False)
         _emit_canonical(cycle, "PRELIMINARY_RESULT_CREATED", {
@@ -685,6 +744,25 @@ def run_anchoring_step(cycle: dict, **_: Any) -> dict[str, Any]:
     _log_step(cycle, "blockchain", "start", package_id=truncate(pkg_id))
     _emit_canonical(cycle, "ANCHOR_REQUEST_CREATED", {"package_id": pkg_id}, include_legacy=False)
 
+    try:
+        from services import provenance_adapter as _prov
+
+        import config as app_config
+
+        network = getattr(app_config, "BLOCKCHAIN_DEFAULT_NETWORK_CODE", "local_simulated")
+        req_mirror = _prov.record_anchor_request(
+            cycle,
+            cycle.get("evidence_package") or {},
+            {
+                "network_code": network,
+                "request_id": (cycle.get("evidence_package") or {}).get("anchor_request_id") or pkg_id,
+                "agent": "frontend.local_orchestrator",
+            },
+        )
+        cycle.setdefault("provenance_mirrors", {})["anchor_request"] = req_mirror
+    except Exception as exc:
+        logger.warning("Espelho de solicitação de ancoragem falhou: %s", exc)
+
     with timed_op() as timer:
         try:
             import config as app_config
@@ -712,6 +790,14 @@ def run_anchoring_step(cycle: dict, **_: Any) -> dict[str, Any]:
         mode = _mode_of(anchor)
         kind = anchor.get("anchoring_kind", "SIMULADA")
         is_simulated = kind == "SIMULADA" or anchor.get("network") == "local_simulated"
+
+        try:
+            from services import provenance_adapter as _prov
+
+            conf_mirror = _prov.record_anchor_confirmation(cycle, anchor)
+            cycle.setdefault("provenance_mirrors", {})["anchor_confirmation"] = conf_mirror
+        except Exception as exc:
+            logger.warning("Espelho de confirmação de ancoragem falhou: %s", exc)
 
         event_name = "ANCHORING_SIMULATED" if is_simulated else "BLOCKCHAIN_ANCHOR_CREATED"
         _emit_canonical(cycle, event_name, {"tx": anchor.get("transaction_id"), "network": anchor.get("network")}, include_legacy=False)
@@ -757,6 +843,14 @@ def run_verification_step(cycle: dict, tamper: bool = False, **_: Any) -> dict[s
         integrity = blockchain_adapter.verify_integrity(cycle.get("evidence_package", {}), {"tamper": tamper})
         cycle["integrity"] = integrity
         mode = _mode_of(integrity)
+
+        try:
+            from services import provenance_adapter as _prov
+
+            ver_mirror = _prov.record_integrity_verification(cycle, integrity)
+            cycle.setdefault("provenance_mirrors", {})["integrity_verification"] = ver_mirror
+        except Exception as exc:
+            logger.warning("Espelho de verificação de integridade falhou: %s", exc)
 
         _emit_canonical(cycle, "INTEGRITY_VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")}, include_legacy=False)
         _emit(cycle, "VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")})

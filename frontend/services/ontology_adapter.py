@@ -8,7 +8,6 @@ from typing import Any, Iterable
 
 import config
 import pandas as pd
-from config import ONTOLOGY_EXPORTS_DIR
 from services import direct_imports as di
 from services import ontology_runtime_cache as onto_cache
 from services.calculation_factor_catalog import (
@@ -26,15 +25,30 @@ logger = logging.getLogger("agrotrace.ontology")
 
 
 def _attach_factor_catalog(result: dict[str, Any], onto: Any | None = None) -> None:
-    """Anexa catálogo de fatores (ontologia se disponível, senão defaults oficiais)."""
+    """Anexa catálogo de fatores completo (extract OWL ou materialização oficial)."""
+    from services.factor_catalog_materialization_service import (
+        catalog_is_complete,
+        materialize_factor_catalog,
+    )
+
     catalog = extract_factor_catalog_from_ontology(onto) if onto is not None else None
-    if catalog is None:
-        catalog = build_default_factor_catalog(source="ontology")
-        catalog["_note"] = (
-            "Snapshot alinhado a emissions.defaults e aos indivíduos EmissionFactor/GWP "
-            "populados no build_full_ontology."
-        )
-    result["factor_catalog"] = catalog
+    if catalog is not None and catalog_is_complete(catalog):
+        from services.factor_catalog_materialization_service import factor_units_for_catalog
+
+        catalog = dict(catalog)
+        catalog.setdefault("_units", factor_units_for_catalog())
+        result["factor_catalog"] = catalog
+        return
+
+    # Materializa defaults pending no resultado (e no OWL quando disponível)
+    tmp_cycle: dict[str, Any] = {
+        "cycle_id": result.get("cycle_id"),
+        "ontology": {"factor_catalog": catalog} if catalog else {},
+    }
+    materialized = materialize_factor_catalog(tmp_cycle, onto=onto, actor="ontology_publish")
+    result["factor_catalog"] = materialized
+    if tmp_cycle.get("ontology_parameter_events"):
+        result.setdefault("parameter_events", []).extend(tmp_cycle["ontology_parameter_events"])
 
 
 def _records_to_dataframe(records: list[dict]) -> pd.DataFrame:
@@ -67,29 +81,29 @@ def _mock_validation(canonical_dataset: dict, reason: str | None = None) -> dict
 
 def _cycle_export_dir(cycle_id: str) -> Path:
     safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(cycle_id))
-    path = ONTOLOGY_EXPORTS_DIR / safe
+    path = config.ONTOLOGY_EXPORTS_DIR / safe
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
 def _export_ontology_files(onto: Any, cycle_id: str | None, *, suffix: str = "") -> dict[str, str]:
     """Exporta OWL/TTL por ciclo e espelha no caminho legado compartilhado."""
-    ONTOLOGY_EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    config.ONTOLOGY_EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
     if cycle_id:
         out_dir = _cycle_export_dir(cycle_id)
         stem = f"agromrv_lite{suffix}"
         owl_path = out_dir / f"{stem}.owl"
         ttl_path = out_dir / f"{stem}.ttl"
     else:
-        owl_path = ONTOLOGY_EXPORTS_DIR / f"agromrv_lite{suffix}.owl"
-        ttl_path = ONTOLOGY_EXPORTS_DIR / f"agromrv_lite{suffix}.ttl"
+        owl_path = config.ONTOLOGY_EXPORTS_DIR / f"agromrv_lite{suffix}.owl"
+        ttl_path = config.ONTOLOGY_EXPORTS_DIR / f"agromrv_lite{suffix}.ttl"
 
     di.export_ontology(onto, str(owl_path), format="rdfxml")
     di.export_ontology(onto, str(ttl_path), format="turtle")
 
     # Espelho legado (última exportação global)
-    shared_owl = ONTOLOGY_EXPORTS_DIR / "agromrv_lite.owl"
-    shared_ttl = ONTOLOGY_EXPORTS_DIR / "agromrv_lite.ttl"
+    shared_owl = config.ONTOLOGY_EXPORTS_DIR / "agromrv_lite.owl"
+    shared_ttl = config.ONTOLOGY_EXPORTS_DIR / "agromrv_lite.ttl"
     di.export_ontology(onto, str(shared_owl), format="rdfxml")
     di.export_ontology(onto, str(shared_ttl), format="turtle")
 
@@ -261,6 +275,29 @@ def mark_parameters_published(cycle: dict, *, actor: str | None = None) -> dict:
     """Marca fatores e resultados como published e republica OWL final."""
     if di.set_groups_status is None:
         raise RuntimeError("API set_groups_status indisponível.")
+
+    try:
+        from services.result_correction_service import (
+            get_active_version,
+            has_open_correction,
+            has_pending_reapproval,
+        )
+
+        if has_open_correction(cycle):
+            raise RuntimeError(
+                "Não é permitido publicar ontologia final com solicitação de correção aberta."
+            )
+        if has_pending_reapproval(cycle):
+            raise RuntimeError(
+                "Não é permitido publicar ontologia final com versão pendente de reaprovação."
+            )
+        active = get_active_version(cycle)
+        if active and active.get("status") == "superseded":
+            raise RuntimeError("Não é permitido publicar versão superseded.")
+    except RuntimeError:
+        raise
+    except Exception:
+        pass
 
     onto = get_onto_for_cycle(cycle)
     catalog = (cycle.get("ontology") or {}).get("factor_catalog") or {}

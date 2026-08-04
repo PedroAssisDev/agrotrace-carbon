@@ -15,6 +15,7 @@ from components.calculation_review.file_review_summary_cards import (
     FileReviewSummaryCards,
 )
 from components.calculation_review.review_provenance_summary import ReviewProvenanceSummary
+from components.calculation_review.result_version_timeline import ResultVersionTimeline
 from components.empty_state import EMPTY_NO_PENDING_APPROVAL, EmptyFilterState, EmptyState
 from components.page_header import PageHeader
 from components.status_badges import StatusBadge
@@ -123,5 +124,6 @@ def layout(
             ),
         ], className="g-3 mb-3"),
         FileApprovalFinalPanel(selected),
+        html.Div(ResultVersionTimeline(selected), className="mb-3"),
         ReviewProvenanceSummary(selected),
     ], className="page-approval page-content-inner")

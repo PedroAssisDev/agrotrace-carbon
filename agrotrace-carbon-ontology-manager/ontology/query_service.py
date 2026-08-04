@@ -439,3 +439,81 @@ def get_ontology_version(onto: Any, cycle_id: str | None = None, **meta) -> dict
         "ontology_path": meta.get("ontology_path"),
         "source": "ontology",
     }
+
+
+def _ind_id(ind: Any) -> str | None:
+    val = _get_dp(ind, "hasIdentifier")
+    return str(val) if val is not None else None
+
+
+def list_lots_for_property(onto: Any, property_id: str) -> list[dict[str, Any]]:
+    cls = getattr(onto, "Lot", None)
+    if cls is None:
+        return []
+    out: list[dict[str, Any]] = []
+    for lot in cls.instances():
+        props = list(getattr(lot, "belongsToProperty", None) or [])
+        if not props:
+            continue
+        pid = _ind_id(props[0])
+        if pid != property_id:
+            continue
+        out.append({"lot_id": _ind_id(lot), "property_id": pid})
+    return sorted(out, key=lambda x: x.get("lot_id") or "")
+
+
+def list_animals_for_lot(onto: Any, lot_id: str) -> list[dict[str, Any]]:
+    cls = getattr(onto, "Animal", None)
+    if cls is None:
+        return []
+    out: list[dict[str, Any]] = []
+    for animal in cls.instances():
+        lots = list(getattr(animal, "belongsToLot", None) or [])
+        if not lots:
+            continue
+        lid = _ind_id(lots[0])
+        if lid != lot_id:
+            continue
+        props = list(getattr(animal, "belongsToProperty", None) or [])
+        pid = _ind_id(props[0]) if props else None
+        out.append({"animal_id": _ind_id(animal), "lot_id": lid, "property_id": pid})
+    return sorted(out, key=lambda x: x.get("animal_id") or "")
+
+
+def resolve_organizational_chain(
+    onto: Any,
+    *,
+    animal_id: str | None = None,
+    lot_id: str | None = None,
+) -> dict[str, Any] | None:
+    """Resolve animal → lot → property (or lot → property)."""
+    from ontology import iri as iri_mod
+
+    if animal_id:
+        animal = onto.search_one(iri=f"*#{iri_mod.animal_iri(animal_id)}")
+        if animal is None:
+            return None
+        lots = list(getattr(animal, "belongsToLot", None) or [])
+        props = list(getattr(animal, "belongsToProperty", None) or [])
+        lot = lots[0] if lots else None
+        prop = props[0] if props else None
+        if lot is not None and prop is None:
+            lot_props = list(getattr(lot, "belongsToProperty", None) or [])
+            prop = lot_props[0] if lot_props else None
+        return {
+            "animal_id": _ind_id(animal),
+            "lot_id": _ind_id(lot) if lot is not None else None,
+            "property_id": _ind_id(prop) if prop is not None else None,
+        }
+    if lot_id:
+        lot = onto.search_one(iri=f"*#{iri_mod.lot_iri(lot_id)}")
+        if lot is None:
+            return None
+        props = list(getattr(lot, "belongsToProperty", None) or [])
+        prop = props[0] if props else None
+        return {
+            "animal_id": None,
+            "lot_id": _ind_id(lot),
+            "property_id": _ind_id(prop) if prop is not None else None,
+        }
+    return None

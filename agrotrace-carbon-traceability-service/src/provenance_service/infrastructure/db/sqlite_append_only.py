@@ -132,7 +132,8 @@ def install_sqlite_append_only(connection: Connection | Engine) -> None:
                 """
             )
         )
-        conn.commit()
+        if own_connection:
+            conn.commit()
     finally:
         if own_connection:
             conn.close()
@@ -151,7 +152,8 @@ def drop_sqlite_append_only(connection: Connection | Engine) -> None:
             conn.execute(text(f"DROP TRIGGER IF EXISTS trg_append_only_{table}_no_delete"))
         conn.execute(text("DROP TRIGGER IF EXISTS trg_prov_entity_invalidate_only"))
         conn.execute(text("DROP TRIGGER IF EXISTS trg_prov_entity_no_delete"))
-        conn.commit()
+        if own_connection:
+            conn.commit()
     finally:
         if own_connection:
             conn.close()

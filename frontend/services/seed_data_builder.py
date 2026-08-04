@@ -18,7 +18,6 @@ SAVE_FILE_ROOT = config.SAVE_FILE_SERVICE_DIR
 if str(SAVE_FILE_ROOT) not in sys.path:
     sys.path.insert(0, str(SAVE_FILE_ROOT))
 
-from save_file.emulated.manifest import default_emulated_dir  # noqa: E402
 from save_file.emulated.planner import expected_approval_count, expected_entry_count  # noqa: E402
 from save_file.emulated.writer import generate_emulated_uploads  # noqa: E402
 
@@ -43,7 +42,7 @@ def build_all_seed_files(
         DeprecationWarning,
         stacklevel=2,
     )
-    out = default_emulated_dir()
+    out = config.SAVE_FILE_EMULATED_UPLOADS_DIR
     result = generate_emulated_uploads(
         global_seed=global_seed,
         profile_mode=profile_mode,

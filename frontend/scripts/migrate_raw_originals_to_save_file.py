@@ -18,7 +18,8 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
-from config import RAW_ORIGINALS_DIR, SAVE_FILE_ORIGINALS_DIR, ensure_data_dirs  # noqa: E402
+from config import ensure_data_dirs  # noqa: E402
+import config  # noqa: E402
 
 
 def migrate() -> dict[str, int]:
@@ -26,14 +27,14 @@ def migrate() -> dict[str, int]:
     copied = 0
     skipped = 0
 
-    if not RAW_ORIGINALS_DIR.exists():
-        print(f"Nada a migrar: {RAW_ORIGINALS_DIR} não existe.")
+    if not config.RAW_ORIGINALS_DIR.exists():
+        print(f"Nada a migrar: {config.RAW_ORIGINALS_DIR} não existe.")
         return {"copied": 0, "skipped": 0}
 
-    for src in RAW_ORIGINALS_DIR.glob("*"):
+    for src in config.RAW_ORIGINALS_DIR.glob("*"):
         if not src.is_file() or src.name == ".gitkeep":
             continue
-        dest = SAVE_FILE_ORIGINALS_DIR / src.name
+        dest = config.SAVE_FILE_ORIGINALS_DIR / src.name
         if dest.exists():
             skipped += 1
             continue
@@ -42,8 +43,8 @@ def migrate() -> dict[str, int]:
         print(f"copiado: {src.name}")
 
     print(f"\nMigração concluída: {copied} copiado(s), {skipped} já existente(s).")
-    print(f"Origem : {RAW_ORIGINALS_DIR}")
-    print(f"Destino: {SAVE_FILE_ORIGINALS_DIR}")
+    print(f"Origem : {config.RAW_ORIGINALS_DIR}")
+    print(f"Destino: {config.SAVE_FILE_ORIGINALS_DIR}")
     return {"copied": copied, "skipped": skipped}
 
 

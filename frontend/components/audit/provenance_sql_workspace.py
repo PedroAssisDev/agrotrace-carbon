@@ -115,7 +115,12 @@ def ProvenanceSqlWorkspace(ctx, schema: dict) -> html.Div:
                     dbc.Button("Executar consulta", id="ta-prov-run-query", color="primary", size="sm", className="me-2 mt-2"),
                     dbc.Button("Limpar", id="ta-prov-clear-sql", color="outline-secondary", size="sm", className="me-2 mt-2"),
                     dbc.Button("Formatar SQL", id="ta-prov-format-sql", color="outline-secondary", size="sm", className="me-2 mt-2"),
-                    dbc.Button("Copiar SQL", id="ta-prov-copy-sql", color="outline-secondary", size="sm", className="me-2 mt-2"),
+                    dcc.Clipboard(
+                        id="ta-prov-copy-sql",
+                        target_id="ta-prov-sql-input",
+                        title="Copiar SQL",
+                        style={"display": "inline-block", "marginTop": "0.5rem", "marginRight": "0.5rem"},
+                    ),
                     dbc.Input(
                         id="ta-prov-limit-input",
                         type="number",
@@ -137,7 +142,12 @@ def ProvenanceSqlWorkspace(ctx, schema: dict) -> html.Div:
             dbc.CardHeader([
                 html.Span("Resultado", className="me-2"),
                 dbc.Button("Exportar CSV", id="ta-prov-export-csv", color="outline-primary", size="sm", className="float-end"),
-                dbc.Button("Copiar resultado", id="ta-prov-copy-result", color="outline-secondary", size="sm", className="float-end me-2"),
+                dcc.Clipboard(
+                    id="ta-prov-copy-result",
+                    target_id="ta-prov-results-table",
+                    title="Copiar resultado",
+                    style={"float": "right", "marginRight": "0.5rem", "marginTop": "0.2rem"},
+                ),
             ]),
             dbc.CardBody([
                 html.Div(id="ta-prov-results-table"),

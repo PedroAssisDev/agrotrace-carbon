@@ -235,4 +235,10 @@ class AnchorMode(StrEnum):
     PERMISSIONED_NETWORK = "permissioned_network"
 
 
-CANONICALIZATION_METHOD_V1 = "json_canonical_v1"
+CANONICALIZATION_METHOD_V1 = "prov_canonical_v1"
+# Alias de leitura para registros históricos gravados com o rótulo antigo
+# (algoritmo do traceability nunca foi o json_canonical_v1 do blockchain-service).
+CANONICALIZATION_METHOD_LEGACY_ALIAS = "json_canonical_v1"
+CANONICALIZATION_METHOD_ALIASES = frozenset(
+    {CANONICALIZATION_METHOD_V1, CANONICALIZATION_METHOD_LEGACY_ALIAS}
+)

@@ -9,7 +9,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from config import CYCLES_DIR, ensure_data_dirs
+import config
 from utils.date_helpers import now_iso
 
 logger = logging.getLogger("agrotrace.store")
@@ -21,8 +21,8 @@ _cycle_file_cache: dict[str, tuple[float, dict[str, Any]]] = {}
 
 
 def _cycles_dir_signature() -> tuple[int, float]:
-    ensure_data_dirs()
-    files = list(CYCLES_DIR.glob("*.json"))
+    config.ensure_data_dirs()
+    files = list(config.CYCLES_DIR.glob("*.json"))
     if not files:
         return (0, 0.0)
     return (len(files), max(f.stat().st_mtime for f in files))
@@ -131,9 +131,9 @@ def list_cycles() -> list[dict[str, Any]]:
     if _cycles_list_cache is not None and _cycles_list_signature == sig:
         return copy.deepcopy(_cycles_list_cache)
 
-    ensure_data_dirs()
+    config.ensure_data_dirs()
     cycles: list[dict[str, Any]] = []
-    for f in sorted(CYCLES_DIR.glob("*.json"), reverse=True):
+    for f in sorted(config.CYCLES_DIR.glob("*.json"), reverse=True):
         try:
             cycles.append(json.loads(f.read_text(encoding="utf-8")))
         except json.JSONDecodeError:
@@ -152,11 +152,11 @@ def list_cycle_summaries() -> list[dict[str, Any]]:
 
 def save_cycle(cycle: dict[str, Any]) -> str:
     """Persiste ciclo e retorna cycle_id."""
-    ensure_data_dirs()
+    config.ensure_data_dirs()
     cycle_id = cycle.get("cycle_id") or f"CYCLE-{uuid.uuid4().hex[:12]}"
     cycle["cycle_id"] = cycle_id
     cycle["updated_at"] = now_iso()
-    path = CYCLES_DIR / f"{cycle_id}.json"
+    path = config.CYCLES_DIR / f"{cycle_id}.json"
     serializable = {k: v for k, v in cycle.items() if not k.startswith("_")}
     save_json(path, serializable)
     invalidate_cycle_cache(cycle_id)
@@ -172,7 +172,7 @@ def save_cycle(cycle: dict[str, Any]) -> str:
 
 def get_cycle(cycle_id: str) -> dict[str, Any] | None:
     """Carrega ciclo por ID (cache por mtime do arquivo)."""
-    path = CYCLES_DIR / f"{cycle_id}.json"
+    path = config.CYCLES_DIR / f"{cycle_id}.json"
     if not path.exists():
         _cycle_file_cache.pop(cycle_id, None)
         return None

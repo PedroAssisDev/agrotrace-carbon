@@ -57,7 +57,7 @@ class ProvidersRegistry:
             if not settings.sepolia_ready():
                 raise ConfigurationError(
                     "ethereum_sepolia requires RPC URL, private key, contract address "
-                    "and chain_id=11155111"
+                    "and chain_id=11155111 (values never logged)"
                 )
             provider = EvmAnchorProvider(settings.sepolia_config())
             self._cache[network_code] = provider

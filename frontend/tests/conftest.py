@@ -28,6 +28,8 @@ def agrotrace_data_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path
         "logs",
         "save_file/originals",
         "save_file/emulated_uploads",
+        "model_training/artifacts",
+        "model_training/processed",
     ):
         (root / name).mkdir(parents=True, exist_ok=True)
 

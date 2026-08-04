@@ -171,7 +171,7 @@ def compute_farm_period_emissions(
             implementation_version=IMPLEMENTATION_VERSION,
         )
 
-    return CalculationBundle(
+    bundle = CalculationBundle(
         enteric=enteric,
         manure=manure,
         fertilizer=fertilizer,
@@ -180,6 +180,64 @@ def compute_farm_period_emissions(
         indicators=indicators,
         provenance=provenance,
     )
+
+    if include_provenance:
+        scope_label = (
+            farm_input.temporal_scope.value
+            if hasattr(farm_input.temporal_scope, "value")
+            else str(farm_input.temporal_scope)
+        )
+        factors_used = {
+            "enteric_ch4_kg_per_animal": enteric_factors,
+            "manure_kg_per_kg_bw_per_day": manure_md,
+            "manure_ch4_kg_per_kg_manure": manure_ef,
+            "energy_co2_kg_per_unit": energy_factors,
+            "fertilizer_factors": fert_factors,
+            "gwp": gwp_values,
+        }
+        inputs = {
+            "headcounts_by_category": dict(farm_input.headcounts_by_category),
+            "body_weight_kg_by_category": dict(farm_input.body_weight_kg_by_category),
+            "nitrogen_applied_kg": farm_input.nitrogen_applied_kg,
+            "energy_consumption_by_vector": dict(farm_input.energy_consumption_by_vector),
+            "days_in_period": farm_input.days_in_period,
+            "milk_liters": farm_input.milk_liters,
+        }
+        # Enteric defaults are annual; when auto_prorate aligns to monthly, mark inferred.
+        enteric_origin = "inferred" if (
+            auto_prorate_factors
+            and enteric_ch4_kg_per_animal is None
+            and str(scope_label).lower() in {"monthly", "month"}
+        ) else ("configured" if enteric_ch4_kg_per_animal is not None else "default")
+        factor_origins = {
+            "enteric_ch4_kg_per_animal": {k: enteric_origin for k in enteric_factors},
+            "manure_kg_per_kg_bw_per_day": {
+                k: ("configured" if manure_kg_per_kg_bw_per_day is not None else "default")
+                for k in manure_md
+            },
+            "manure_ch4_kg_per_kg_manure": {
+                k: ("configured" if manure_ch4_kg_per_kg_manure is not None else "default")
+                for k in manure_ef
+            },
+            "energy_co2_kg_per_unit": {
+                k: ("configured" if energy_co2_kg_per_unit is not None else "default")
+                for k in energy_factors
+            },
+            "fertilizer_factors": {
+                k: ("configured" if fertilizer_factors is not None else "default")
+                for k in fert_factors
+            },
+            "gwp": {k: ("configured" if gwp is not None else "default") for k in gwp_values},
+        }
+        bundle = bundle.attach_explanation(
+            inputs=inputs,
+            factors_used=factors_used,
+            gwp=gwp_values,
+            temporal_granularity=scope_label,
+            factor_origins=factor_origins,
+        )
+
+    return bundle
 
 
 def compute_row_emissions(

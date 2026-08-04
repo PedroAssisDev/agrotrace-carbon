@@ -5,10 +5,11 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 from utils.date_helpers import now_iso
-from utils.hash_helpers import sha256_dict, sha256_text
+from utils.hash_helpers import ui_preview_hash, sha256_text
 
 
 def _id(prefix: str) -> str:
@@ -96,7 +97,7 @@ def mock_ontology_result(normalized_batch: dict) -> dict[str, Any]:
             {"from": "farm", "to": "fert", "label": "applies"},
             {"from": "farm", "to": "emissions", "label": "emits"},
         ],
-        "ontology_hash": sha256_dict({"version": "agromrv_lite_v2026_01"}),
+        "ontology_hash": ui_preview_hash({"version": "agromrv_lite_v2026_01"}),
         "export_paths": {},
     }
 
@@ -121,7 +122,7 @@ def mock_semantic_validation(canonical_dataset: dict) -> dict[str, Any]:
             {"rule": "energia sem vetor identificado", "severity": "WARNING"},
         ],
         "status": "SEMANTIC_VALIDATION_PASSED_WITH_WARNINGS",
-        "validation_hash": sha256_dict({"status": "passed_with_warnings"}),
+        "validation_hash": ui_preview_hash({"status": "passed_with_warnings"}),
     }
 
 
@@ -261,7 +262,7 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         "subcalculations": subcalculations,
         "co2e_total_kg": 82631.35,
     }
-    results["preliminary_hash"] = sha256_dict(hash_payload)
+    results["preliminary_hash"] = ui_preview_hash(hash_payload)
     return results
 
 
@@ -322,7 +323,7 @@ def mock_evidence_package(cycle: dict) -> dict[str, Any]:
         "calculation_execution_id": "CALC-2026-01-0001",
         "methodology": "IPCC/IDF-compatible",
         "hashes": hashes,
-        "merkle_root": "0x8cfa" + sha256_dict(hashes)[:56],
+        "merkle_root": "0x8cfa" + ui_preview_hash(hashes)[:56],
         "created_at": now_iso(),
         "source": "mock",
         "anchoring_status": "ANCHORING_SIMULATED",
@@ -357,7 +358,18 @@ def mock_integrity_check(integrate: bool = True) -> dict[str, Any]:
     }
 
 
-def mock_full_cycle() -> dict[str, Any]:
+def _mock_stored_path(filename: str, *, data_root: Path | None = None) -> str:
+    """Caminho de stored_path sob o data root efetivo (sem literal frontend/data)."""
+    try:
+        import config as cfg
+
+        base = Path(data_root) if data_root is not None else Path(cfg.RAW_ORIGINALS_DIR)
+    except Exception:
+        base = Path(data_root) if data_root is not None else Path("raw_originals")
+    return str((base / filename).as_posix())
+
+
+def mock_full_cycle(*, data_root: Path | None = None) -> dict[str, Any]:
     """Ciclo mensal completo para demonstração."""
     from services.cycle_state import PIPELINE_STEP_DEFS, new_cycle
 
@@ -365,7 +377,7 @@ def mock_full_cycle() -> dict[str, Any]:
     period = "2026-01"
     raw = {
         "original_filename": "producao_janeiro_2026.csv",
-        "stored_path": "frontend/data/raw_originals/demo.csv",
+        "stored_path": _mock_stored_path("demo.csv", data_root=data_root),
         "sha256": sha256_text("demo-raw"),
         "property_id": MOCK_FARM["property_id"],
         "reporting_period": period,
@@ -426,6 +438,7 @@ def mock_pending_cycle(
     property_name: str = "Fazenda Boa Vista Leiteira",
     reporting_period: str = "2026-05",
     granularity: str = "monthly",
+    data_root: Path | None = None,
 ) -> dict[str, Any]:
     """Ciclo mensal com cálculo preliminar aguardando aprovação humana."""
     from services.cycle_state import PIPELINE_STEP_DEFS, new_cycle
@@ -433,7 +446,7 @@ def mock_pending_cycle(
     period = reporting_period
     raw = {
         "original_filename": "producao_demo.csv",
-        "stored_path": "frontend/data/raw_originals/demo-pending.csv",
+        "stored_path": _mock_stored_path("demo-pending.csv", data_root=data_root),
         "sha256": sha256_text("demo-raw-pending"),
         "property_id": property_id,
         "reporting_period": period,

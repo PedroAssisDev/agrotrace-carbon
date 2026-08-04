@@ -13,6 +13,7 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
+from scripts._validation_env import CheckCollector, isolated_data_root, print_structured_summary  # noqa: E402
 import config  # noqa: E402
 from pages.technical_audit import layout as audit_layout  # noqa: E402
 from pages.technical_audit_sections import build_provenance_queries_section  # noqa: E402
@@ -28,26 +29,21 @@ from services.provenance_schema_service import get_audit_schema  # noqa: E402
 from utils.file_helpers import save_cycle  # noqa: E402
 
 
-class Validator:
-    def __init__(self) -> None:
-        self.errors: list[str] = []
-        self.ok: list[str] = []
-
-    def check(self, name: str, condition: bool, detail: str = "") -> None:
-        if condition:
-            self.ok.append(name)
-            print(f"  [OK]   {name}")
-        else:
-            msg = f"{name}{f' — {detail}' if detail else ''}"
-            self.errors.append(msg)
-            print(f"  [FAIL] {msg}")
-
-
 def main() -> int:
-    v = Validator()
-    print("=== validate_provenance_queries ===\n")
+    v = CheckCollector()
+    print("=== validate_provenance_queries (data-root isolado) ===\n")
 
+    with isolated_data_root():
+        return _run(v)
+
+
+def _run(v: CheckCollector) -> int:
     demo = mock_full_cycle()
+    # Evita path absoluto no raw_file do mock
+    raw = dict(demo.get("raw_file") or {})
+    if raw.get("stored_path"):
+        raw["stored_path"] = "fixture/raw.csv"
+        demo["raw_file"] = raw
     save_cycle(demo)
     gf = {
         "farm_id": demo.get("property_id"),
@@ -65,7 +61,10 @@ def main() -> int:
 
     # Templates
     templates = list_query_templates()
-    v.check("12 templates definidos", len(templates) == 12)
+    ids = [t["id"] for t in templates]
+    v.check("templates >= 13", len(templates) >= 13, f"count={len(templates)}")
+    v.check("template ids únicos", len(ids) == len(set(ids)))
+    v.check("template blockchain_anchors_for_run", "blockchain_anchors_for_run" in ids)
     qctx = build_query_context_from_cycle(demo, ctx.farm_id)
     for tpl in templates:
         resolved = apply_context_placeholders(tpl["sql"], qctx)
@@ -104,8 +103,7 @@ def main() -> int:
         missing = execute_provenance_query("SELECT 1", context=qctx)
         v.check("DB ausente retorna erro amigável", bool(missing.get("error")))
 
-    print(f"\n{len(v.ok)} OK, {len(v.errors)} FAIL")
-    return 1 if v.errors else 0
+    return print_structured_summary(v, "Provenance queries validation")
 
 
 if __name__ == "__main__":

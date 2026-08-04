@@ -11,6 +11,7 @@ from components.audit.audit_summary_cards import AuditSummaryCards
 from components.audit.audit_timeline import AuditTimeline
 from components.audit.mock_source_badge import MockSourceBadge
 from components.audit.provenance_sql_workspace import ProvenanceSqlWorkspace
+from components.audit.raw_artifact_panel import RawArtifactPanel
 from components.audit.technical_actions_panel import TechnicalActionsPanel
 
 __all__ = [
@@ -24,6 +25,7 @@ __all__ = [
     "AuditLogPanel",
     "AuditPayloadViewer",
     "MockSourceBadge",
+    "RawArtifactPanel",
     "TechnicalActionsPanel",
     "ProvenanceSqlWorkspace",
 ]

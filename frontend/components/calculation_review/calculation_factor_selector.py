@@ -23,12 +23,14 @@ def _factors_table(rows: list[dict]) -> html.Div:
             html.Tr([
                 html.Th("Grupo", className="small"),
                 html.Th("Chave", className="small"),
+                html.Th("Origem", className="small"),
                 html.Th("Valor", className="small text-end"),
             ]),
             *[
                 html.Tr([
                     html.Td(r.get("grupo") or "—", className="small"),
                     html.Td(r.get("chave") or "—", className="small text-muted"),
+                    html.Td(r.get("origin") or "—", className="small text-muted"),
                     html.Td(
                         dbc.Input(
                             id={"type": "cr-factor-input", "group": r["group"], "key": r["factor_key"]},
@@ -64,8 +66,20 @@ def CalculationFactorSelector(cycle: dict, item: dict) -> html.Div:
     display_meth = methodology.get("applied") or default_meth
     has_custom = bool(methodology.get("applied"))
 
+    from services.calculation_explanation_service import get_or_build_explanation
+
+    expl = get_or_build_explanation(cycle)
+    gwp = expl.get("gwp") or {}
+    gwp_note = None
+    if gwp.get("assessment_report"):
+        gwp_note = html.Small(
+            f"GWP: {gwp.get('assessment_report')} · horizonte {gwp.get('time_horizon') or '—'}",
+            className="text-muted d-block mb-2",
+        )
+
     return html.Div([
         html.H6("Fatores da fórmula", className="small mb-2"),
+        gwp_note,
         _factors_table(factor_rows),
         html.Div([
             html.Small("Metodologia dos fatores", className="text-aux d-block mb-1"),
@@ -78,7 +92,8 @@ def CalculationFactorSelector(cycle: dict, item: dict) -> html.Div:
                 className="mb-1",
             ),
             html.Small(
-                "Padrão IPCC. O campo é habilitado ao alterar algum fator.",
+                "Padrão IPCC. Origem: configured / default / inferred / absent. "
+                "O campo de metodologia é habilitado ao alterar algum fator.",
                 className="text-muted d-block",
             ),
         ], className="mt-3"),

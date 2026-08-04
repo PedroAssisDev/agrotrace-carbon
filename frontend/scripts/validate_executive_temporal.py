@@ -13,6 +13,12 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
+from scripts._validation_env import (  # noqa: E402
+    CheckCollector,
+    isolated_data_root,
+    print_structured_summary,
+    seed_temporal_fixtures,
+)
 from services.indicator_service import (  # noqa: E402
     build_dashboard_chart_components,
     build_dashboard_chart_series,
@@ -24,19 +30,6 @@ from services.mock_data import mock_pending_cycle  # noqa: E402
 from services.page_context import resolve_page_context  # noqa: E402
 from utils.file_helpers import list_cycles  # noqa: E402
 from utils.global_filter import DEFAULT_GLOBAL_FILTER, normalize_filter_state  # noqa: E402
-
-
-class Validator:
-    def __init__(self) -> None:
-        self.errors: list[str] = []
-
-    def check(self, name: str, condition: bool, detail: str = "") -> None:
-        if condition:
-            print(f"  [OK]   {name}")
-        else:
-            msg = f"{name}{f' — {detail}' if detail else ''}"
-            self.errors.append(msg)
-            print(f"  [FAIL] {msg}")
 
 
 _LEGACY_EXECUTIVE_TEMPORAL_TITLES = frozenset({
@@ -146,8 +139,15 @@ def _pending_cycle(cid: str, period: str, milk: float, co2e: float, property_id:
 
 
 def main() -> int:
-    v = Validator()
+    v = CheckCollector()
+    print("== Executive temporal (fixture isolado) ==\n")
 
+    with isolated_data_root():
+        seed_temporal_fixtures(persist=True)
+        return _run(v)
+
+
+def _run(v: CheckCollector) -> int:
     cycles = [
         _pending_cycle("C-2021", "2021", 700000, 120000, "FARM-ANNUAL-001", "Santa Clara"),
         _pending_cycle("C-2022", "2022", 720000, 125000, "FARM-ANNUAL-001", "Santa Clara"),
@@ -287,14 +287,7 @@ def main() -> int:
                 str(em_labels[:5]),
             )
 
-    print()
-    if v.errors:
-        print("Executive temporal validation: FAIL")
-        for e in v.errors:
-            print(f"  - {e}")
-        return 1
-    print("Executive temporal validation: PASS")
-    return 0
+    return print_structured_summary(v, "Executive temporal validation")
 
 
 if __name__ == "__main__":

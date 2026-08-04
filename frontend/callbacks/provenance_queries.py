@@ -17,6 +17,7 @@ from services.provenance_query_service import (
 )
 from services.provenance_query_templates import get_template_by_id
 from services.provenance_sql_validator import format_sql_simple
+from utils.sanitize import sanitize_for_display
 
 logger = logging.getLogger("agrotrace.provenance_queries")
 
@@ -31,7 +32,18 @@ def _query_context(ctx) -> dict[str, str]:
     return build_query_context_from_cycle(ctx.active_cycle, ctx.farm_id)
 
 
+def _sanitize_result_rows(result: dict) -> dict:
+    """Remove paths/segredos das linhas antes de exibir ou exportar."""
+    if not result or result.get("error"):
+        return result
+    out = dict(result)
+    rows = result.get("rows") or []
+    out["rows"] = [sanitize_for_display(r) if isinstance(r, dict) else r for r in rows]
+    return out
+
+
 def _render_results(result: dict) -> html.Div:
+    result = _sanitize_result_rows(result)
     if result.get("error"):
         return dbc.Alert(result["error"], color="danger", className="small")
 
@@ -104,28 +116,42 @@ def _append_history(history: list | None, entry: dict) -> list:
     return hist[:MAX_HISTORY]
 
 
+def _sql_literal(value: str) -> str | None:
+    """Escapa aspas; rejeita valores com caracteres de injeção óbvios."""
+    s = str(value)
+    if any(ch in s for ch in (";", "--", "/*", "*/", "\x00")):
+        return None
+    return s.replace("'", "''")
+
+
 def _build_filter_clause(
     event_type, entity_type, artifact, result_set, status, hash_val, entity_id, date_from, date_to,
 ) -> str:
     parts: list[str] = []
-    if event_type:
-        parts.append(f"event_type = '{event_type}'")
-    if entity_type:
-        parts.append(f"aggregate_kind = '{entity_type}'")
-    if artifact:
-        parts.append(f"source_artifact_id = '{artifact}'")
-    if result_set:
-        parts.append(f"calculation_result_set_id = '{result_set}'")
-    if status:
-        parts.append(f"status = '{status}'")
+    mapping = [
+        (event_type, "event_type = '{}'"),
+        (entity_type, "aggregate_kind = '{}'"),
+        (artifact, "source_artifact_id = '{}'"),
+        (result_set, "calculation_result_set_id = '{}'"),
+        (status, "status = '{}'"),
+        (entity_id, "aggregate_id = '{}'"),
+        (date_from, "created_at >= '{}'"),
+    ]
+    for raw, fmt in mapping:
+        if not raw:
+            continue
+        lit = _sql_literal(raw)
+        if lit is None:
+            continue
+        parts.append(fmt.format(lit))
     if hash_val:
-        parts.append(f"hash_value LIKE '%{hash_val}%'")
-    if entity_id:
-        parts.append(f"aggregate_id = '{entity_id}'")
-    if date_from:
-        parts.append(f"created_at >= '{date_from}'")
+        lit = _sql_literal(hash_val)
+        if lit is not None:
+            parts.append(f"hash_value LIKE '%{lit}%'")
     if date_to:
-        parts.append(f"created_at <= '{date_to} 23:59:59'")
+        lit = _sql_literal(date_to)
+        if lit is not None:
+            parts.append(f"created_at <= '{lit} 23:59:59'")
     if not parts:
         return ""
     return "\nAND " + "\nAND ".join(parts)
@@ -212,11 +238,13 @@ def run_query(n_clicks, sql, limit, history, cycle_data, global_filter, context_
     ctx = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
     qctx = _query_context(ctx)
     effective_limit = int(limit) if limit else 100
-    result = execute_provenance_query(
-        sql or "",
-        limit=effective_limit,
-        offset=0,
-        context=qctx,
+    result = _sanitize_result_rows(
+        execute_provenance_query(
+            sql or "",
+            limit=effective_limit,
+            offset=0,
+            context=qctx,
+        )
     )
     entry = {
         "sql": sql or "",
@@ -264,7 +292,8 @@ def restore_from_history(n_clicks_list, history):
 def export_csv(n_clicks, last_result):
     if not last_result or not last_result.get("rows"):
         return no_update
-    content = rows_to_csv(last_result.get("columns") or [], last_result.get("rows") or [])
+    sanitized = _sanitize_result_rows(last_result)
+    content = rows_to_csv(sanitized.get("columns") or [], sanitized.get("rows") or [])
     return dict(content=content, filename="provenance_query.csv")
 
 

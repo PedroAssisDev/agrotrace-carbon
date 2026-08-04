@@ -36,6 +36,10 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
         class Property(FarmEntity):
             pass
 
+        class Lot(FarmEntity):
+            """Organizational unit between Property and Animal."""
+            pass
+
         class Animal(FarmEntity):
             pass
 
@@ -355,6 +359,21 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
             domain = [DataRecord, Observation, EmissionCycle, EmissionResult, CalculationResult]
             range = [Property]
 
+        class belongsToProperty(ObjectProperty):
+            """Canonical Lot/Animal → Property membership."""
+            domain = [Lot, Animal]
+            range = [Property]
+
+        class belongsToLot(ObjectProperty):
+            """Animal → Lot membership (optional)."""
+            domain = [Animal]
+            range = [Lot]
+
+        class refersToLot(ObjectProperty):
+            """Observation/record/cycle association to a Lot."""
+            domain = [DataRecord, Observation, EmissionCycle]
+            range = [Lot]
+
         class refersToAnimal(ObjectProperty):
             domain = [DataRecord, Observation]
             range = [Animal]
@@ -669,7 +688,7 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
 # Registry for validators and tests
 REQUIRED_CLASSES = [
     "Context", "OrganizationalContext", "TemporalContext",
-    "FarmEntity", "Property", "Animal", "Location", "EmissionCycle",
+    "FarmEntity", "Property", "Lot", "Animal", "Location", "EmissionCycle",
     "DataRecord", "AnnualPropertyInventoryRecord", "MonthlyPropertyRecord",
     "DailyAnimalProductionRecord", "DailyAnimalNutritionRecord",
     "Observation", "QuantitativeObservation", "QualitativeObservation",
@@ -707,6 +726,7 @@ REQUIRED_CLASSES = [
 
 REQUIRED_OBJECT_PROPERTIES = [
     "hasOrganizationalContext", "hasTemporalContext", "refersToProperty",
+    "belongsToProperty", "belongsToLot", "refersToLot",
     "refersToAnimal", "belongsToCycle", "hasPreviousResult",
     "hasObservation", "observesVariable", "hasUnit",
     "belongsToRecord", "hasRecordType", "hasCalculationMethod",

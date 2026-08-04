@@ -1,0 +1,12 @@
+{
+  "label": "after",
+  "timestamp_utc": "2026-08-04T07:53:47.919967+00:00",
+  "data_root_name": "agrotrace-data",
+  "cycle_count": 32,
+  "db_files": [
+    "blockchain_service.db",
+    "provenance.db",
+    "provenance.db-shm",
+    "provenance.db-wal"
+  ]
+}

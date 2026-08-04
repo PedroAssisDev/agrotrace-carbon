@@ -12,6 +12,7 @@ from components.evidence_package_viewer import EvidencePackageViewer
 from components.hash_viewer import HashViewer
 from components.merkle_tree import MerkleTreeView
 from components.tables import DataTable
+from services.blockchain_linkage_view_service import build_linkage_rows, build_linkage_trail
 from services.blockchain_view_service import build_evidence_summary
 
 
@@ -60,6 +61,8 @@ def AuditBlockchainGate(
     anchoring = cycle.get("anchoring") or {}
     hashes = summary.get("hashes") or {}
     mode = summary.get("mode") or evidence.get("mode")
+    trail = build_linkage_trail(cycle)
+    linkage_rows = build_linkage_rows(trail)
 
     return html.Div([
         html.Div([
@@ -77,6 +80,22 @@ def AuditBlockchainGate(
             dbc.Tab(label="Pacote", children=html.Div(EvidencePackageViewer(evidence), className="mt-3")),
             dbc.Tab(label="Hashes", children=html.Div(HashViewer(hashes), className="mt-3")),
             dbc.Tab(label="Merkle Root", children=html.Div(MerkleTreeView(evidence, hashes), className="mt-3")),
+            dbc.Tab(label="Vínculo proveniência", children=html.Div([
+                html.P(
+                    "Trilha reconstruída via adapters (provenance.db + ciclo). "
+                    "Sem consulta direta ao SQLite do blockchain-service.",
+                    className="text-muted small mb-2",
+                ),
+                DataTable(
+                    linkage_rows,
+                    columns=["etapa", "identificador", "presente"],
+                ),
+                html.P(
+                    f"Completa: {'sim' if trail.get('complete') else 'não'} · "
+                    f"pipeline_run_id: {trail.get('pipeline_run_id') or '—'}",
+                    className="small mt-2 mb-0",
+                ),
+            ], className="mt-3")),
             dbc.Tab(label="Detalhes", children=html.Div([
                 html.P(f"Pacote: {summary.get('evidence_package_id', '—')}", className="small"),
                 html.P(f"Merkle Root: {summary.get('merkle_root', '—')}", className="small"),

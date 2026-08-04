@@ -280,6 +280,20 @@ def record_semantic_and_canonical(pipeline_run_id: str, normalized_batch_id: str
 
     from provenance_service.domain.shared.enums import SemanticExecutionStatus
 
+    catalog = ontology_result.get("factor_catalog") or {}
+    catalog_meta = {
+        "version": catalog.get("_version"),
+        "source": catalog.get("_source"),
+        "groups": [k for k in catalog if not str(k).startswith("_")],
+        "pending_count": sum(
+            1
+            for g in (catalog.get("_statuses") or {}).values()
+            if isinstance(g, dict)
+            for s in g.values()
+            if str(s) == "pending"
+        ),
+    }
+
     recorder, uow_factory = _get_recorder()
     with uow_factory() as uow:
         integration = recorder.record_semantic_integration(
@@ -302,7 +316,10 @@ def record_semantic_and_canonical(pipeline_run_id: str, normalized_batch_id: str
                 semantic_integration_execution_id=integration.semantic_integration_execution_id,
                 graph_name="agrotrace:canonical",
                 snapshot_label=f"snap-{uuid.uuid4().hex[:8]}",
-                payload={"entities": ontology_result.get("entities_created", 0)},
+                payload={
+                    "entities": ontology_result.get("entities_created", 0),
+                    "factor_catalog": catalog_meta,
+                },
                 snapshot_hash_override=ontology_result.get("ontology_hash"),
             ),
         )
@@ -312,15 +329,61 @@ def record_semantic_and_canonical(pipeline_run_id: str, normalized_batch_id: str
         "source": "real",
         "semantic_integration_id": str(integration.semantic_integration_execution_id),
         "canonical_snapshot_id": str(snapshot.canonical_snapshot_id),
+        "factor_catalog": catalog_meta,
     }
 
 
+def record_factor_catalog_materialization(
+    pipeline_run_id: str,
+    cycle: dict,
+    catalog: dict,
+) -> dict[str, Any]:
+    """Registra materialização do catálogo (evento observável + trilha no ciclo)."""
+    statuses = catalog.get("_statuses") or {}
+    pending_count = sum(
+        1
+        for g in statuses.values()
+        if isinstance(g, dict)
+        for s in g.values()
+        if str(s) == "pending"
+    )
+    payload = {
+        "aggregate_type": "emission_cycle",
+        "aggregate_id": cycle.get("cycle_id"),
+        "pipeline_run_id": pipeline_run_id,
+        "event": "factor_catalog_materialized",
+        "version": catalog.get("_version"),
+        "source": catalog.get("_source"),
+        "pending_count": pending_count,
+        "groups": [k for k in catalog if not str(k).startswith("_")],
+        "cycle_events": (cycle.get("ontology_parameter_events") or [])[-3:],
+    }
+    return register_provenance_event("FACTOR_CATALOG_MATERIALIZED", payload)
+
+
 def _parameter_values_from_calculation_result(calculation_result: dict) -> list:
-    """Converte factors_used do resultado em ParameterValueInput para proveniência."""
+    """Converte explanation/factors_used do resultado em ParameterValueInput para proveniência."""
     if di.ParameterValueInput is None:
         return []
 
+    explanation = calculation_result.get("explanation") or {}
     factors = calculation_result.get("factors_used") or {}
+    if not factors and explanation:
+        # Deriva factors_used da explanation quando ausente
+        try:
+            from services.calculation_explanation_service import applied_factors_from_explanation
+
+            factors = {
+                "enteric_ch4_kg_per_animal": applied_factors_from_explanation(explanation, "enteric_ch4_kg_per_animal"),
+                "manure_kg_per_kg_bw_per_day": applied_factors_from_explanation(explanation, "manure_kg_per_kg_bw_per_day"),
+                "manure_ch4_kg_per_kg_manure": applied_factors_from_explanation(explanation, "manure_ch4_kg_per_kg_manure"),
+                "energy_co2_kg_per_unit": applied_factors_from_explanation(explanation, "energy_co2_kg_per_unit"),
+                "fertilizer_factors": applied_factors_from_explanation(explanation, "fertilizer_factors"),
+                "gwp": applied_factors_from_explanation(explanation, "gwp"),
+            }
+        except Exception:
+            pass
+
     values: list = []
 
     gwp = factors.get("gwp") or calculation_result.get("gwp") or {}
@@ -364,11 +427,7 @@ def _parameter_values_from_calculation_result(calculation_result: dict) -> list:
             parameter_value_numeric=Decimal(str(val)),
         ))
 
-    if not values:
-        values.append(di.ParameterValueInput(
-            parameter_name="gwp_ch4", parameter_value_numeric=Decimal("25")
-        ))
-
+    # Sem inventar GWP fictício — lista vazia é válida (parâmetros ausentes).
     return values
 
 
@@ -377,12 +436,18 @@ def record_calculation_flow(
     canonical_snapshot_id: str,
     reporting_period_id: str,
     calculation_result: dict,
+    *,
+    supersedes_id: str | None = None,
+    correction_reason: str | None = None,
 ) -> dict[str, Any]:
     if not _available():
+        mock_id = str(uuid.uuid4())
         return {
             "source": "mock",
             "calculation_execution_id": str(uuid.uuid4()),
-            "calculation_result_set_id": str(uuid.uuid4()),
+            "calculation_result_set_id": mock_id,
+            "prov_entity_id": str(uuid.uuid4()),
+            "supersedes_id": supersedes_id,
         }
 
     from provenance_service.domain.shared.enums import (
@@ -397,6 +462,7 @@ def record_calculation_flow(
     method_code = method_info.get("code") or "ECOFARM-T1-DAIRY"
     version_label = method_info.get("version") or "1.0.0"
     method_name = f"AgroTrace {method_code}"
+    supersedes_uuid = UUID(str(supersedes_id)) if supersedes_id else None
 
     with uow_factory() as uow:
         recorder.record_calculation_method(
@@ -438,6 +504,11 @@ def record_calculation_flow(
                 reporting_period_id=UUID(reporting_period_id),
             ),
         )
+        meta: dict[str, Any] = {}
+        if correction_reason:
+            meta["correction_reason"] = correction_reason
+        if supersedes_id:
+            meta["supersedes_id"] = str(supersedes_id)
         result_set = recorder.record_calculation_result_set(
             uow,
             di.RecordCalculationResultSetCommand(
@@ -455,15 +526,176 @@ def record_calculation_flow(
                 result_scope=ResultScope.MONTHLY,
                 consolidation_type=ConsolidationType.DIRECT,
                 summary_hash_override=calculation_result.get("preliminary_hash"),
+                supersedes_id=supersedes_uuid,
+                correction_reason=correction_reason,
+                metadata=meta,
             ),
         )
+        if supersedes_uuid is not None:
+            try:
+                uow.calculation_result_sets.mark_superseded(
+                    supersedes_uuid, result_set.calculation_result_set_id
+                )
+            except Exception as exc:
+                logger.warning("mark_superseded falhou: %s", exc)
         uow.commit()
 
     return {
         "source": "real",
         "calculation_execution_id": str(execution.calculation_execution_id),
         "calculation_result_set_id": str(result_set.calculation_result_set_id),
+        "prov_entity_id": str(result_set.prov_entity_id),
+        "supersedes_id": str(supersedes_uuid) if supersedes_uuid else None,
     }
+
+
+def record_correction_request(cycle: dict, correction: dict) -> dict[str, Any]:
+    """Registra atividade de solicitação de correção (CHANGES_REQUESTED) na proveniência."""
+    if not _available():
+        return {"source": "mock", "decision": "changes_requested", "correction_id": correction.get("correction_id")}
+
+    pipeline_run_id = cycle.get("pipeline_run_id")
+    result_set_id = (
+        correction.get("source_result_set_id")
+        or cycle.get("calculation_result_set_id")
+    )
+    reporting_period_id = cycle.get("reporting_period_id")
+    if not (pipeline_run_id and result_set_id and reporting_period_id):
+        return {
+            "source": "unavailable",
+            "reason": "missing_ids",
+            "correction_id": correction.get("correction_id"),
+        }
+
+    from provenance_service.domain.shared.enums import CalculationReviewDecision
+
+    recorder, uow_factory = _get_recorder()
+    meta = {
+        "correction_id": correction.get("correction_id"),
+        "cycle_id": cycle.get("cycle_id"),
+        "target": correction.get("target"),
+        "correctable_fields": [
+            f.get("field") for f in (correction.get("correctable_fields") or []) if isinstance(f, dict)
+        ],
+        "requested_by": correction.get("requested_by"),
+        "requested_at": correction.get("requested_at"),
+        "service": "frontend.result_correction_service",
+    }
+    with uow_factory() as uow:
+        review = recorder.record_calculation_review(
+            uow,
+            di.RecordCalculationReviewCommand(
+                pipeline_run_id=UUID(str(pipeline_run_id)),
+                calculation_result_set_id=UUID(str(result_set_id)),
+                reviewer_agent_id=_ensure_reviewer_agent(),
+                decision=CalculationReviewDecision.CHANGES_REQUESTED,
+                review_comment=correction.get("justification"),
+                reporting_period_id=UUID(str(reporting_period_id)),
+                metadata=meta,
+            ),
+        )
+        uow.commit()
+    return {
+        "source": "real",
+        "calculation_review_id": str(review.calculation_review_id),
+        "decision": "changes_requested",
+        "correction_id": correction.get("correction_id"),
+    }
+
+
+def record_result_revision(
+    previous_result_set_id: str,
+    new_result_set_id: str,
+    reason: str | None = None,
+    *,
+    invalidate_previous: bool = False,
+) -> dict[str, Any]:
+    """Vincula entidades PROV via prov_core_prov_revision (wasRevisionOf)."""
+    if not _available():
+        return {"source": "mock", "previous": previous_result_set_id, "new": new_result_set_id}
+
+    from provenance_service.application.services import RecordRevisionCommand
+
+    recorder, uow_factory = _get_recorder()
+    try:
+        with uow_factory() as uow:
+            prev_rs = uow.calculation_result_sets.get(UUID(str(previous_result_set_id)))
+            new_rs = uow.calculation_result_sets.get(UUID(str(new_result_set_id)))
+            if prev_rs is None or new_rs is None:
+                return {
+                    "source": "unavailable",
+                    "reason": "result_set_not_found",
+                    "previous": previous_result_set_id,
+                    "new": new_result_set_id,
+                }
+            revision = recorder.record_revision(
+                uow,
+                RecordRevisionCommand(
+                    previous_entity_id=prev_rs.prov_entity_id,
+                    new_entity_id=new_rs.prov_entity_id,
+                    revision_reason=reason or "correction_recalculation",
+                    invalidate_previous=invalidate_previous,
+                    metadata={
+                        "previous_result_set_id": str(previous_result_set_id),
+                        "new_result_set_id": str(new_result_set_id),
+                    },
+                ),
+            )
+            # wasDerivedFrom complementar
+            try:
+                from provenance_service.domain.prov_core.relations import ProvDerivedFrom
+                from provenance_service.domain.shared.ids import new_uuid7
+
+                uow.prov_relations.add_derived_from(
+                    ProvDerivedFrom(
+                        derived_id=new_uuid7(),
+                        generated_entity_id=new_rs.prov_entity_id,
+                        source_entity_id=prev_rs.prov_entity_id,
+                        derivation_type="correction_recalculation",
+                    )
+                )
+            except Exception as exc:
+                logger.warning("add_derived_from falhou: %s", exc)
+            uow.commit()
+        return {
+            "source": "real",
+            "revision_id": str(getattr(revision, "revision_id", None) or getattr(revision, "prov_revision_id", "")),
+            "previous_entity_id": str(prev_rs.prov_entity_id),
+            "new_entity_id": str(new_rs.prov_entity_id),
+            "previous_result_set_id": str(previous_result_set_id),
+            "new_result_set_id": str(new_result_set_id),
+        }
+    except Exception as exc:
+        logger.warning("record_result_revision falhou: %s", exc)
+        return {"source": "unavailable", "error": str(exc)}
+
+
+def list_result_revisions(pipeline_run_id: str | UUID) -> list[dict[str, Any]]:
+    """Lista revisões PROV do pipeline_run (prov_core_prov_revision)."""
+    if not _available():
+        return []
+    try:
+        pid = UUID(str(pipeline_run_id))
+    except (ValueError, TypeError):
+        return []
+    try:
+        _, uow_factory = _get_recorder()
+        with uow_factory() as uow:
+            revisions = uow.prov_relations.list_revisions_for_pipeline_run(pid)
+            out = []
+            for rev in revisions:
+                out.append({
+                    "revision_id": str(getattr(rev, "revision_id", None) or getattr(rev, "prov_revision_id", "")),
+                    "previous_entity_id": str(rev.previous_entity_id),
+                    "new_entity_id": str(rev.new_entity_id),
+                    "revision_reason": getattr(rev, "revision_reason", None),
+                    "revised_at": rev.revised_at.isoformat() if getattr(rev, "revised_at", None) else None,
+                    "metadata": getattr(rev, "metadata", None) or {},
+                })
+            return out
+    except Exception as exc:
+        logger.warning("list_result_revisions falhou: %s", exc)
+        return []
 
 
 def record_review_request(
@@ -619,3 +851,402 @@ def list_events_for_context(
             if narrowed:
                 events = narrowed
     return events
+
+
+# ── Espelho blockchain → proveniência (RF006 / RNF001) ───────────────────────
+
+_PUBLIC_META_KEYS = frozenset({
+    "cycle_id",
+    "publication_id",
+    "evidence_package_id",
+    "network_code",
+    "package_hash",
+    "merkle_root",
+    "request_id",
+    "agent",
+    "service",
+    "contract_address",
+    "receipt_status",
+    "event_identifier",
+    "chain_id",
+    "block_number",
+    "transaction_hash",
+    "confirmed_at",
+    "verified_at",
+    "verification_id",
+    "anchoring_kind",
+})
+
+_SECRET_KEY_FRAGMENTS = (
+    "private_key",
+    "privkey",
+    "rpc",
+    "token",
+    "secret",
+    "password",
+    "api_key",
+    "apikey",
+)
+
+
+def _public_metadata(raw: dict[str, Any] | None) -> dict[str, Any]:
+    """Whitelist de metadados públicos — nunca copia segredos/RPC/paths absolutos."""
+    out: dict[str, Any] = {}
+    for key, value in (raw or {}).items():
+        lk = str(key).lower()
+        if any(frag in lk for frag in _SECRET_KEY_FRAGMENTS):
+            continue
+        if key not in _PUBLIC_META_KEYS:
+            continue
+        if isinstance(value, str) and (":\\" in value or value.startswith("/")):
+            # paths absolutos não entram no espelho
+            continue
+        out[key] = value
+    return out
+
+
+def _subject_uuid_from_package_id(package_id: str) -> UUID:
+    try:
+        return UUID(str(package_id))
+    except (ValueError, TypeError):
+        return uuid.uuid5(uuid.NAMESPACE_URL, f"agrotrace:evidence:{package_id}")
+
+
+def _parse_pipeline_run_id(cycle: dict) -> UUID | None:
+    raw = cycle.get("pipeline_run_id")
+    if not raw:
+        return None
+    try:
+        return UUID(str(raw))
+    except (ValueError, TypeError):
+        return None
+
+
+def _anchor_mode_for_network(network: str | None, anchoring_kind: str | None = None) -> str:
+    if anchoring_kind == "SIMULADA" or network in (None, "", "local_simulated"):
+        return "local_simulation"
+    if network and "sepolia" in str(network).lower():
+        return "testnet"
+    return "testnet"
+
+
+def record_anchor_request(
+    cycle: dict,
+    evidence: dict | None = None,
+    request_meta: dict | None = None,
+) -> dict[str, Any]:
+    """Registra solicitação PENDING em audit_blockchain_anchor (+ hash_record)."""
+    evidence = evidence or cycle.get("evidence_package") or {}
+    meta_in = dict(request_meta or {})
+    if not _available():
+        return {"source": "unavailable", "status": "skipped", "reason": "provenance_unavailable"}
+
+    pipeline_run_id = _parse_pipeline_run_id(cycle)
+    if pipeline_run_id is None:
+        return {"source": "unavailable", "status": "skipped", "reason": "missing_pipeline_run_id"}
+
+    package_id = str(evidence.get("evidence_package_id") or meta_in.get("evidence_package_id") or "")
+    if not package_id:
+        return {"source": "unavailable", "status": "skipped", "reason": "missing_evidence_package_id"}
+
+    package_hash = evidence.get("package_hash") or meta_in.get("package_hash") or ""
+    merkle_root = evidence.get("merkle_root") or meta_in.get("merkle_root")
+    network = (
+        meta_in.get("network_code")
+        or evidence.get("network")
+        or getattr(config, "BLOCKCHAIN_DEFAULT_NETWORK_CODE", "local_simulated")
+    )
+    request_id = str(meta_in.get("request_id") or evidence.get("anchor_request_id") or package_id)
+    publication = cycle.get("publication") or {}
+    publication_id = publication.get("publication_id") or meta_in.get("publication_id")
+
+    public_meta = _public_metadata({
+        "cycle_id": cycle.get("cycle_id"),
+        "publication_id": publication_id,
+        "evidence_package_id": package_id,
+        "network_code": network,
+        "package_hash": package_hash,
+        "merkle_root": merkle_root,
+        "request_id": request_id,
+        "agent": meta_in.get("agent") or "frontend.local_orchestrator",
+        "service": "frontend.provenance_adapter",
+    })
+
+    try:
+        from provenance_service.domain.shared.enums import (
+            BlockchainAnchorStatus,
+            HashAlgorithm,
+            HashSubjectKind,
+        )
+
+        recorder, uow_factory = _get_recorder()
+        subject_id = _subject_uuid_from_package_id(package_id)
+        hash_value = str(package_hash or merkle_root or ("0" * 64))
+
+        with uow_factory() as uow:
+            hash_record = recorder.record_hash(
+                uow,
+                di.RecordHashCommand(
+                    pipeline_run_id=pipeline_run_id,
+                    subject_kind=HashSubjectKind.BUNDLE,
+                    subject_id=subject_id,
+                    hash_value=hash_value[:128],
+                    hash_algorithm=HashAlgorithm.SHA256,
+                    metadata={"kind": "evidence_package", "evidence_package_id": package_id},
+                ),
+            )
+            anchor = recorder.record_blockchain_anchor(
+                uow,
+                di.RecordBlockchainAnchorCommand(
+                    pipeline_run_id=pipeline_run_id,
+                    hash_record_id=hash_record.hash_record_id,
+                    blockchain_network=str(network),
+                    anchor_status=BlockchainAnchorStatus.PENDING,
+                    merkle_root=str(merkle_root) if merkle_root else None,
+                    evidence_package_external_id=package_id,
+                    package_hash=str(package_hash) if package_hash else None,
+                    anchor_provider="frontend",
+                    anchor_mode=_anchor_mode_for_network(str(network)),
+                    metadata=public_meta,
+                ),
+            )
+            uow.commit()
+
+        return {
+            "source": "real",
+            "blockchain_anchor_id": str(anchor.blockchain_anchor_id),
+            "hash_record_id": str(hash_record.hash_record_id),
+            "anchor_status": anchor.anchor_status.value,
+            "request_id": request_id,
+            "evidence_package_id": package_id,
+        }
+    except Exception as exc:
+        logger.warning("record_anchor_request falhou: %s", exc)
+        return {"source": "unavailable", "status": "error", "error": str(exc)}
+
+
+def record_anchor_confirmation(cycle: dict, anchor_result: dict | None = None) -> dict[str, Any]:
+    """Atualiza espelho para CONFIRMED com metadados públicos da transação."""
+    anchor_result = anchor_result or cycle.get("anchoring") or {}
+    if not _available():
+        return {"source": "unavailable", "status": "skipped", "reason": "provenance_unavailable"}
+
+    pipeline_run_id = _parse_pipeline_run_id(cycle)
+    evidence = cycle.get("evidence_package") or {}
+    package_id = str(
+        evidence.get("evidence_package_id")
+        or anchor_result.get("evidence_package_id")
+        or ""
+    )
+    if not package_id:
+        return {"source": "unavailable", "status": "skipped", "reason": "missing_evidence_package_id"}
+
+    tx = anchor_result.get("transaction_id") or anchor_result.get("transaction_hash")
+    confirmed_at = _utc_now()
+    public_meta = _public_metadata({
+        "cycle_id": cycle.get("cycle_id"),
+        "publication_id": (cycle.get("publication") or {}).get("publication_id"),
+        "evidence_package_id": package_id,
+        "network_code": anchor_result.get("network"),
+        "package_hash": anchor_result.get("package_hash") or evidence.get("package_hash"),
+        "merkle_root": anchor_result.get("merkle_root") or evidence.get("merkle_root"),
+        "contract_address": anchor_result.get("contract_address"),
+        "receipt_status": str(anchor_result.get("receipt_status") or "1"),
+        "event_identifier": anchor_result.get("event_identifier") or anchor_result.get("evidence_key"),
+        "transaction_hash": tx,
+        "chain_id": str(anchor_result.get("chain_id")) if anchor_result.get("chain_id") is not None else None,
+        "block_number": str(anchor_result.get("block_number")) if anchor_result.get("block_number") is not None else None,
+        "confirmed_at": confirmed_at.isoformat(),
+        "anchoring_kind": anchor_result.get("anchoring_kind"),
+        "agent": "frontend.local_orchestrator",
+        "service": "frontend.provenance_adapter",
+    })
+
+    try:
+        from provenance_service.domain.shared.enums import BlockchainAnchorStatus
+
+        recorder, uow_factory = _get_recorder()
+        with uow_factory() as uow:
+            confirmed = recorder.confirm_blockchain_anchor(
+                uow,
+                di.ConfirmBlockchainAnchorCommand(
+                    evidence_package_external_id=package_id,
+                    pipeline_run_id=pipeline_run_id,
+                    anchor_status=BlockchainAnchorStatus.CONFIRMED,
+                    chain_id=str(anchor_result.get("chain_id")) if anchor_result.get("chain_id") is not None else None,
+                    transaction_hash=str(tx) if tx else None,
+                    block_number=str(anchor_result.get("block_number")) if anchor_result.get("block_number") is not None else None,
+                    confirmations=1,
+                    confirmed_at=confirmed_at,
+                    verification_uri=anchor_result.get("explorer_url"),
+                    metadata=public_meta,
+                ),
+            )
+            uow.commit()
+        return {
+            "source": "real",
+            "blockchain_anchor_id": str(confirmed.blockchain_anchor_id),
+            "anchor_status": confirmed.anchor_status.value,
+            "transaction_hash": confirmed.transaction_hash,
+        }
+    except Exception as exc:
+        logger.warning("record_anchor_confirmation falhou: %s", exc)
+        return {"source": "unavailable", "status": "error", "error": str(exc)}
+
+
+def record_integrity_verification(cycle: dict, integrity_result: dict | None = None) -> dict[str, Any]:
+    """Registra verificação em audit_event (subject=blockchain_anchor)."""
+    integrity_result = integrity_result or cycle.get("integrity") or {}
+    if not _available():
+        return {"source": "unavailable", "status": "skipped", "reason": "provenance_unavailable"}
+
+    pipeline_run_id = _parse_pipeline_run_id(cycle)
+    if pipeline_run_id is None:
+        return {"source": "unavailable", "status": "skipped", "reason": "missing_pipeline_run_id"}
+
+    evidence = cycle.get("evidence_package") or {}
+    package_id = str(evidence.get("evidence_package_id") or "")
+    is_valid = bool(integrity_result.get("is_valid"))
+    result = "match" if is_valid else "divergence"
+    verification_id = str(
+        integrity_result.get("verification_id")
+        or f"verify:{package_id}:{result}:{integrity_result.get('final_status', '')}"
+    )
+    verified_at = _utc_now()
+
+    local_values = {
+        "package_hash": evidence.get("package_hash"),
+        "merkle_root": evidence.get("merkle_root"),
+    }
+    recovered_values = {
+        "package_hash": evidence.get("package_hash") if is_valid else integrity_result.get("details", {}).get("recovered_package_hash"),
+        "merkle_root": evidence.get("merkle_root") if is_valid else integrity_result.get("details", {}).get("recovered_merkle_root"),
+        "final_status": integrity_result.get("final_status"),
+    }
+    if not is_valid and integrity_result.get("rows"):
+        recovered_values["divergent_rows"] = [
+            {
+                "artifact": r.get("artifact"),
+                "anchored_hash": r.get("anchored_hash"),
+                "recalculated_hash": r.get("recalculated_hash"),
+                "status": r.get("status"),
+            }
+            for r in (integrity_result.get("rows") or [])[:20]
+            if r.get("status") == "divergente"
+        ]
+
+    try:
+        recorder, uow_factory = _get_recorder()
+        with uow_factory() as uow:
+            anchors = uow.blockchain_anchors.list_by_pipeline_run(pipeline_run_id)
+            anchor = None
+            for a in anchors:
+                if a.evidence_package_external_id == package_id:
+                    anchor = a
+                    break
+            if anchor is None and anchors:
+                anchor = anchors[-1]
+            if anchor is None:
+                return {
+                    "source": "unavailable",
+                    "status": "skipped",
+                    "reason": "no_blockchain_anchor_mirror",
+                }
+
+            event = recorder.record_integrity_verification(
+                uow,
+                di.RecordIntegrityVerificationCommand(
+                    pipeline_run_id=pipeline_run_id,
+                    blockchain_anchor_id=anchor.blockchain_anchor_id,
+                    verification_id=verification_id,
+                    result=result,
+                    local_values=local_values,
+                    recovered_values=recovered_values,
+                    verified_at=verified_at,
+                    metadata=_public_metadata({
+                        "cycle_id": cycle.get("cycle_id"),
+                        "publication_id": (cycle.get("publication") or {}).get("publication_id"),
+                        "package_hash": evidence.get("package_hash"),
+                        "merkle_root": evidence.get("merkle_root"),
+                        "agent": "frontend.local_orchestrator",
+                        "service": "frontend.provenance_adapter",
+                    }),
+                ),
+            )
+            uow.commit()
+        return {
+            "source": "real",
+            "audit_event_id": str(event.audit_event_id),
+            "verification_id": verification_id,
+            "result": result,
+            "blockchain_anchor_id": str(anchor.blockchain_anchor_id),
+        }
+    except Exception as exc:
+        logger.warning("record_integrity_verification falhou: %s", exc)
+        return {"source": "unavailable", "status": "error", "error": str(exc)}
+
+
+def list_anchors_for_pipeline_run(pipeline_run_id: str | UUID) -> list[dict[str, Any]]:
+    """Lista espelhos de ancoragem no provenance.db (nunca no blockchain SQLite)."""
+    if not _available():
+        return []
+    try:
+        pid = UUID(str(pipeline_run_id))
+    except (ValueError, TypeError):
+        return []
+    try:
+        _, uow_factory = _get_recorder()
+        with uow_factory() as uow:
+            anchors = uow.blockchain_anchors.list_by_pipeline_run(pid)
+            return [
+                {
+                    "blockchain_anchor_id": str(a.blockchain_anchor_id),
+                    "pipeline_run_id": str(a.pipeline_run_id),
+                    "hash_record_id": str(a.hash_record_id),
+                    "blockchain_network": a.blockchain_network,
+                    "chain_id": a.chain_id,
+                    "transaction_hash": a.transaction_hash,
+                    "block_number": a.block_number,
+                    "anchor_status": a.anchor_status.value if hasattr(a.anchor_status, "value") else str(a.anchor_status),
+                    "merkle_root": a.merkle_root,
+                    "package_hash": a.package_hash,
+                    "evidence_package_external_id": a.evidence_package_external_id,
+                    "anchor_provider": a.anchor_provider,
+                    "anchor_mode": a.anchor_mode,
+                    "submitted_at": a.submitted_at.isoformat() if a.submitted_at else None,
+                    "confirmed_at": a.confirmed_at.isoformat() if a.confirmed_at else None,
+                    "verification_uri": a.verification_uri,
+                    "metadata": _public_metadata(a.metadata or {}),
+                }
+                for a in anchors
+            ]
+    except Exception as exc:
+        logger.warning("list_anchors_for_pipeline_run falhou: %s", exc)
+        return []
+
+
+def list_audit_events_for_anchor(blockchain_anchor_id: str | UUID) -> list[dict[str, Any]]:
+    if not _available():
+        return []
+    try:
+        aid = UUID(str(blockchain_anchor_id))
+    except (ValueError, TypeError):
+        return []
+    try:
+        _, uow_factory = _get_recorder()
+        with uow_factory() as uow:
+            events = uow.audit_events.list_for_subject("blockchain_anchor", aid)
+            return [
+                {
+                    "audit_event_id": str(e.audit_event_id),
+                    "event_type": e.event_type,
+                    "subject_kind": e.subject_kind,
+                    "subject_id": str(e.subject_id),
+                    "payload": e.payload,
+                    "recorded_at": e.recorded_at.isoformat() if e.recorded_at else None,
+                }
+                for e in events
+            ]
+    except Exception as exc:
+        logger.warning("list_audit_events_for_anchor falhou: %s", exc)
+        return []

@@ -18,7 +18,7 @@ FRONTEND_ROOT = Path(__file__).resolve().parents[1]
 if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
-from config import CYCLES_DIR, DB_DIR  # noqa: E402
+import config  # noqa: E402
 from services import provenance_adapter  # noqa: E402
 from services.dashboard_service import (  # noqa: E402
     build_dashboard_chart_components,
@@ -53,7 +53,7 @@ def _timed(label: str, fn: Callable[[], Any]) -> tuple[Any, float]:
 
 
 def _cycles_size_stats() -> dict[str, float]:
-    files = list(CYCLES_DIR.glob("*.json"))
+    files = list(config.CYCLES_DIR.glob("*.json"))
     if not files:
         return {"count": 0, "total_mb": 0.0, "avg_kb": 0.0, "max_kb": 0.0}
     sizes = [f.stat().st_size for f in files]
@@ -231,7 +231,7 @@ def main() -> int:
     print(f"data_entry_render_ms: {page_metrics.get('data_entry_render', {}).get('ms', 0):.1f}")
     print(f"calculations_render_ms: {page_metrics.get('calculations_render', {}).get('ms', 0):.1f}")
     print(f"provenance_events_count: {prov_count}")
-    print(f"provenance_db_kb: {(DB_DIR / 'provenance.db').stat().st_size / 1024:.1f}" if (DB_DIR / 'provenance.db').exists() else "provenance_db_kb: 0")
+    print(f"provenance_db_kb: {(config.DB_DIR / 'provenance.db').stat().st_size / 1024:.1f}" if (config.DB_DIR / 'provenance.db').exists() else "provenance_db_kb: 0")
     print()
     print("Top 10 funções mais lentas:")
     for i, (label, ms) in enumerate(timings[:10], 1):

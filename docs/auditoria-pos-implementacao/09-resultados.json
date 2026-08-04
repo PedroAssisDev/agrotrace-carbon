@@ -1,0 +1,540 @@
+{
+  "auditoria": {
+    "tipo": "pos-implementacao",
+    "generated_at_utc": "2026-08-04T13:34:02.916823+00:00",
+    "dissertacao": "frontend/main (7).pdf",
+    "git": {
+      "branch": "master",
+      "commits": 0,
+      "head": null
+    },
+    "ambiente": {
+      "python_venv": "3.11.9",
+      "pytest": "9.0.3",
+      "forge": "1.7.1",
+      "isolamento": "AGROTRACE_DATA_ROOT temporario via run_full_regression.py"
+    },
+    "prontidao_capitulo_5": "PRONTA COM LIMITACOES DECLARADAS"
+  },
+  "comandos_resumo": {
+    "pass_count": 37,
+    "fail_count": 2,
+    "steps": 39,
+    "total_duration_ms": 1419009,
+    "falhas": [
+      "validate_emission_calculation_details",
+      "validate_preliminary_calculation_fix"
+    ],
+    "suites_unitarias_aprox_passed": {
+      "wrappers": 41,
+      "ontology": 14,
+      "calculation": 53,
+      "traceability": 115,
+      "blockchain": 59,
+      "frontend": 70,
+      "forge": 9,
+      "model-training": "~50",
+      "save-file": "unittest PASS",
+      "skips_wrappers": 3,
+      "deselected_blockchain": 4
+    }
+  },
+  "divergencia_requirements_map_yaml": {
+    "nota": "Numeracao RF em docs/auditoria-capitulo-5/requirements_map.yaml diverge do PDF oficial; PDF prevalece.",
+    "exemplos": [
+      {
+        "id": "RF004",
+        "pdf": "Validacao da qualidade e consistencia",
+        "mapa_antigo": "Ontologia semantica"
+      },
+      {
+        "id": "RF006",
+        "pdf": "Registro de proveniencia",
+        "mapa_antigo": "Calculo preliminar"
+      },
+      {
+        "id": "RF007",
+        "pdf": "Ontologia de trabalho",
+        "mapa_antigo": "Revisao e aprovacao"
+      }
+    ]
+  },
+  "RF": [
+    {
+      "id": "RF001",
+      "titulo": "Entrada de dados agropecuarios",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "smoke+pipeline; ciclo com propriedade/periodo/layout",
+      "arquivos": "frontend/pages/data_entry.py; save_file_adapter",
+      "teste": "run_pipeline_smoke_test PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF002",
+      "titulo": "Preservacao e recuperacao dos dados brutos",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "retrieve_original + adapter + aba Artefatos",
+      "arquivos": "save_file/storage.py::retrieve_original; save_file_adapter",
+      "teste": "save-file + validate_technical_audit PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF003",
+      "titulo": "Normalizacao e padronizacao",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "wrappers layouts daily/monthly/annual",
+      "arquivos": "wrappers-service",
+      "teste": "wrappers 41p + validate_frontend_pipeline PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF004",
+      "titulo": "Validacao qualidade/consistencia",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "validacao em wrappers antes do calculo",
+      "arquivos": "wrappers validation",
+      "teste": "wrappers + ontology validation PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF005",
+      "titulo": "Granularidades temporal e organizacional",
+      "status": "PARCIALMENTE ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "daily/monthly/annual e animal/lot/property no catalogo; OWL sem classe Lot",
+      "arquivos": "domain_catalog.py; ontology/schema.py",
+      "teste": "validate_temporal_model PASS; Lot OWL ausente",
+      "lacunas": "OWL sem Lot"
+    },
+    {
+      "id": "RF006",
+      "titulo": "Registro de proveniencia",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "trilha ate verificacao via ProvenanceRecorder",
+      "arquivos": "traceability-service; provenance_adapter",
+      "teste": "traceability 115p + validate_provenance_queries PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF007",
+      "titulo": "Ontologia de trabalho",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "AgroMRV-Lite populada no ciclo",
+      "arquivos": "ontology-manager",
+      "teste": "ontology 14p + validate_ontology_* PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF008",
+      "titulo": "Calculo preliminar",
+      "status": "PARCIALMENTE ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "calculo e full cycle OK; form preliminar e detalhe de emissao falham",
+      "arquivos": "calculation-service; calculation_adapter",
+      "teste": "calculation 53p; validate_emission_calculation_details FAIL; validate_preliminary_calculation_form FAIL",
+      "lacunas": "validate_emission_calculation_details / preliminary_form"
+    },
+    {
+      "id": "RF009",
+      "titulo": "Registro dos parametros",
+      "status": "PARCIALMENTE ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "calc_explanation_v1 e factors_used; falha serie por gas no validador",
+      "arquivos": "emissions/explanation.py",
+      "teste": "test_calculation_explanation; emission_details FAIL serie por gas",
+      "lacunas": "validate_emission_calculation_details / preliminary_form"
+    },
+    {
+      "id": "RF010",
+      "titulo": "Correcao, recalculo e nova versao",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "eventos append-only; nova versao preliminar",
+      "arquivos": "result_correction_service.py",
+      "teste": "validate_correction_recalculation PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF011",
+      "titulo": "Predicao de emissoes e producao",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "Prediction bloqueada na publicacao",
+      "arquivos": "publication_service._reject_prediction_input",
+      "teste": "validate_prediction_separation PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF012",
+      "titulo": "Metricas e indicadores",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "dashboard/indicators derivados",
+      "arquivos": "indicator_service; dashboard",
+      "teste": "validate_dashboard_indicators PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF013",
+      "titulo": "Revisao humana",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "preliminar -> em revisao",
+      "arquivos": "calculation_approval_service",
+      "teste": "validate_calculation_review PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF014",
+      "titulo": "Decisao individual",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "aprovar/rejeitar/corrigir com justificativa",
+      "arquivos": "calculation_approval_service; result_correction_service",
+      "teste": "validate_calculation_review PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF015",
+      "titulo": "Aprovacao geral",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "bloqueio ate obrigatorios aprovados",
+      "arquivos": "calculation_approval_service",
+      "teste": "validate_pending_approval_seed + full cycle PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF016",
+      "titulo": "Publicacao ontologia final",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "somente aprovados + aprovacao geral",
+      "arquivos": "publication_service",
+      "teste": "test_full_emission_cycle + ontology lifecycle PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF017",
+      "titulo": "Pacote de evidencias",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "pacote pos-publicacao",
+      "arquivos": "blockchain evidence_package_builder",
+      "teste": "test_full_emission_cycle PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF018",
+      "titulo": "Identificadores criptograficos",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "json_canonical_v1 unico; fail-closed",
+      "arquivos": "canonical_json_service; hash_helpers",
+      "teste": "frontend_tests canonical + validate_reproducibility PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RF019",
+      "titulo": "Ancoragem blockchain",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "gate pos FINAL_ONTOLOGY_PUBLISHED; provider simulado+Forge; Sepolia nao reexecutada nesta auditoria",
+      "arquivos": "CarbonEvidenceRegistry; SimulatedAnchorProvider",
+      "teste": "forge 9p + blockchain 59p + full cycle PASS; Sepolia documental",
+      "lacunas": "Sepolia nao reexecutada; evidencia documental preexistente"
+    },
+    {
+      "id": "RF020",
+      "titulo": "Visualizacao e auditoria tecnica",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "8 rotas + /technical-audit com 9 abas; callbacks validados por script",
+      "arquivos": "technical_audit.py; callbacks",
+      "teste": "validate_technical_audit PASS; captura visual Cap.5 pendente",
+      "lacunas": "Capturas visuais Cap.5 pendentes"
+    },
+    {
+      "id": "RF021",
+      "titulo": "Consulta e verificacao evidencia",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "match/divergencia local+simulado",
+      "arquivos": "blockchain_adapter; integrity_view_service",
+      "teste": "full cycle + integrity paths PASS",
+      "lacunas": null
+    }
+  ],
+  "RNF": [
+    {
+      "id": "RNF001",
+      "titulo": "Rastreabilidade",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "trajetoria via proveniencia + pacote",
+      "arquivos": "provenance_*",
+      "teste": "validate_provenance_queries + full cycle",
+      "lacunas": null
+    },
+    {
+      "id": "RNF002",
+      "titulo": "Auditabilidade",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "consultas pela UI/adapters; SQL proveniencia RO; blockchain via adapter",
+      "arquivos": "technical_audit; provenance_query_service mode=ro",
+      "teste": "validate_technical_audit PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RNF003",
+      "titulo": "Manutenibilidade",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "alteracao localizada demonstrada por script",
+      "arquivos": "validate_maintainability_extensibility",
+      "teste": "PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RNF004",
+      "titulo": "Integridade",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "hash/Merkle original vs adulterado",
+      "arquivos": "canonical + verification",
+      "teste": "validate_reproducibility + full cycle",
+      "lacunas": null
+    },
+    {
+      "id": "RNF005",
+      "titulo": "Explicabilidade",
+      "status": "PARCIALMENTE ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "contrato calc_explanation_v1; validador de detalhes falhou serie por gas",
+      "arquivos": "explanation.py",
+      "teste": "emission_details FAIL",
+      "lacunas": "serie por gas no validador"
+    },
+    {
+      "id": "RNF006",
+      "titulo": "Consistencia semantica",
+      "status": "PARCIALMENTE ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "vocabulario temporal/org; Lot nao e classe OWL",
+      "arquivos": "domain_catalog; schema.py",
+      "teste": "temporal PASS; Lot OWL gap",
+      "lacunas": "Lot OWL"
+    },
+    {
+      "id": "RNF007",
+      "titulo": "Operabilidade das interfaces",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "tarefas via scripts/callbacks; nao e estudo de usabilidade",
+      "arquivos": "8 rotas Dash",
+      "teste": "validate_technical_audit + forecast/approval PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RNF008",
+      "titulo": "Extensibilidade",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "layout/provider extension points",
+      "arquivos": "wrappers registry; BlockchainAnchorProviderPort",
+      "teste": "validate_maintainability_extensibility PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RNF009",
+      "titulo": "Reprodutibilidade",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "numerica + criptografica",
+      "arquivos": "validate_reproducibility",
+      "teste": "PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RNF010",
+      "titulo": "Versionamento",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "VersionManifest com missing_reason explicito",
+      "arquivos": "version_manifest_service.py",
+      "teste": "frontend tests + audit payload",
+      "lacunas": null
+    },
+    {
+      "id": "RNF011",
+      "titulo": "Interoperabilidade",
+      "status": "ATENDIDO",
+      "confianca": "medio",
+      "criterio_resumo": "contratos entre servicos; ABI versionada",
+      "arquivos": "blockchain schemas; wrappers contracts",
+      "teste": "blockchain + forge PASS",
+      "lacunas": null
+    },
+    {
+      "id": "RNF012",
+      "titulo": "Protecao credenciais / minimizacao on-chain",
+      "status": "ATENDIDO",
+      "confianca": "alto",
+      "criterio_resumo": "gitignore; .env.example placeholders; scan_secrets; contrato minimo",
+      "arquivos": "scan_secrets.py; CarbonEvidenceRegistry.sol",
+      "teste": "scan_secrets PASS",
+      "lacunas": null
+    }
+  ],
+  "decisoes": [
+    {
+      "id": "D1",
+      "titulo": "Separacao de responsabilidades (frontend orquestra sem absorver logica)",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "servicos + adapters; chamada Python direta"
+    },
+    {
+      "id": "D2",
+      "titulo": "Separacao de estados",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "preliminar/revisao/aprovado/rejeitado/publicado; correcao e evento"
+    },
+    {
+      "id": "D3",
+      "titulo": "Separacao calculo e predicao",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "PredictionNotPublishableError"
+    },
+    {
+      "id": "D4",
+      "titulo": "Separacao proveniencia e blockchain",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "gate FINAL_ONTOLOGY_PUBLISHED; DBs distintos"
+    },
+    {
+      "id": "D5",
+      "titulo": "Abstracao de providers",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "BlockchainAnchorProviderPort; Simulated + EVM"
+    },
+    {
+      "id": "D6",
+      "titulo": "Canonicalizacao unica",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "json_canonical_v1 no blockchain-service; frontend fail-closed"
+    },
+    {
+      "id": "D7",
+      "titulo": "Gate pos-publicacao",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "is_blockchain_unlocked; full cycle"
+    },
+    {
+      "id": "D8",
+      "titulo": "Idempotencia e proibicao de sobrescrita",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "forge testes overwrite; app key SHA-256(network:hash)"
+    },
+    {
+      "id": "D9",
+      "titulo": "Minimizacao on-chain",
+      "secao": "4.2.3",
+      "status": "ATENDIDO",
+      "evidencia": "contrato so key/hash/merkle/owner/time"
+    },
+    {
+      "id": "D10",
+      "titulo": "Publicacao vinculada ao fluxo de aprovacao",
+      "secao": "4.5.10",
+      "status": "ATENDIDO",
+      "evidencia": "publication_service a partir de aprovacao; nota: nao e item de 4.2.3",
+      "nota": "Complementar ao Cap. 4.2.3; secao 4.5.10"
+    }
+  ],
+  "CE": [
+    {
+      "id": "CE1",
+      "titulo": "Preparacao e representacao",
+      "status": "PARCIALMENTE ATENDIDO",
+      "evidencia": "pipeline+temporal OK; Lot OWL ausente; recuperacao bruto OK"
+    },
+    {
+      "id": "CE2",
+      "titulo": "Calculo e governanca",
+      "status": "PARCIALMENTE ATENDIDO",
+      "evidencia": "revisao/correcao/aprovacao/publicacao OK; 2 validate de calculo/detalhe FAILam"
+    },
+    {
+      "id": "CE3",
+      "titulo": "Predicao",
+      "status": "ATENDIDO",
+      "evidencia": "separacao e bloqueio de publicacao demonstrados"
+    },
+    {
+      "id": "CE4",
+      "titulo": "Proveniencia, evidencias e integridade",
+      "status": "ATENDIDO",
+      "evidencia": "pacote+canonical+Merkle+provider simulado+idempotencia; Sepolia nao reexecutada"
+    },
+    {
+      "id": "CE5",
+      "titulo": "Visualizacao e auditoria",
+      "status": "ATENDIDO",
+      "evidencia": "validate_technical_audit; evidencias visuais Cap.5 ainda pendentes"
+    }
+  ],
+  "contagens": {
+    "RF": {
+      "ATENDIDO": 18,
+      "PARCIALMENTE ATENDIDO": 3
+    },
+    "RNF": {
+      "ATENDIDO": 10,
+      "PARCIALMENTE ATENDIDO": 2
+    },
+    "decisoes_4_2_3": {
+      "ATENDIDO": 9
+    },
+    "decisoes_complementares_4_5_10": {
+      "ATENDIDO": 1
+    },
+    "decisoes": {
+      "ATENDIDO": 9,
+      "nota": "Contagem oficial Cap. 4.2.3 = 9; D10 e complementar 4.5.10"
+    },
+    "CE": {
+      "PARCIALMENTE ATENDIDO": 2,
+      "ATENDIDO": 3
+    }
+  },
+  "operacional_intact": {
+    "blockchain_service.db_sha256_before": "C0B9CAFF1E0F1164C50C7F1E07E160CCE3430E76E2188D7FB7E713CB861A2645",
+    "blockchain_service.db_sha256_after": "C0B9CAFF1E0F1164C50C7F1E07E160CCE3430E76E2188D7FB7E713CB861A2645",
+    "blockchain_match": true,
+    "provenance.db_sha256_before": "E8CB58F9350D388926A8553DD6D053953E7435D43EF5F047687D375D694CD1C8",
+    "provenance.db_sha256_after": "42BAFB2FBB071C04659B2224B13C5727D05665B11233F10D51F4100CA0C572AF",
+    "provenance_match": false,
+    "provenance_note": "Hash mudou apos regressao; WAL/shm iniciais desapareceram — provavel checkpoint SQLite. blockchain_service.db inalterado. Regressao usou AGROTRACE_DATA_ROOT temporario."
+  },
+  "achados_pos_subagentes": {
+    "cap_4_2_3_decisoes": 9,
+    "jsonschema_optional_dev": true,
+    "requirements_map_yaml_desalinhado": true,
+    "frontend_sqlite3_blockchain": false
+  }
+}

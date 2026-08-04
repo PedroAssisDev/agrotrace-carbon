@@ -268,17 +268,60 @@ def apply_factors_cb(
         return no_update, "Nenhum fator foi alterado."
 
     try:
-        cycle = apply_factor_edits(
-            cycle, item_id,
-            edits=edits,
-            reviewer=reviewer or "Revisor",
-            methodology=methodology_note,
-            factors_changed=True,
+        open_list = [
+            c for c in reversed(cycle.get("corrections") or []) if c.get("status") == "open"
+        ]
+        open_corr = next(
+            (
+                c
+                for c in open_list
+                if (c.get("target") or {}).get("item_id") == item_id
+                or (c.get("target") or {}).get("calculation_item_id") == item_id
+            ),
+            open_list[0] if open_list else None,
         )
-        return _save_and_return(cycle), "Fatores aplicados. Reaprove o item após revisar o resultado."
+        if open_corr:
+            from services.result_correction_service import apply_correction_and_recalculate
+
+            cycle = apply_correction_and_recalculate(
+                cycle,
+                open_corr["correction_id"],
+                changes={
+                    "kind": "factor_edit",
+                    "edits": edits,
+                    "methodology": methodology_note,
+                    "factors_changed": True,
+                },
+                reviewer=reviewer or "Revisor",
+            )
+            msg = (
+                "Correção aplicada e recálculo gerou nova versão preliminar. "
+                "Reaprove o item."
+            )
+        else:
+            cycle = apply_factor_edits(
+                cycle, item_id,
+                edits=edits,
+                reviewer=reviewer or "Revisor",
+                methodology=methodology_note,
+                factors_changed=True,
+            )
+            msg = "Fatores aplicados. Reaprove o item após revisar o resultado."
+        return _save_and_return(cycle), msg
     except Exception as exc:
         logger.exception("Erro ao aplicar fatores: %s", exc)
         return no_update, str(exc)
+
+
+@callback(
+    Output("cr-item-action-feedback", "children", allow_duplicate=True),
+    Input({"type": "cr-btn-review-version", "version": ALL}, "n_clicks"),
+    prevent_initial_call=True,
+)
+def review_version_cb(n_clicks_list):
+    if not n_clicks_list or not any(n_clicks_list):
+        return no_update
+    return "Nova versão preliminar selecionada — revise os itens em ADJUSTMENT_PENDING_RECALCULATION e reaprove."
 
 
 @callback(

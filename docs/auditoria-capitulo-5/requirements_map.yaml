@@ -1,0 +1,251 @@
+# Mapa de requisitos → evidências/testes (Cap. 5)
+# Status é DERIVADO automaticamente a partir de regressao.json — não editar contagens manualmente.
+
+groups:
+  RF:
+    - id: RF001
+      title: Ingestão de dados brutos
+      static: frontend/services/save_file_adapter.py
+      tests: [save-file, validate_frontend_pipeline, run_pipeline_smoke_test]
+      visual: Upload na UI
+    - id: RF002
+      title: Recuperação do bruto
+      static: agrotrace-carbon-save-file/save_file/__init__.py
+      tests: [save-file, validate_technical_audit]
+      visual: Aba Artefatos
+    - id: RF003
+      title: Normalização via wrappers
+      static: agrotrace-carbon-wrappers-service
+      tests: [wrappers, validate_frontend_pipeline]
+      visual: null
+    - id: RF004
+      title: Ontologia semântica
+      static: agrotrace-carbon-ontology-manager
+      tests: [ontology, validate_ontology_domain_source]
+      visual: null
+    - id: RF005
+      title: Granularidades temporal/organizacional
+      static: frontend/utils/temporal_model.py
+      tests: [validate_temporal_model, seed_test_scenarios]
+      visual: Filtro temporal
+    - id: RF006
+      title: Cálculo preliminar
+      static: agrotrace-carbon-calculation-service
+      tests: [calculation, validate_emission_calculation_details]
+      visual: null
+    - id: RF007
+      title: Revisão e aprovação
+      static: frontend/services/calculation_approval_service.py
+      tests: [validate_calculation_review, validate_pending_approval_seed]
+      visual: /approval
+    - id: RF008
+      title: Publicação final
+      static: frontend/services/publication_service.py
+      tests: [test_full_emission_cycle, validate_ontology_parameter_lifecycle]
+      visual: null
+    - id: RF009
+      title: Fatores e GWP
+      static: agrotrace-carbon-calculation-service/emissions
+      tests: [calculation, validate_emission_calculation_details]
+      visual: null
+    - id: RF010
+      title: Correção e recálculo
+      static: frontend/services/calculation_approval_service.py
+      tests: [validate_correction_recalculation]
+      visual: null
+    - id: RF011
+      title: Separação cálculo/predição
+      static: frontend/services/forecast_inference
+      tests: [validate_prediction_separation, validate_forecast_page]
+      visual: /forecasts
+    - id: RF012
+      title: Pacote de evidências
+      static: agrotrace-carbon-blockchain-service
+      tests: [blockchain, test_full_emission_cycle]
+      visual: null
+    - id: RF013
+      title: Hash e Merkle
+      static: app/domain/services/sha256_service.py
+      tests: [blockchain, validate_reproducibility, test_canonical_vectors]
+      visual: null
+    - id: RF014
+      title: Ancoragem
+      static: agrotrace-carbon-blockchain-service/app/application/use_cases
+      tests: [blockchain, test_full_emission_cycle]
+      visual: null
+    - id: RF015
+      title: Verificação de integridade
+      static: verify_evidence_package.py
+      tests: [blockchain, validate_technical_audit]
+      visual: Aba Integridade
+    - id: RF016
+      title: Proveniência contínua
+      static: agrotrace-carbon-traceability-service
+      tests: [traceability, validate_provenance_queries]
+      visual: Aba Proveniência
+    - id: RF017
+      title: Dashboard indicadores
+      static: frontend/services/dashboard_service.py
+      tests: [validate_dashboard_indicators, validate_executive_temporal]
+      visual: /
+    - id: RF018
+      title: Canonicalização determinística
+      static: canonical_json_service.py
+      tests: [blockchain, validate_reproducibility, frontend_tests]
+      visual: null
+    - id: RF019
+      title: Filtros analíticos
+      static: frontend/utils/global_filter.py
+      tests: [validate_global_filter, validate_property_filter, validate_analytic_context]
+      visual: Filtro global
+    - id: RF020
+      title: Auditoria técnica
+      static: frontend/pages/technical_audit.py
+      tests: [validate_technical_audit]
+      visual: /technical-audit
+    - id: RF021
+      title: Previsões
+      static: frontend/pages/forecasts.py
+      tests: [validate_forecast_page, model-training]
+      visual: /forecasts
+
+  RNF:
+    - id: RNF001
+      title: Rastreabilidade ponta a ponta
+      static: provenance + blockchain adapters
+      tests: [traceability, blockchain, test_full_emission_cycle]
+      visual: Trilha auditoria
+    - id: RNF002
+      title: Usabilidade auditoria
+      static: technical_audit
+      tests: [validate_technical_audit]
+      visual: 9 abas
+    - id: RNF003
+      title: Manutenibilidade
+      static: LayoutRegistry
+      tests: [validate_maintainability_extensibility]
+      visual: null
+    - id: RNF004
+      title: Integridade criptográfica
+      static: json_canonical_v1
+      tests: [blockchain, validate_reproducibility, scan_secrets]
+      visual: null
+    - id: RNF005
+      title: Transparência metodológica
+      static: VersionManifest
+      tests: [frontend_tests, validate_technical_audit]
+      visual: VersionManifest na auditoria
+    - id: RNF006
+      title: Modelo temporal
+      static: temporal_model.py
+      tests: [validate_temporal_model]
+      visual: null
+    - id: RNF007
+      title: Performance UI aceitável
+      static: technical_audit Loading
+      tests: [validate_technical_audit]
+      visual: null
+    - id: RNF008
+      title: Extensibilidade providers
+      static: BlockchainAnchorProviderPort
+      tests: [validate_maintainability_extensibility]
+      visual: null
+    - id: RNF009
+      title: Reprodutibilidade
+      static: validate_reproducibility.py
+      tests: [validate_reproducibility]
+      visual: null
+    - id: RNF010
+      title: Versionamento
+      static: version_manifest_service.py
+      tests: [frontend_tests, blockchain]
+      visual: null
+    - id: RNF011
+      title: Conformidade de schema
+      static: test_anchor_payload_schema.py
+      tests: [blockchain]
+      visual: null
+    - id: RNF012
+      title: Proteção de credenciais
+      static: app/shared/redact.py
+      tests: [scan_secrets, frontend_tests]
+      visual: null
+
+  RN:
+    - id: RN-01
+      title: Integração direta sem HTTP
+      static: .cursor/rules/01-architecture-direct-calls.mdc
+      tests: [frontend_tests]
+      visual: null
+    - id: RN-02
+      title: Gate FINAL_ONTOLOGY_PUBLISHED
+      static: blockchain_view_service.py
+      tests: [test_full_emission_cycle]
+      visual: null
+    - id: RN-03
+      title: Predição ≠ cálculo publicado
+      static: publication_service.py
+      tests: [validate_prediction_separation]
+      visual: null
+    - id: RN-04
+      title: Append-only ledger
+      static: sqlite_append_only.py
+      tests: [traceability, blockchain]
+      visual: null
+    - id: RN-05
+      title: Proveniência ≠ ancoragem
+      static: docs/conceptual_model_mrv.md
+      tests: [validate_technical_audit]
+      visual: null
+    - id: RN-06
+      title: Sem fallback compact JSON oficial
+      static: hash_helpers.py
+      tests: [frontend_tests, validate_reproducibility]
+      visual: null
+    - id: RN-07
+      title: Milestone de publicação
+      static: publication_service.py
+      tests: [test_full_emission_cycle]
+      visual: null
+    - id: RN-08
+      title: Minimização on-chain
+      static: evm_anchor_provider.py
+      tests: [blockchain]
+      visual: null
+    - id: RN-09
+      title: Filtro global vs operacional
+      static: docs/filter_architecture_mrv.md
+      tests: [validate_global_filter]
+      visual: null
+    - id: RN-10
+      title: Entrypoint frontend/main.py
+      static: frontend/main.py
+      tests: [frontend_tests]
+      visual: null
+
+  CE:
+    - id: CE1
+      title: Ciclo multi-granularidade
+      static: seed_test_scenarios.py
+      tests: [validate_temporal_model, seed_test_scenarios]
+      visual: null
+    - id: CE2
+      title: Aprovação humana
+      static: approval_review.py
+      tests: [validate_calculation_review, validate_pending_approval_seed]
+      visual: null
+    - id: CE3
+      title: Evidência e verificação
+      static: blockchain-service
+      tests: [test_full_emission_cycle, blockchain]
+      visual: null
+    - id: CE4
+      title: Proveniência até transação
+      static: provenance + anchoring
+      tests: [traceability, validate_technical_audit]
+      visual: null
+    - id: CE5
+      title: Auditoria técnica
+      static: /technical-audit
+      tests: [validate_technical_audit]
+      visual: 9 abas

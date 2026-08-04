@@ -16,6 +16,10 @@ if str(FRONTEND_ROOT) not in sys.path:
     sys.path.insert(0, str(FRONTEND_ROOT))
 
 import config  # noqa: E402
+from utils.data_root_cli import apply_data_root_from_argv  # noqa: E402
+
+apply_data_root_from_argv()
+
 from pages.emission_calculations import layout as calc_layout  # noqa: E402
 from services import local_orchestrator as orch  # noqa: E402
 from services.blockchain_view_service import is_blockchain_unlocked  # noqa: E402
@@ -31,7 +35,7 @@ from services.emission_timeseries_service import build_source_line_series  # noq
 from components.charts import MultiLineTemporalChart  # noqa: E402
 from services.mock_data import mock_pending_cycle  # noqa: E402
 from services.page_context import resolve_page_context  # noqa: E402
-from utils.file_helpers import save_raw_file  # noqa: E402
+from utils.file_helpers import save_cycle, save_raw_file  # noqa: E402
 from utils.global_filter import DEFAULT_GLOBAL_FILTER  # noqa: E402
 
 SAMPLE_CSV = config.SAMPLE_DATA_DIR / "monthly_report.csv"
@@ -89,7 +93,10 @@ def _mock_cycles() -> tuple[list[dict], dict, dict]:
             **(c.get("wrapper") or {}),
             "normalized_payload": [{
                 "milk_production": 12000,
-                "enteric_tco2e": co2e * 0.52 / 1000.0,
+                "enteric_tco2e": co2e * 0.55 / 1000.0,
+                "manure_tco2e": co2e * 0.15 / 1000.0,
+                "fertilizer_n2o_co2e": co2e * 0.10,
+                "energy_tco2e": co2e * 0.20 / 1000.0,
                 "ef_enteric_kg_ch4": 120,
                 "period_start": f"{period}-01",
             }],
@@ -131,9 +138,13 @@ def _mock_single_cycle_monthly_history() -> tuple[list[dict], dict, dict]:
     }
     payload = []
     for i, month in enumerate(["2026-01", "2026-02", "2026-03"], start=1):
+        share = i / 6.0
         payload.append({
             "milk_production": 8000 + i * 100,
-            "enteric_tco2e": co2e_total * 0.55 * (i / 6.0),
+            "enteric_tco2e": co2e_total * 0.55 * share / 1000.0,
+            "manure_tco2e": co2e_total * 0.15 * share / 1000.0,
+            "fertilizer_n2o_co2e": co2e_total * 0.10 * share,
+            "energy_tco2e": co2e_total * 0.20 * share / 1000.0,
             "period_start": f"{month}-01",
             "period_end": f"{month}-28",
         })
@@ -157,6 +168,8 @@ def main() -> int:
     print("=== validate_emission_calculation_details ===\n")
 
     cycles, gf, active = _mock_cycles()
+    for cyc in cycles:
+        save_cycle(cyc)
     ctx = resolve_page_context(active, gf, active.get("cycle_id"))
     work = ctx.filtered_analysis_cycles or ctx.analysis_cycles or cycles
 
@@ -187,6 +200,8 @@ def main() -> int:
 
     # 1 ciclo + múltiplos meses normalizados → série mensal por fonte
     hist_cycles, hist_gf, hist_active = _mock_single_cycle_monthly_history()
+    for cyc in hist_cycles:
+        save_cycle(cyc)
     hist_ctx = resolve_page_context(hist_active, hist_gf, hist_active.get("cycle_id"))
     hist_work = hist_ctx.filtered_analysis_cycles or hist_ctx.analysis_cycles or hist_cycles
     hist_ts = build_emission_timeseries(hist_work, hist_ctx.temporal)

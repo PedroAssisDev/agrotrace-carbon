@@ -24,6 +24,7 @@ from app.infrastructure.anchoring.evm.errors import (
     TransactionRevertedError,
     WalletNotAuthorizedError,
 )
+from app.infrastructure.anchoring.abi_versioning import AbiVersionError, validate_abi_file
 from app.infrastructure.anchoring.evm.evm_types import EvmNetworkConfig
 from app.infrastructure.anchoring.evm.hash_conversion import hex_hash_to_bytes32
 
@@ -82,15 +83,15 @@ class EvmContractClient:
 
     def load_abi(self) -> list[dict[str, Any]]:
         path = self.config.abi_path or DEFAULT_ABI_PATH
-        if not path.exists():
-            raise InvalidAbiError(f"ABI file not found: {path}")
         try:
-            abi = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            raise InvalidAbiError("ABI JSON is invalid") from exc
-        if not isinstance(abi, list):
-            raise InvalidAbiError("ABI root must be a list")
-        return abi
+            meta = validate_abi_file(
+                path,
+                expected_version=self.config.contract_version,
+                expected_checksum=self.config.expected_abi_checksum,
+            )
+        except AbiVersionError as exc:
+            raise InvalidAbiError(str(exc)) from exc
+        return meta["abi"]
 
     def load_contract(self) -> Contract:
         if self._contract is not None:
