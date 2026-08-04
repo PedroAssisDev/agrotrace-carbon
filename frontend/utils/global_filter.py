@@ -1,6 +1,6 @@
 """Filtro global: escopo analítico (fazenda + período) e referência operacional (cycle_id).
 
-Dois contextos (ver docs/conceptual_model_mrv.md):
+Dois contextos (ver docs/architecture/data-lifecycle.md e docs/modules/frontend.md):
 
 - **Analítico:** ``cycles_for_analysis()`` — vários ciclos no período; alimenta KPIs/gráficos.
 - **Operacional:** ``filter_cycles_by_context()`` — um ciclo; proveniência, evidências, wizard.
@@ -8,7 +8,7 @@ Dois contextos (ver docs/conceptual_model_mrv.md):
 ``cycle_id`` no store = ciclo operacional de referência (sinônimo conceitual: operational_cycle_id).
 Não substitui ``analysis_period_start/end`` como driver exclusivo de dashboards.
 
-Arquitetura de filtros: docs/filter_architecture_mrv.md
+Arquitetura de filtros: docs/modules/frontend.md
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Documentação de schemas dos dcc.Store (referência, sem enforcement rígido).
 
-Arquitetura de filtros: docs/filter_architecture_mrv.md
-Modelo conceitual: docs/conceptual_model_mrv.md
+Arquitetura de filtros: docs/modules/frontend.md (filtro global analítico vs operacional)
+Modelo conceitual: docs/architecture/data-lifecycle.md
 """
 
 from __future__ import annotations
