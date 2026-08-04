@@ -49,8 +49,6 @@ Documentação técnica da camada de **wrappers** para integração de dados het
 | [Guia de extensão](extension-guide.md) | Novo layout, regras, exportação |
 | [FAQ](faq.md) | Perguntas frequentes técnicas |
 | [Ontologia: unidades e IRIs](ontology/units-and-iris.md) | Catálogo de unidades, IRIs de exemplo, YAML máquina-legível |
-| [Runbook Kubernetes](runbooks/kubernetes.md) | Jobs, recursos, rollout |
-| [Runbook filas](runbooks/message-queues.md) | Mensagens, idempotência, DLQ |
 
 ## Como executar testes
 

@@ -5,9 +5,7 @@ Integração de dados heterogêneos (fazenda leiteira) com **layouts versionados
 ## Documentação
 
 - **[docs/](docs/README.md)** — documentação técnica modular (arquitetura, layouts V1, exportação `;_;`, testes, produção, extensão, FAQ).
-- [00_ARQUITETURA_CAMADA_WRAPPERS.md](00_ARQUITETURA_CAMADA_WRAPPERS.md) — visão original da camada.
-- [01_ARQUITETURA_WRAPPERS_ESCALAVEL.md](01_ARQUITETURA_WRAPPERS_ESCALAVEL.md) — escalabilidade, versionamento, registries.
-- [02_PERSISTENCIA_E_EXPORTACAO_POST_WRAPPER.md](02_PERSISTENCIA_E_EXPORTACAO_POST_WRAPPER.md) — pastas `data/`, delimitador `;_;`, manifest e componentes de exportação.
+- Documento canônico do módulo no monorepo: [../docs/modules/wrappers-service.md](../docs/modules/wrappers-service.md).
 
 ## Dependências
 
