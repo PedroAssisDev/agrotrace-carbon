@@ -6,6 +6,9 @@
 PRONTO COM LIMITAÇÕES DECLARADAS
 ```
 
+Regressão pós-legado (`--quick`): **pass=38 fail=0** (`_regressao-final-quick.json`).  
+Smoke/full emission cycle omitidos no modo quick (limitação residual).
+
 ## Topologia / Git
 
 - Monorepo `agrotrace-carbon`

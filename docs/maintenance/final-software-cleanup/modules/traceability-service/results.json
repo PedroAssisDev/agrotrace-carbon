@@ -1,1 +1,17 @@
-﻿{}
+﻿{
+  "project": "agrotrace-carbon-traceability-service",
+  "version": "1.0.0",
+  "classification": "PROJETO PRONTO COM LIMITAÇÕES",
+  "pyproject": true,
+  "gitignore": true,
+  "isolated_install": true,
+  "pip_check": true,
+  "tests_passed": 115,
+  "tests_failed": 0,
+  "pytest_exit_code": 0,
+  "validated_at": "2026-08-04T22:48:00-03:00",
+  "limitations": [
+    "include_legacy_is_frontend_concern",
+    "legacy_schema_prefixes_documented_in_architecture"
+  ]
+}
