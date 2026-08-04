@@ -17,6 +17,15 @@ def init_database(settings: Settings | None = None) -> None:
     settings = settings or get_settings()
     engine = create_engine_from_settings(settings)
     Base.metadata.create_all(engine)
+    # Safe additive migration for existing SQLite databases
+    if settings.database_url.startswith("sqlite:///"):
+        try:
+            from scripts.migrate_add_idempotency_key import migrate
+
+            migrate(settings.database_url)
+        except Exception:
+            # New DBs already have the column via models; ignore migration edge cases
+            pass
     with SqlAlchemyUnitOfWork(create_session_factory(settings)) as uow:
         uow.blockchain_networks.ensure_default_networks()
 
@@ -27,7 +36,6 @@ class ServiceContainer:
         self.session_factory = create_session_factory(self.settings)
         self.event_reader = SQLiteProvenanceEventReader(self.settings)
         self.data_reader = SQLiteProvenanceDataReader(self.settings)
-        self.providers = ProvidersRegistry()
-
+        self.providers = ProvidersRegistry(self.settings)
     def unit_of_work(self) -> SqlAlchemyUnitOfWork:
         return SqlAlchemyUnitOfWork(self.session_factory)

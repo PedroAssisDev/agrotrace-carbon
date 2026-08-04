@@ -29,7 +29,7 @@ def main() -> int:
         "--profile",
         choices=("demo", "full"),
         default="demo",
-        help="demo=3 fazendas/23 ciclos; full=perfis extras",
+        help="demo=2 fazendas/17 ciclos (sem diário); full=perfis extras",
     )
     parser.add_argument(
         "--output-dir",

@@ -1,4 +1,4 @@
-"""Painel colapsado de ações técnicas / demonstração."""
+"""Painel técnico — upload de amostra (sem demos com mock)."""
 
 from __future__ import annotations
 
@@ -13,30 +13,11 @@ def TechnicalActionsPanel() -> html.Div:
     return html.Div([
         dbc.Accordion([
             dbc.AccordionItem([
-                dbc.Alert(
-                    "Modo demonstração: pode usar dados simulados e aprovação automática. "
-                    "Não use como fluxo operacional real.",
-                    color="warning",
-                    className="small py-2 mb-3",
+                html.P(
+                    "Ações operacionais principais: Entrada de Dados, Cálculos de Emissão e Revisão e Aprovação. "
+                    "Cenários de teste oficiais: scripts/seed_test_scenarios.py.",
+                    className="text-aux small mb-2",
                 ),
-                dbc.ButtonGroup([
-                    dbc.Button(
-                        "Pipeline completo (demo)",
-                        id="btn-run-full-pipeline",
-                        color="warning",
-                        outline=True,
-                        size="sm",
-                        className="btn-agro-secondary",
-                    ),
-                    dbc.Button(
-                        "Carregar demo",
-                        id="btn-load-demo",
-                        color="secondary",
-                        outline=True,
-                        size="sm",
-                        className="btn-agro-secondary",
-                    ),
-                ]),
                 html.Div([
                     dbc.Select(
                         id="upload-sample",
@@ -44,11 +25,10 @@ def TechnicalActionsPanel() -> html.Div:
                         value=sample_files[0] if sample_files else None,
                         style={"display": "none"},
                     ),
+                    # Placeholders ocultos para callbacks legacy não quebrarem (allow_optional)
+                    html.Button(id="btn-run-full-pipeline", n_clicks=0, style={"display": "none"}),
+                    html.Button(id="btn-load-demo", n_clicks=0, style={"display": "none"}),
                 ]),
-                html.P(
-                    "Execução operacional principal: Entrada de Dados, Cálculos de Emissão e Revisão e Aprovação.",
-                    className="text-aux small mt-3 mb-0",
-                ),
-            ], title="Ações técnicas / Demonstração"),
+            ], title="Referência técnica"),
         ], start_collapsed=True, className="audit-technical-actions mb-3"),
     ])

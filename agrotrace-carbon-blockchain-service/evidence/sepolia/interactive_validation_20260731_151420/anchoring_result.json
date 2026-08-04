@@ -1,0 +1,9 @@
+{
+  "timestamp": "2026-07-31T15:16:24.917669+00:00",
+  "status": "FALHOU",
+  "tipo": "KeyError",
+  "causa": "UUID('76c5e8fb-f7ac-44ff-94e6-315a4359e4b7')",
+  "transacao_enviada_conhecida": false,
+  "diretorio_evidencias": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-blockchain-service\\evidence\\sepolia\\interactive_validation_20260731_151420",
+  "recomendacao": "Não troque para local_simulated. Se houver transaction_hash, use --resume-transaction. Verifique saldo, owner e gate final."
+}

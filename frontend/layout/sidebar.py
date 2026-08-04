@@ -13,6 +13,7 @@ MANAGERIAL_NAV = [
     ("/calculations", "fas fa-calculator", "Cálculos de Emissão"),
     ("/approval", "fas fa-user-check", "Revisão e Aprovação"),
     ("/indicators", "fas fa-chart-bar", "Análise Geral"),
+    ("/previsoes", "fas fa-chart-area", "Previsões"),
 ]
 
 TECHNICAL_NAV = [

@@ -8,7 +8,15 @@ from dash import html
 import config
 from components.page_header import PageHeader
 from services import direct_imports as di
+from services.gwp import resolve_gwp
 from utils.global_filter import format_filter_badge, normalize_global_filter
+
+
+def _display_gwp() -> dict:
+    try:
+        return resolve_gwp()
+    except Exception:
+        return {"error": "calculation-service indisponível"}
 
 
 def _settings_card(title: str, body) -> dbc.Card:
@@ -80,7 +88,8 @@ Backgrounds:      {config.AUTH_BACKGROUNDS_DIR}
         _settings_card(
             "Blockchain pós-publicação final",
             html.P(
-                "O blockchain-service só é acionado após CALCULATION_APPROVED e FINAL_ONTOLOGY_PUBLISHED. "
+                "O blockchain-service só é acionado após aprovação e APPROVED_RESULT_PUBLISHED "
+                "(alias legado: FINAL_ONTOLOGY_PUBLISHED)."
                 "Antes disso, apenas o traceability-service registra proveniência.",
                 className="text-aux mb-0",
             ),
@@ -89,5 +98,8 @@ Backgrounds:      {config.AUTH_BACKGROUNDS_DIR}
             "Versão do frontend",
             html.P(f"{config.APP_TITLE} — entry point main.py", className="text-aux mb-0"),
         ),
-        _settings_card("GWP padrão (IPCC AR4)", html.Pre(str(config.DEFAULT_GWP), className="settings-paths-pre mb-0")),
+        _settings_card(
+            "GWP padrão (IPCC AR4)",
+            html.Pre(str(_display_gwp()), className="settings-paths-pre mb-0"),
+        ),
     ], className="page-settings page-content-inner")

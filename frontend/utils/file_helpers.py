@@ -37,6 +37,12 @@ def invalidate_cycle_cache(cycle_id: str | None = None) -> None:
         _cycle_file_cache.pop(cycle_id, None)
     else:
         _cycle_file_cache.clear()
+    try:
+        from services.property_registry import invalidate_property_catalog_cache
+
+        invalidate_property_catalog_cache()
+    except Exception:
+        pass
     logger.debug("[STORE] invalidate_cycle_cache cycle_id=%s", cycle_id)
 
 

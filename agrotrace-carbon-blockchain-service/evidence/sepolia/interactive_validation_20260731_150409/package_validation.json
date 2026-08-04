@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-07-31T15:06:12.917860+00:00",
+  "status": "PASSOU",
+  "module": {
+    "settings_class": "Settings",
+    "container_class": "ServiceContainer",
+    "provider_class": "EvmAnchorProvider",
+    "provider_type": "evm",
+    "network_code": "ethereum_sepolia",
+    "chain_id": 11155111,
+    "contract_address": "0x7dFc5d077c0911DcD29881aEf4B4EF5FFc1573Aa",
+    "database_url_sanitized": "sqlite://********",
+    "idempotency_key_column": true,
+    "sepolia_ready": true
+  }
+}

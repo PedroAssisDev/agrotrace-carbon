@@ -50,3 +50,18 @@ def test_compute_farm_period_emissions_with_milk_intensity():
     assert bundle.indicators["co2e_intensity_per_milk_liter"].value == pytest.approx(
         bundle.total.co2e_kg / 10000.0
     )
+
+
+def test_default_manure_below_enteric_for_lactating_herd():
+    """Sanidade: com defaults, CH4 de dejetos deve ficar bem abaixo da entérica."""
+    farm = _full_farm_input()  # 10 lactantes, 550 kg
+    bundle = compute_farm_period_emissions(farm)
+
+    assert bundle.enteric.value == pytest.approx(1000.0)  # 10 × 100
+    # 10 × 550 × 0.08 × 0.001 × 365 ≈ 160.6 kg CH4
+    assert bundle.manure.value == pytest.approx(160.6, rel=1e-3)
+    assert bundle.manure.value < bundle.enteric.value
+    assert bundle.manure.value / bundle.enteric.value < 0.5
+    # Por cabeça: ordem IPCC Tier-1 dejetos (~10–50 kg CH4/ano), não milhares
+    assert bundle.manure.value / 10.0 < 50.0
+    assert bundle.manure.value / 10.0 > 5.0

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-07-31T15:04:48.021122+00:00",
+  "status": "PASSOU",
+  "variaveis": {
+    "BLOCKCHAIN_DEFAULT_NETWORK_CODE": "CONFIGURADA",
+    "BLOCKCHAIN_SEPOLIA_RPC_URL": "/********",
+    "BLOCKCHAIN_SEPOLIA_CHAIN_ID": "CONFIGURADA",
+    "BLOCKCHAIN_SEPOLIA_PRIVATE_KEY": "********",
+    "BLOCKCHAIN_SEPOLIA_CONTRACT_ADDRESS": "CONFIGURADA",
+    "BLOCKCHAIN_SEPOLIA_CONFIRMATIONS": "CONFIGURADA",
+    "BLOCKCHAIN_SEPOLIA_REQUEST_TIMEOUT_SECONDS": "CONFIGURADA",
+    "BLOCKCHAIN_SEPOLIA_RECEIPT_TIMEOUT_SECONDS": "CONFIGURADA",
+    "BLOCKCHAIN_SEPOLIA_EXPLORER_BASE_URL": "CONFIGURADA"
+  },
+  "rpc_sanitizado": "https://eth-sepolia.g.alchemy.com/v2/********",
+  "chain_id": 11155111,
+  "contract_address": "0x7dFc5d077c0911DcD29881aEf4B4EF5FFc1573Aa",
+  "default_network_code": "local_simulated",
+  "confirmations": 1,
+  "request_timeout": 30.0,
+  "receipt_timeout": 180.0,
+  "chave_privada_configurada": true,
+  "tamanho_chave_valido": true
+}

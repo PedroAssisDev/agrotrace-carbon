@@ -1,0 +1,24 @@
+{
+  "migrated": 3,
+  "failed": 0,
+  "reports": [
+    {
+      "cycle_id": "TEST-ONTO-LIFECYCLE-P9",
+      "ok": true,
+      "errors": [],
+      "results": 8
+    },
+    {
+      "cycle_id": "MONTHLY-2026-06-FARM-DAILY-006",
+      "ok": true,
+      "errors": [],
+      "results": 7
+    },
+    {
+      "cycle_id": "MONTHLY-2026-05-FARM-DAILY-005",
+      "ok": true,
+      "errors": [],
+      "results": 7
+    }
+  ]
+}

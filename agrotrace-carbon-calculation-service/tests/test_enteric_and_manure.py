@@ -19,7 +19,7 @@ def _uniform_manure_day(m: float = 0.08) -> dict[str, float]:
     return {c: m for c in ANIMAL_CATEGORIES}
 
 
-def _uniform_manure_ef(e: float = 0.17) -> dict[str, float]:
+def _uniform_manure_ef(e: float = 0.001) -> dict[str, float]:
     return {c: e for c in ANIMAL_CATEGORIES}
 
 

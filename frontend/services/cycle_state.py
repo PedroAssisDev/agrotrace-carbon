@@ -187,9 +187,9 @@ PIPELINE_STEP_DEFS: list[StepDef] = [
     StepDef(
         "publication",
         "8. Publicação Final",
-        "Publicação final da ontologia aprovada.",
+        "Publicação do manifesto final aprovado (artefato imutável).",
         "run_publication_step",
-        ("FINAL_ONTOLOGY_PUBLICATION_STARTED", "FINAL_ONTOLOGY_PUBLISHED"),
+        ("APPROVED_RESULT_PUBLISHED", "FINAL_ONTOLOGY_PUBLISHED"),
     ),
     StepDef(
         "evidence",

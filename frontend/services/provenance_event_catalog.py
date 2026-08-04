@@ -4,14 +4,20 @@ from __future__ import annotations
 
 from typing import Any
 
-# Canônico → aliases legados (compatibilidade com telas e stepper de 18 etapas)
+# Canônico → aliases legados (compatibilidade de LEITURA apenas; não emitir aliases)
 EVENT_ALIASES: dict[str, list[str]] = {
     "RAW_DATA_RECEIVED": ["RAW_DATA_UPLOADED"],
     "RAW_DATA_UPLOADED": ["RAW_DATA_RECEIVED"],
     "CANONICAL_MODEL_POPULATED": ["CANONICAL_PUBLISHED", "SEMANTIC_MAPPING_COMPLETED"],
     "PRELIMINARY_RESULT_CREATED": ["CALCULATION_PRELIMINARY_RESULT_CREATED"],
+    "CALCULATION_PRELIMINARY_RESULT_CREATED": ["PRELIMINARY_RESULT_CREATED", "CALCULATION_EXECUTED"],
+    "APPROVED_RESULT_PUBLISHED": ["FINAL_ONTOLOGY_PUBLISHED", "FINAL_ONTOLOGY_PUBLICATION_STARTED"],
+    "FINAL_ONTOLOGY_PUBLISHED": ["APPROVED_RESULT_PUBLISHED"],
     "MERKLE_ROOT_CREATED": ["LOCAL_HASH_CREATED"],
-    "INTEGRITY_VERIFICATION_EXECUTED": ["VERIFICATION_EXECUTED"],
+    "EVIDENCE_PACKAGE_CREATED": ["MERKLE_ROOT_CREATED", "LOCAL_HASH_CREATED", "ARTIFACT_HASHES_CREATED"],
+    "BLOCKCHAIN_ANCHORED": ["ANCHORING_SIMULATED", "BLOCKCHAIN_ANCHOR_CREATED", "ANCHOR_REQUEST_CREATED"],
+    "INTEGRITY_VERIFIED": ["INTEGRITY_VERIFICATION_EXECUTED", "VERIFICATION_EXECUTED", "PROVENANCE_CHAIN_VERIFIED"],
+    "INTEGRITY_VERIFICATION_EXECUTED": ["INTEGRITY_VERIFIED", "VERIFICATION_EXECUTED", "PROVENANCE_CHAIN_VERIFIED"],
     # Revisão e aprovação por cálculo
     "CALCULATION_REVIEW_STARTED": ["REVIEW_STARTED"],
     "CALCULATION_ITEM_REVIEWED": ["ITEM_REVIEWED"],
@@ -24,9 +30,10 @@ EVENT_ALIASES: dict[str, list[str]] = {
     "CALCULATION_ITEM_CORRECTION_REQUESTED": ["ITEM_CORRECTION_REQUESTED"],
     "ZERO_VALUE_ASSUMPTION_CONFIRMED": ["ZERO_ASSUMPTION_CONFIRMED"],
     "FILE_CALCULATION_REVIEW_COMPLETED": ["FILE_REVIEW_COMPLETED"],
-    "FILE_CALCULATION_APPROVED": ["FILE_APPROVED"],
+    "FILE_CALCULATION_APPROVED": ["FILE_APPROVED", "CYCLE_APPROVED"],
     "FILE_CALCULATION_REJECTED": ["FILE_REJECTED"],
     "FINAL_APPROVAL_READY": ["APPROVAL_READY"],
+    "CYCLE_APPROVED": ["FILE_CALCULATION_APPROVED"],
 }
 
 # Alias reverso para serviços de revisão
@@ -65,20 +72,14 @@ def emit_pipeline_event(
     payload: dict,
     *,
     emit_fn,
-    include_legacy: bool = True,
+    include_legacy: bool = False,
 ) -> None:
-    """Emite evento canônico e aliases legados via função emit do orquestrador."""
+    """Emite um único evento canônico. Aliases legados não são gravados (somente leitura)."""
     payload = dict(payload)
     payload.setdefault("cycle_id", cycle.get("cycle_id"))
     if cycle.get("pipeline_run_id"):
         payload.setdefault("pipeline_run_id", cycle["pipeline_run_id"])
 
     emit_fn(cycle, event_type, payload)
-
-    if not include_legacy:
-        return
-
-    canonical = canonical_event_type(event_type)
-    for alias in EVENT_ALIASES.get(canonical, []):
-        if alias != event_type:
-            emit_fn(cycle, alias, dict(payload))
+    # include_legacy mantido na assinatura por compatibilidade; não emite duplicatas.
+    _ = include_legacy

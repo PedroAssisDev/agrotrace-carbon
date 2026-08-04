@@ -1,17 +1,18 @@
 """Catálogo de propriedades do frontend.
 
-Combina propriedades mock fixas com propriedades derivadas dos ciclos já
-persistidos em ``frontend/data/`` e dos pacotes de evidência. Não toca nos
-serviços externos — apenas lê dados locais.
+Combina propriedades persistidas com propriedades derivadas dos ciclos já
+salvos. O caminho quente da UI (filtro/navbar) NÃO varre ontologia OWL —
+use ``load_property_catalog_from_ontology`` apenas quando a tela precisar
+de dados semânticos.
 """
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
-from typing import Any
-
 import re
+from typing import Any
 
 import config
 from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR, SAVE_FILE_ORIGINALS_DIR
@@ -20,6 +21,8 @@ from utils.property_filter import get_all_property_ids
 
 logger = logging.getLogger("agrotrace.property_registry")
 
+# Cache do catálogo rápido (UI/filtro). Invalidado com ciclos / cadastro de fazenda.
+_catalog_cache: list[dict[str, Any]] | None = None
 
 # Propriedades mock fixas para a demonstração multi-propriedade.
 MOCK_PROPERTIES: list[dict[str, Any]] = [
@@ -67,6 +70,13 @@ LEGACY_ALIASES: dict[str, str] = {
 }
 
 
+def invalidate_property_catalog_cache() -> None:
+    """Invalida cache do catálogo rápido (chamar ao salvar ciclo/fazenda)."""
+    global _catalog_cache
+    _catalog_cache = None
+    logger.debug("[PROP] catalog cache invalidated")
+
+
 def _entry(property_id: str, name: str | None = None, municipality: str = "", state: str = "") -> dict[str, Any]:
     return {
         "property_id": property_id,
@@ -84,10 +94,10 @@ def _add_found(found: dict[str, dict[str, Any]], pid: str, name: str | None = No
         found[canonical]["name"] = name
 
 
-def _derive_from_cycles() -> dict[str, dict[str, Any]]:
+def _derive_from_cycles(cycles: list[dict[str, Any]] | None = None) -> dict[str, dict[str, Any]]:
     """Extrai propriedades únicas dos ciclos salvos (topo + campos aninhados)."""
     found: dict[str, dict[str, Any]] = {}
-    for c in list_cycles():
+    for c in cycles if cycles is not None else list_cycles():
         for pid in get_all_property_ids(c):
             _add_found(found, pid, c.get("property_name"))
     return found
@@ -139,21 +149,68 @@ def _load_persisted_properties() -> dict[str, dict[str, Any]]:
         return {}
 
 
-def load_property_catalog() -> list[dict[str, Any]]:
-    """Catálogo: cadastro persistido + mock (se demo) + derivadas de dados locais."""
+def _build_fast_catalog(cycles: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Catálogo para UI/filtro: persistido + ciclos (+ mock). Sem OWL."""
     catalog: dict[str, dict[str, Any]] = _load_persisted_properties()
+
+    for pid, entry in _derive_from_cycles(cycles).items():
+        if pid not in catalog:
+            entry = dict(entry)
+            entry["source"] = "cycle_bootstrap"
+            catalog[pid] = entry
+        elif entry.get("name") and (
+            not catalog[pid].get("name") or catalog[pid]["name"] == pid
+        ):
+            catalog[pid]["name"] = entry["name"]
 
     if config.USE_MOCK_DATA:
         for p in MOCK_PROPERTIES:
             if p["property_id"] not in catalog:
-                catalog[p["property_id"]] = dict(p)
+                catalog[p["property_id"]] = {**dict(p), "source": "mock"}
 
-    for source in (_derive_from_cycles(), _derive_from_evidence(), _derive_from_raw_originals()):
-        for pid, entry in source.items():
+    return sorted(catalog.values(), key=lambda p: p.get("name") or p["property_id"])
+
+
+def load_property_catalog() -> list[dict[str, Any]]:
+    """Catálogo rápido para filtro/navbar (sem varredura de ontologia)."""
+    global _catalog_cache
+    if _catalog_cache is not None:
+        return copy.deepcopy(_catalog_cache)
+    built = _build_fast_catalog()
+    _catalog_cache = built
+    logger.debug("[PROP] catalog built entries=%d", len(built))
+    return copy.deepcopy(built)
+
+
+def load_property_catalog_from_ontology() -> list[dict[str, Any]]:
+    """Catálogo enriquecido via OWL — uso pontual (telas/scripts semânticos)."""
+    catalog: dict[str, dict[str, Any]] = {
+        p["property_id"]: dict(p) for p in load_property_catalog()
+    }
+
+    try:
+        from services.ontology_query_adapter import list_properties_from_ontology
+
+        for p in list_properties_from_ontology():
+            pid = p["property_id"]
             if pid not in catalog:
-                catalog[pid] = entry
-            elif not catalog[pid].get("name") or catalog[pid]["name"] == pid:
-                catalog[pid]["name"] = entry.get("name") or catalog[pid]["name"]
+                catalog[pid] = {
+                    "property_id": pid,
+                    "name": p.get("name") or pid,
+                    "municipality": p.get("municipality") or "",
+                    "state": p.get("state") or "",
+                    "source": "ontology",
+                    "ontology_path": p.get("ontology_path"),
+                    "ontology_version": p.get("ontology_version"),
+                }
+            else:
+                catalog[pid]["source"] = catalog[pid].get("source") or "ontology"
+                if p.get("name") and (
+                    not catalog[pid].get("name") or catalog[pid]["name"] == pid
+                ):
+                    catalog[pid]["name"] = p["name"]
+    except Exception as exc:
+        logger.warning("Falha ao listar propriedades da ontologia: %s", exc)
 
     return sorted(catalog.values(), key=lambda p: p.get("name") or p["property_id"])
 
@@ -166,3 +223,37 @@ def get_property(property_id: str, catalog: list[dict[str, Any]] | None = None) 
         if p["property_id"] == canonical:
             return p
     return None
+
+
+def resolve_farm_name(
+    farm_id: str | None,
+    *,
+    cycles: list[dict[str, Any]] | None = None,
+    known_name: str | None = None,
+) -> str | None:
+    """Resolve nome da fazenda sem carregar catálogo OWL completo."""
+    if not farm_id:
+        return None
+    if known_name and str(known_name).strip():
+        return str(known_name).strip()
+
+    canonical = LEGACY_ALIASES.get(farm_id, farm_id)
+    for c in cycles if cycles is not None else list_cycles():
+        if c.get("property_id") == canonical and c.get("property_name"):
+            return c["property_name"]
+
+    try:
+        from services.farm_registry_service import list_persisted_properties
+
+        for p in list_persisted_properties():
+            if p.get("property_id") == canonical:
+                return p.get("name") or farm_id
+    except Exception:
+        pass
+
+    if _catalog_cache is not None:
+        for p in _catalog_cache:
+            if p.get("property_id") == canonical:
+                return p.get("name") or farm_id
+
+    return farm_id

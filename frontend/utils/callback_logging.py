@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from functools import wraps
 from typing import Any, Callable, TypeVar
 
@@ -27,22 +28,36 @@ def safe_repr(obj: Any, max_len: int = 800) -> str:
 
 
 def log_callback(name: str) -> Callable[[F], F]:
-    """Decorator: loga trigger, args resumidas e resultado."""
+    """Decorator: loga trigger, duração e resultado; repropaga exceções."""
 
     def decorator(fn: F) -> F:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             trigger = getattr(ctx, "triggered_id", None)
             logger.debug("[%s] trigger=%s", name, trigger)
+            started = time.perf_counter()
             try:
                 result = fn(*args, **kwargs)
+                duration_ms = round((time.perf_counter() - started) * 1000.0, 1)
                 if isinstance(result, tuple):
-                    logger.debug("[%s] ok outputs=%d first=%s", name, len(result), safe_repr(result[0], 400))
+                    logger.debug(
+                        "[%s] ok outputs=%d first=%s duration_ms=%.1f",
+                        name,
+                        len(result),
+                        safe_repr(result[0], 400),
+                        duration_ms,
+                    )
                 else:
-                    logger.debug("[%s] ok result=%s", name, safe_repr(result, 400))
+                    logger.debug(
+                        "[%s] ok result=%s duration_ms=%.1f",
+                        name,
+                        safe_repr(result, 400),
+                        duration_ms,
+                    )
                 return result
             except Exception:
-                logger.exception("[%s] FAILED trigger=%s", name, trigger)
+                duration_ms = round((time.perf_counter() - started) * 1000.0, 1)
+                logger.exception("[%s] FAILED trigger=%s duration_ms=%.1f", name, trigger, duration_ms)
                 raise
 
         return wrapper  # type: ignore[return-value]

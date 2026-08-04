@@ -144,14 +144,11 @@ def _load_ipcc_defaults(group: str, cycle: dict) -> dict[str, Any]:
 
     if group == "energy_co2_kg_per_unit":
         from emissions.defaults import default_energy_co2_kg_per_unit_yearly_basis
-        from emissions.factor_alignment import align_energy_factors_to_scope
 
         raw = default_energy_co2_kg_per_unit_yearly_basis()
         vectors = _energy_vectors(cycle)
-        filtered = {k: v for k, v in raw.items() if not vectors or k in vectors}
-        scope = (cycle.get("calculation") or {}).get("temporal", {}).get("scope", "MONTHLY")
-        temporal = di.TemporalScope.MONTHLY if str(scope).upper() == "MONTHLY" else di.TemporalScope.YEARLY
-        return align_energy_factors_to_scope(filtered, temporal_scope=temporal, auto_prorate=True)
+        # Intensidades (kg CO2/unidade): sem prorratação temporal.
+        return {k: v for k, v in raw.items() if not vectors or k in vectors}
 
     if group == "fertilizer_factors":
         from emissions.defaults import default_fertilizer_factors
@@ -160,7 +157,8 @@ def _load_ipcc_defaults(group: str, cycle: dict) -> dict[str, Any]:
     if group == "gwp":
         if di.gwp_ipcc_ar4:
             return dict(di.gwp_ipcc_ar4())
-        return dict(config.DEFAULT_GWP)
+        from services.gwp import resolve_gwp
+        return resolve_gwp()
 
     return {}
 
@@ -181,7 +179,8 @@ def _ecofarm_enteric_uniform_ef(cycle: dict) -> tuple[dict[str, float] | None, s
         return None, None
 
     tier2 = _aggregate_tier2_observed(observed_rows)
-    gwp_ch4 = float(_tier1_enteric_values(cycle).get("gwp_ch4") or config.DEFAULT_GWP.get("CH4", 25))
+    from services.gwp import resolve_gwp
+    gwp_ch4 = float(_tier1_enteric_values(cycle).get("gwp_ch4") or resolve_gwp().get("CH4", 25))
 
     if tier2.get("enteric_tco2e_t") is not None:
         ch4_total = float(tier2["enteric_tco2e_t"]) * 1000.0 / gwp_ch4
@@ -366,11 +365,13 @@ def build_factor_params(cycle: dict, group: str, values: dict[str, Any], *, prof
 
 
 def build_factor_rows_for_display(cycle: dict, item: dict) -> list[dict[str, Any]]:
-    """Linhas atuais dos fatores do item para tabela na UI."""
+    """Linhas atuais dos fatores do item (prioriza factor_catalog da ontologia)."""
     formula_id = item.get("formula_id") or ""
     sub_id = resolve_sub_id(item)
     sub = _subcalculation(cycle, sub_id)
     sub_factors: dict[str, Any] = (sub or {}).get("factors") or {}
+    catalog = (cycle.get("ontology") or {}).get("factor_catalog") or {}
+    catalog_statuses = catalog.get("_statuses") or {}
 
     rows: list[dict[str, Any]] = []
     fert_labels = {
@@ -379,17 +380,24 @@ def build_factor_rows_for_display(cycle: dict, item: dict) -> list[dict[str, Any
         "fraction_n_volatilized": "Fração N volatilizada",
     }
     for group in get_factor_groups_for_formula(formula_id):
-        data = sub_factors.get(group)
+        data = catalog.get(group)
+        if data is None:
+            data = sub_factors.get(group)
         if data is None:
             data = _factors_used(cycle).get(group) or {}
         data = _filter_factor_data_for_sub(group, dict(data) if isinstance(data, dict) else {}, sub)
+        group_st = catalog_statuses.get(group) or {}
         for k, v in data.items():
+            if str(k).startswith("_"):
+                continue
             rows.append({
                 "group": group,
                 "factor_key": k,
                 "grupo": _FACTOR_GROUP_LABELS.get(group, group),
                 "chave": fert_labels.get(k, k) if group == "fertilizer_factors" else k,
                 "valor": v,
+                "status": group_st.get(k) or "pending",
+                "source": catalog.get("_source") or "calculation",
             })
     return rows
 

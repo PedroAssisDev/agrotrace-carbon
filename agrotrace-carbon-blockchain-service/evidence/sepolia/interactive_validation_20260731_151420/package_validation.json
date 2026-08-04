@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-07-31T15:15:17.268330+00:00",
+  "status": "ready_to_anchor",
+  "evidence_package_id": "49a1dd76-7820-48f5-b630-4489a49887ec",
+  "package_hash": "0x6482c49265254b90530b4913c37ac98aef4d7d9eb968752b17c0794825e9ab83",
+  "merkle_root": "0xe09e32963a8c7563dd856865e455722377f5d7c5988507d0444120f2deae5c09",
+  "event_type": "FINAL_ONTOLOGY_PUBLISHED",
+  "period_start": "2026-01-01",
+  "period_end": "2026-12-31",
+  "sample_created": true
+}

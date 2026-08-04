@@ -171,4 +171,11 @@ def plan_annual_santa_clara() -> SeedScenarioPlan:
 
 
 def plan_daily_experimental() -> SeedScenarioPlan:
-    return next(p for p in build_all_seed_plans() if p.scenario_key == "daily_experimental")
+    """Diário desativado temporariamente no catálogo demo."""
+    plans = [p for p in build_all_seed_plans() if p.scenario_key == "daily_experimental"]
+    if not plans:
+        raise RuntimeError(
+            "Cenário daily_experimental desativado. "
+            "Reative FARM-DAILY-001 em save_file.emulated.catalog.demo_profiles()."
+        )
+    return plans[0]

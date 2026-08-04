@@ -49,7 +49,11 @@ def _scale_cows(scale: HerdScale, base: int) -> int:
 
 
 def demo_profiles() -> list[EmulatedFarmProfile]:
-    """Três fazendas do seed legado — 198 entradas / 23 ciclos."""
+    """Fazendas demo — mensal + anual (diário desativado temporariamente).
+
+    Contagens atuais: 17 entradas / 17 ciclos (12 mensais + 5 anuais).
+    Com diário: 198 entradas / 23 ciclos.
+    """
     return [
         EmulatedFarmProfile(
             property_id="FARM-MONTHLY-001",
@@ -93,28 +97,29 @@ def demo_profiles() -> list[EmulatedFarmProfile]:
                 ),
             ),
         ),
-        EmulatedFarmProfile(
-            property_id="FARM-DAILY-001",
-            name="Fazenda Experimental Sensorial",
-            municipality="Rio Verde",
-            state="GO",
-            production_type="leite",
-            herd_scale="medium",
-            area_ha=95.0,
-            base_lactating_cows=20,
-            data_quality="complete",
-            scenarios=(
-                EmulatedScenario(
-                    scenario_key="daily_experimental",
-                    data_granularity="daily",
-                    approval_granularity="monthly",
-                    layout="intraday",
-                    entry_prefix="DAILY-2026-01-2026-06-FARM-DAILY",
-                    daily_start=date(2026, 1, 1),
-                    daily_end=date(2026, 6, 30),
-                ),
-            ),
-        ),
+        # TODO: reativar simulação diária/intraday quando necessário.
+        # EmulatedFarmProfile(
+        #     property_id="FARM-DAILY-001",
+        #     name="Fazenda Experimental Sensorial",
+        #     municipality="Rio Verde",
+        #     state="GO",
+        #     production_type="leite",
+        #     herd_scale="medium",
+        #     area_ha=95.0,
+        #     base_lactating_cows=20,
+        #     data_quality="complete",
+        #     scenarios=(
+        #         EmulatedScenario(
+        #             scenario_key="daily_experimental",
+        #             data_granularity="daily",
+        #             approval_granularity="monthly",
+        #             layout="intraday",
+        #             entry_prefix="DAILY-2026-01-2026-06-FARM-DAILY",
+        #             daily_start=date(2026, 1, 1),
+        #             daily_end=date(2026, 6, 30),
+        #         ),
+        #     ),
+        # ),
     ]
 
 

@@ -33,12 +33,12 @@ DISPLAY_PIPELINE_STEPS: list[DisplayStep] = [
     DisplayStep(10, "calculation", "Cálculo", "operational", "calculation-service", ("CALCULATION_EXECUTION_STARTED", "CALCULATION_EXECUTED"), "calculation"),
     DisplayStep(11, "preliminary", "Resultado Preliminar", "operational", "calculation-service", ("PRELIMINARY_RESULT_CREATED", "CALCULATION_PRELIMINARY_RESULT_CREATED"), "calculation"),
     DisplayStep(12, "approval", "Aprovação Humana", "operational", "Frontend + traceability", ("HUMAN_APPROVAL_REQUESTED", "CALCULATION_APPROVED"), "approval"),
-    DisplayStep(13, "publication", "Publicação Final", "operational", "ontology-manager", ("FINAL_ONTOLOGY_PUBLICATION_STARTED", "FINAL_ONTOLOGY_PUBLISHED"), "publication"),
+    DisplayStep(13, "publication", "Publicação Final", "operational", "publication_service", ("APPROVED_RESULT_PUBLISHED", "FINAL_ONTOLOGY_PUBLISHED", "FINAL_ONTOLOGY_PUBLICATION_STARTED"), "publication"),
     DisplayStep(14, "evidence", "Pacote de Evidências", "blockchain", "blockchain-service", ("EVIDENCE_PACKAGE_CREATED",), "evidence", True),
     DisplayStep(15, "artifact_hashes", "Hashes Finais", "blockchain", "blockchain-service", ("ARTIFACT_HASHES_CREATED", "LOCAL_HASH_CREATED"), "evidence", True),
     DisplayStep(16, "merkle", "Merkle Root", "blockchain", "blockchain-service", ("MERKLE_ROOT_CREATED",), "evidence", True),
-    DisplayStep(17, "anchoring", "Ancoragem", "blockchain", "blockchain-service", ("ANCHOR_REQUEST_CREATED", "ANCHORING_SIMULATED", "BLOCKCHAIN_ANCHOR_CREATED"), "blockchain", True),
-    DisplayStep(18, "verification", "Verificação", "blockchain", "blockchain-service", ("INTEGRITY_VERIFICATION_EXECUTED", "VERIFICATION_EXECUTED"), "verification", True),
+    DisplayStep(17, "anchoring", "Ancoragem", "blockchain", "blockchain-service", ("ANCHOR_REQUEST_CREATED", "ANCHORING_SIMULATED", "BLOCKCHAIN_ANCHOR_CREATED", "BLOCKCHAIN_ANCHORED"), "blockchain", True),
+    DisplayStep(18, "verification", "Verificação", "blockchain", "blockchain-service", ("INTEGRITY_VERIFICATION_EXECUTED", "VERIFICATION_EXECUTED", "INTEGRITY_VERIFIED"), "verification", True),
 ]
 
 AUDIT_STEP = DisplayStep(19, "prov_audit", "Proveniência Completa", "audit", "traceability-service", ("PROVENANCE_CHAIN_VERIFIED",), "verification")

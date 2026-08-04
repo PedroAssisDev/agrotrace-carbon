@@ -18,8 +18,9 @@ from save_file.emulated.generators.monthly import MONTHLY_HEADER
 
 class EmulatedGenerationTests(unittest.TestCase):
     def test_demo_counts(self) -> None:
-        self.assertEqual(expected_entry_count("demo"), 198)
-        self.assertEqual(expected_approval_count("demo"), 23)
+        # Diário desativado: 12 mensais + 5 anuais = 17 entradas / 17 ciclos
+        self.assertEqual(expected_entry_count("demo"), 17)
+        self.assertEqual(expected_approval_count("demo"), 17)
 
     def test_reproducible_seed(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -39,7 +40,7 @@ class EmulatedGenerationTests(unittest.TestCase):
 
         self.assertEqual(manifest1, manifest2)
         self.assertEqual(text1, text2)
-        self.assertEqual(len(r1["paths"]), 198)
+        self.assertEqual(len(r1["paths"]), 17)
 
     def test_no_emission_columns_in_monthly(self) -> None:
         self.assertNotIn("ef_enteric_kgCH4", MONTHLY_HEADER)

@@ -13,6 +13,7 @@ import config
 from services import direct_imports as di
 from services.mock_data import mock_provenance_events
 from utils.date_helpers import now_iso
+from utils.pipeline_logging import log_call, log_fail, timed_op, truncate
 
 logger = logging.getLogger("agrotrace.provenance")
 
@@ -105,30 +106,59 @@ def register_provenance_event(event_type: str, payload: dict) -> dict[str, Any]:
             uow.commit()
         return {"source": "real", "event_type": event_type, "aggregate_id": str(aggregate_id), "created_at": now_iso()}
     except Exception as exc:
-        logger.warning("Evento proveniência falhou: %s", exc)
+        log_fail(
+            logger,
+            "provenance.emit.failed",
+            event_type=event_type,
+            cycle_id=payload.get("cycle_id"),
+            pipeline_run_id=payload.get("pipeline_run_id"),
+            error=str(exc),
+        )
         return {"source": "mock", "event_type": event_type, "error": str(exc), "created_at": now_iso()}
 
 
 def start_pipeline_run(farm_ref: str, period_ref: str, run_code: str) -> dict[str, Any]:
     if not _available():
-        return {"source": "mock", "pipeline_run_id": str(uuid.uuid4()), "run_code": run_code}
+        out = {"source": "mock", "pipeline_run_id": str(uuid.uuid4()), "run_code": run_code, "mode": "mock"}
+        log_call(
+            logger,
+            "provenance.start_run",
+            mode="mock",
+            property_id=farm_ref,
+            period=period_ref,
+            run_code=run_code,
+            pipeline_run_id=truncate(out["pipeline_run_id"]),
+        )
+        return out
 
     from provenance_service.domain.shared.enums import RunType
 
-    recorder, uow_factory = _get_recorder()
-    with uow_factory() as uow:
-        run = recorder.start_pipeline_run(
-            uow,
-            di.StartPipelineRunCommand(
-                run_code=run_code,
-                farm_reference=farm_ref,
-                reporting_period_reference=period_ref,
-                run_type=RunType.MONTHLY_CALCULATION,
-                idempotency_key=run_code,
-            ),
+    log_call(logger, "provenance.start_run.start", property_id=farm_ref, period=period_ref, run_code=run_code)
+    with timed_op() as timer:
+        recorder, uow_factory = _get_recorder()
+        with uow_factory() as uow:
+            run = recorder.start_pipeline_run(
+                uow,
+                di.StartPipelineRunCommand(
+                    run_code=run_code,
+                    farm_reference=farm_ref,
+                    reporting_period_reference=period_ref,
+                    run_type=RunType.MONTHLY_CALCULATION,
+                    idempotency_key=run_code,
+                ),
+            )
+            uow.commit()
+        out = {"source": "real", "pipeline_run_id": str(run.pipeline_run_id), "run_code": run.run_code, "mode": "real"}
+        log_call(
+            logger,
+            "provenance.start_run.done",
+            mode="real",
+            property_id=farm_ref,
+            period=period_ref,
+            pipeline_run_id=truncate(out["pipeline_run_id"]),
+            duration_ms=timer.duration_ms,
         )
-        uow.commit()
-    return {"source": "real", "pipeline_run_id": str(run.pipeline_run_id), "run_code": run.run_code}
+    return out
 
 
 def record_reporting_period(year: int, month: int, label: str) -> dict[str, Any]:

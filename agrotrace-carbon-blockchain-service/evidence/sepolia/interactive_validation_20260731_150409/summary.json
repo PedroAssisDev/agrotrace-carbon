@@ -1,0 +1,71 @@
+{
+  "timestamp": "2026-07-31T15:06:35.120620+00:00",
+  "status": "FALHOU",
+  "overall": "FAILURE",
+  "results": [
+    {
+      "name": "Raiz do módulo",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Arquivo .env",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Configuração",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "RPC Sepolia",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Carteira",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Saldo",
+      "status": "PASSOU",
+      "message": "derivado do teste de carteira"
+    },
+    {
+      "name": "Contrato",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "ABI",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Owner",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Banco",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Pacote de evidência",
+      "status": "FALHOU",
+      "message": "Nenhum pacote selecionado."
+    }
+  ],
+  "chain_id": 11155111,
+  "wallet": "0xa7f4F8b38f6c6a6c2ce47A849463E448d72A95A5",
+  "contract": "0x7dFc5d077c0911DcD29881aEf4B4EF5FFc1573Aa",
+  "package_id": null,
+  "evidence_key": "",
+  "package_hash": "",
+  "merkle_root": "",
+  "transaction_hash": null,
+  "block_number": null
+}

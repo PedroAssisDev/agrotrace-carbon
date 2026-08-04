@@ -53,17 +53,23 @@ class AnchoringMode(StrEnum):
 
 class AnchoringStatus(StrEnum):
     NOT_SUBMITTED = "not_submitted"
+    PENDING = "pending"
     SUBMITTED = "submitted"
     SIMULATED = "simulated"
     CONFIRMED = "confirmed"
     FAILED = "failed"
+    REVERTED = "reverted"
+    TIMEOUT = "timeout"
 
 
 class AttemptStatus(StrEnum):
     STARTED = "started"
     SIMULATED = "simulated"
+    SUBMITTED = "submitted"
     CONFIRMED = "confirmed"
     FAILED = "failed"
+    REVERTED = "reverted"
+    TIMEOUT = "timeout"
 
 
 class VerificationType(StrEnum):
@@ -71,6 +77,9 @@ class VerificationType(StrEnum):
     PACKAGE_HASH = "package_hash"
     MERKLE_ROOT = "merkle_root"
     FULL = "full"
+    ONCHAIN_PACKAGE_HASH = "onchain_package_hash"
+    ONCHAIN_MERKLE_ROOT = "onchain_merkle_root"
+    FULL_ONCHAIN = "full_onchain"
 
 
 class AuditSeverity(StrEnum):

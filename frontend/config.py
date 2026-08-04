@@ -14,6 +14,7 @@ NORMALIZED_DIR = DATA_DIR / "normalized"
 ONTOLOGY_DIR = DATA_DIR / "ontology"
 ONTOLOGY_EXPORTS_DIR = DATA_DIR / "ontology_exports"
 EVIDENCE_PACKAGES_DIR = DATA_DIR / "evidence_packages"
+PUBLICATIONS_DIR = DATA_DIR / "publications"
 REPORTS_DIR = DATA_DIR / "reports"
 CYCLES_DIR = DATA_DIR / "cycles"
 PROPERTIES_DIR = DATA_DIR / "properties"
@@ -26,12 +27,20 @@ BLOCKCHAIN_DB_PATH = DB_DIR / "blockchain_service.db"
 SAVE_FILE_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-save-file"
 SAVE_FILE_ORIGINALS_DIR = SAVE_FILE_SERVICE_DIR / "data" / "originals"
 SAVE_FILE_EMULATED_UPLOADS_DIR = SAVE_FILE_SERVICE_DIR / "data" / "emulated_uploads"
+SAVE_FILE_EMBRAPA_DIR = SAVE_FILE_SERVICE_DIR / "data" / "embrapa"
+SAVE_FILE_EMBRAPA_MONTHLY_DIR = SAVE_FILE_EMBRAPA_DIR / "monthly"
+SAVE_FILE_EMBRAPA_ANNUAL_DIR = SAVE_FILE_EMBRAPA_DIR / "annual"
 WRAPPERS_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-wrappers-service"
 CALCULATION_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-calculation-service"
 ONTOLOGY_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-ontology-manager"
 BLOCKCHAIN_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-blockchain-service"
 TRACEABILITY_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-traceability-service"
 TRACEABILITY_SRC_DIR = TRACEABILITY_SERVICE_DIR / "src"
+MODEL_TRAINING_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-model-training-service"
+MODEL_TRAINING_ARTIFACTS_DIR = MODEL_TRAINING_SERVICE_DIR / "artifacts"
+MODEL_REGISTRY_PATH = MODEL_TRAINING_ARTIFACTS_DIR / "registry.jsonl"
+MODEL_TRAINING_CONFIG_PATH = MODEL_TRAINING_SERVICE_DIR / "configs" / "training.yaml"
+MODEL_TRAINING_SRC_DIR = MODEL_TRAINING_SERVICE_DIR / "src"
 
 # Assets do workspace (referência, sem mover)
 AUTH_BACKGROUNDS_DIR = WORKSPACE_ROOT / "auth_backgrounds"
@@ -42,13 +51,12 @@ LOGO_PATH = LOGO_DIR / "Logo.png"
 SAMPLE_DATA_DIR = WORKSPACE_ROOT / "data"
 
 # ── Modos de integração ─────────────────────────────────────────────────────
-# USE_MOCK_DATA: força o uso de dados simulados em todo o frontend.
+# USE_MOCK_DATA: força mocks apenas em caminhos de teste explícitos (não no runtime normal).
 # USE_DIRECT_FUNCTION_CALLS: integra via chamadas Python diretas (sem HTTP).
-# ALLOW_MOCK_FALLBACK: quando uma chamada real falha, permite cair em mock.
-#   Se False, o erro é propagado para a lista de erros do ciclo e exibido na UI.
+# ALLOW_MOCK_FALLBACK: se True, falhas de serviço viram mock silencioso — PROIBIDO no fluxo real.
 USE_MOCK_DATA = False
 USE_DIRECT_FUNCTION_CALLS = True
-ALLOW_MOCK_FALLBACK = True
+ALLOW_MOCK_FALLBACK = False
 
 # ── Identidade visual ───────────────────────────────────────────────────────
 # PRESENTATION_MODE: ativa CSS de prints (sem debug menu, sombras suaves, payload claro).
@@ -59,9 +67,6 @@ APP_SUBTITLE = (
     "Plataforma para gestão, cálculo e acompanhamento de emissões agropecuárias"
 )
 
-# ── GWP padrão (IPCC AR4) ───────────────────────────────────────────────────
-DEFAULT_GWP = {"CH4": 25.0, "N2O": 298.0, "CO2": 1.0}
-
 # ── Layouts de wrapper ──────────────────────────────────────────────────────
 LAYOUT_OPTIONS = {
     "intraday": "intraday:v1",
@@ -69,77 +74,21 @@ LAYOUT_OPTIONS = {
     "annual": "annual:v1",
 }
 
-# ── Status do ciclo ─────────────────────────────────────────────────────────
-CYCLE_STATUSES = [
-    "DRAFT",
-    "RAW_DATA_REGISTERED",
-    "ORIGINAL_FILE_STORED",
-    "WRAPPER_SELECTED",
-    "WRAPPER_EXECUTED",
-    "NORMALIZED_BATCH_CREATED",
-    "NORMALIZED_DATA_REVIEWED",
-    "CANONICAL_MODEL_POPULATED",
-    "CANONICAL_PUBLISHED",
-    "SEMANTIC_VALIDATION_RUNNING",
-    "SEMANTIC_VALIDATION_FAILED",
-    "SEMANTIC_VALIDATION_APPROVED",
-    "CALCULATION_RUNNING",
-    "CALCULATION_PRELIMINARY_RESULT_CREATED",
-    "AWAITING_HUMAN_APPROVAL",
-    "CALCULATION_APPROVED",
-    "FINAL_ONTOLOGY_PUBLICATION_PENDING",
-    "FINAL_ONTOLOGY_PUBLISHED",
-    "EVIDENCE_PACKAGE_CREATED",
-    "LOCAL_HASH_CREATED",
-    "ANCHOR_REQUEST_CREATED",
-    "ANCHORING_PENDING",
-    "ANCHORING_SIMULATED",
-    "ANCHORED",
-    "VERIFICATION_PENDING",
-    "VERIFIED",
-    "VERIFICATION_FAILED",
-]
-
-# ── Eventos de proveniência ─────────────────────────────────────────────────
-PROVENANCE_EVENT_TYPES = [
-    "RAW_DATA_REGISTERED",
-    "ORIGINAL_FILE_STORED",
-    "WRAPPER_EXECUTED",
-    "NORMALIZED_BATCH_CREATED",
-    "SEMANTIC_MAPPING_COMPLETED",
-    "CANONICAL_PUBLISHED",
-    "SEMANTIC_VALIDATION_COMPLETED",
-    "CALCULATION_PRELIMINARY_RESULT_CREATED",
-    "CALCULATION_APPROVED",
-    "FINAL_ONTOLOGY_PUBLISHED",
-    "EVIDENCE_PACKAGE_CREATED",
-    "LOCAL_HASH_CREATED",
-    "ANCHOR_REQUEST_CREATED",
-    "ANCHORING_SIMULATED",
-    "ANCHORED",
-    "VERIFICATION_EXECUTED",
-]
-
-# ── Pipeline steps ──────────────────────────────────────────────────────────
-PIPELINE_STEPS = [
-    ("upload", "Upload"),
-    ("original", "Arquivo Original"),
-    ("wrapper", "Wrapper"),
-    ("normalization", "Normalização"),
-    ("ontology", "Ontologia"),
-    ("semantic", "Validação Semântica"),
-    ("calculation", "Cálculo"),
-    ("approval", "Aprovação"),
-    ("publication", "Publicação Final"),
-    ("provenance", "Proveniência"),
-    ("blockchain", "Blockchain"),
-    ("verification", "Verificação"),
-]
+# Status / eventos / etapas: fonte canônica em services.domain_catalog
+# (listas duplicadas removidas desta config).
 
 # ── Dash server ─────────────────────────────────────────────────────────────
 DASH_HOST = "127.0.0.1"
 DASH_PORT = 8050
 DEBUG = True
+
+# Blockchain network for anchoring (local_simulated | anvil_local | ethereum_sepolia)
+# Prefer BLOCKCHAIN_DEFAULT_NETWORK_CODE env; never default to Sepolia without config.
+import os as _os
+
+BLOCKCHAIN_DEFAULT_NETWORK_CODE = _os.environ.get(
+    "BLOCKCHAIN_DEFAULT_NETWORK_CODE", "local_simulated"
+)
 
 # Logging: AGROTRACE_LOG_LEVEL (default DEBUG), AGROTRACE_LOG_FILE → utils/logging_config.py
 
@@ -154,6 +103,7 @@ def ensure_data_dirs() -> None:
         ONTOLOGY_DIR,
         ONTOLOGY_EXPORTS_DIR,
         EVIDENCE_PACKAGES_DIR,
+        PUBLICATIONS_DIR,
         REPORTS_DIR,
         CYCLES_DIR,
         PROPERTIES_DIR,

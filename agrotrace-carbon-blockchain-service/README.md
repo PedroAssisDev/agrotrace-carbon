@@ -1,22 +1,23 @@
 # Agrotrace Carbon Blockchain Service
 
-Serviço independente responsável por observar eventos do `agrotrace-carbon-traceability-service`, montar pacotes de evidência, gerar hashes determinísticos, Merkle Roots e simular ancoragem local no MVP.
+Serviço responsável por observar eventos do `agrotrace-carbon-traceability-service`, montar pacotes de evidência, gerar hashes determinísticos, Merkle Roots e ancorar evidências criptográficas — em modo simulado ou em redes EVM (Anvil / Sepolia).
 
 ## Responsabilidades
 
 - Observar `audit_outbox_event` do serviço de proveniência
-- Criar `anchor_request`, `evidence_package` e `evidence_item`
-- Gerar payload canônico, `package_hash` e `merkle_root`
-- Simular ancoragem em rede `local_simulated`
-- Verificar integridade dos pacotes
-- Manter banco SQLite próprio
+- Criar `anchor_request`, `evidence_package` e `evidence_item` **somente após publicação final**
+- Gerar payload canônico (`json_canonical_v1`), `package_hash` e `merkle_root` (SHA-256)
+- Ancorar via `local_simulated`, `anvil_local` ou `ethereum_sepolia`
+- Verificar integridade off-chain e on-chain
+- Manter banco SQLite próprio + trilha de auditoria
 
-## Limites do MVP
+## Providers
 
-- Sem blockchain real
-- Sem smart contract
-- Sem alteração do serviço de proveniência
-- Sem dados sensíveis completos no payload de ancoragem
+```text
+BlockchainAnchorProviderPort
+├── SimulatedAnchorProvider   (local_simulated)
+└── EvmAnchorProvider         (anvil_local, ethereum_sepolia)
+```
 
 ## Setup
 
@@ -25,10 +26,7 @@ pip install -e ".[dev]"
 python -m app.interfaces.cli init-db
 ```
 
-Variáveis de ambiente:
-
-- `BLOCKCHAIN_DATABASE_URL` (default: `./data/blockchain_service.db`)
-- `BLOCKCHAIN_PROVENANCE_DATABASE_URL` (default: path para `../agrotrace-carbon-traceability-service/data/provenance.db`)
+See `.env.example` for configuration names (never commit secrets).
 
 ## Comandos CLI
 
@@ -36,34 +34,37 @@ Variáveis de ambiente:
 python -m app.interfaces.cli observe-events
 python -m app.interfaces.cli process-anchor-requests
 python -m app.interfaces.cli build-evidence-package --event-id <outbox_event_id>
-python -m app.interfaces.cli simulate-anchoring --package-id <evidence_package_id>
-python -m app.interfaces.cli verify-package --package-id <evidence_package_id>
-python -m app.interfaces.cli reprocess-failed
-python -m app.interfaces.cli audit-report --package-id <evidence_package_id>
+python -m app.interfaces.cli simulate-anchoring --package-id <UUID>
+python -m app.interfaces.cli anchor-package --package-id <UUID> --network-code local_simulated
+python -m app.interfaces.cli anchor-package --package-id <UUID> --network-code anvil_local
+python -m app.interfaces.cli query-anchor --package-id <UUID> --network-code anvil_local
+python -m app.interfaces.cli verify-anchor --package-id <UUID> --network-code anvil_local
+python -m app.interfaces.cli verify-package --package-id <UUID>
 ```
 
-Worker contínuo:
+## Contrato Solidity
 
 ```bash
-python scripts/run_worker_loop.py
+cd contracts
+forge build
+forge test -vvv
 ```
 
 ## Testes
 
 ```bash
 python -m pytest tests/ -q
-python -m unittest tests/test_anchor_payload_schema.py
+python -m pytest tests/ -m blockchain_local -q
+# Sepolia (somente com configuração explícita):
+# RUN_SEPOLIA_TESTS=1 python -m pytest tests/ -m sepolia
 ```
-
-## Estrutura
-
-- `app/domain` — entidades, serviços de hash/Merkle, portas
-- `app/application` — use cases
-- `app/infrastructure` — SQLite, readers de proveniência, provider simulado
-- `app/interfaces` — CLI e worker
-- `schemas/` — DDL SQLite e JSON Schemas
-- `docs/` — documentação técnica
 
 ## Documentação
 
-Consulte `docs/architecture.md`, `docs/provenance_integration.md`, `docs/hash_strategy.md` e `docs/mvp_roadmap.md`.
+- `docs/architecture.md`
+- `docs/ethereum_integration.md`
+- `docs/anvil_local_validation.md`
+- `docs/sepolia_deployment.md`
+- `docs/security_and_secrets.md`
+- `docs/hash_strategy.md`
+- `schemas/canonical/canonicalization_rules.md`

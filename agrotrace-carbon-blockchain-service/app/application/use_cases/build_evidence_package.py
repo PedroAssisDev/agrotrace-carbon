@@ -13,6 +13,7 @@ from app.domain.value_objects.statuses import (
 from app.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 from app.infrastructure.logging.audit_logger import AuditLogger
 from app.infrastructure.provenance.sqlite_provenance_event_reader import SQLiteProvenanceDataReader
+from app.domain.services.final_publication_gate import require_final_publication_event
 from app.shared.clock import utcnow
 from app.shared.constants import CANONICALIZATION_METHOD_V1, HASH_ALGORITHM_SHA256
 from app.shared.exceptions import InvalidStateError, NotFoundError
@@ -34,6 +35,9 @@ class BuildEvidencePackageUseCase:
 
     def execute(self, command: BuildEvidencePackageCommand) -> BuildEvidencePackageResult:
         request = self._resolve_request(command)
+        require_final_publication_event(
+            request.source_event_type, context="build_evidence_package"
+        )
         if request.status not in {
             AnchorRequestStatus.PENDING.value,
             AnchorRequestStatus.BUILDING.value,

@@ -104,7 +104,7 @@ def build_header_meta(
 
     data_source = calc.get("data_source") or calc.get("source") or "—"
     mode = calc.get("mode") or "—"
-    uses_fallback = data_source == "fallback_defaults" or mode == "mock"
+    uses_fallback = data_source in {"fallback_defaults", "empty_inputs"} or mode == "mock"
 
     return {
         "farm_name": active_cycle.get("property_name") or gf.get("farm_name"),
@@ -230,7 +230,7 @@ def build_data_origin_panel(cycle: dict) -> dict[str, Any]:
         "mode": calc.get("mode"),
         "preliminary_hash": format_hash_short(calc.get("preliminary_hash")),
         "ontology_version": calc.get("ontology_version"),
-        "is_fallback": (calc.get("data_source") == "fallback_defaults"),
+        "is_fallback": (calc.get("data_source") in {"fallback_defaults", "empty_inputs"}),
         "is_mock": calc.get("mode") == "mock",
         "is_real": calc.get("mode") == "real",
         "inputs_summary": build_inputs_summary(cycle),

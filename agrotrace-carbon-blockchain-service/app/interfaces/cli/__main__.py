@@ -3,28 +3,58 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from dataclasses import asdict, is_dataclass
 
 from app.application.container import ServiceContainer, init_database
 from app.application.dto.commands import (
+    AnchorEvidencePackageCommand,
     BuildEvidencePackageCommand,
     GenerateAuditReportCommand,
     ObserveEventsCommand,
+    QueryAnchoredEvidenceCommand,
     ReprocessFailedAnchoringCommand,
     SimulateAnchoringCommand,
+    VerifyAnchoredEvidenceCommand,
     VerifyEvidencePackageCommand,
 )
+from app.application.use_cases.anchor_evidence_package import AnchorEvidencePackageUseCase
 from app.application.use_cases.build_evidence_package import BuildEvidencePackageUseCase
 from app.application.use_cases.generate_audit_report import GenerateAuditReportUseCase
 from app.application.use_cases.observe_provenance_events import ObserveProvenanceEventsUseCase
 from app.application.use_cases.process_anchor_requests import ProcessAnchorRequestsUseCase
+from app.application.use_cases.query_anchored_evidence import QueryAnchoredEvidenceUseCase
 from app.application.use_cases.reprocess_failed_anchoring import ReprocessFailedAnchoringUseCase
 from app.application.use_cases.simulate_anchoring import SimulateAnchoringUseCase
+from app.application.use_cases.verify_anchored_evidence import VerifyAnchoredEvidenceUseCase
 from app.application.use_cases.verify_evidence_package import VerifyEvidencePackageUseCase
 from app.shared.ids import ensure_uuid
 
 
 def _print_json(data: object) -> None:
+    if is_dataclass(data) and not isinstance(data, type):
+        data = asdict(data)
     print(json.dumps(data, indent=2, default=str))
+
+
+def _anchor_payload(result) -> dict:
+    return {
+        "evidence_package_id": str(result.evidence_package_id),
+        "network_code": result.network_code,
+        "chain_id": result.chain_id,
+        "contract_address": result.contract_address,
+        "evidence_key": result.evidence_key,
+        "package_hash": result.package_hash,
+        "merkle_root": result.merkle_root,
+        "transaction_hash": result.transaction_hash,
+        "block_number": result.block_number,
+        "anchoring_status": result.anchoring_status,
+        "receipt_status": result.receipt_status,
+        "gas_used": result.gas_used,
+        "effective_gas_price": result.effective_gas_price,
+        "explorer_url": result.explorer_url,
+        "idempotent_reuse": result.idempotent_reuse,
+        "anchoring_mode": result.anchoring_mode,
+    }
 
 
 def cmd_observe_events(args: argparse.Namespace) -> int:
@@ -87,6 +117,60 @@ def cmd_simulate_anchoring(args: argparse.Namespace) -> int:
                 "transaction_hash": result.transaction_hash,
                 "block_number": result.block_number,
                 "anchoring_status": result.anchoring_status,
+            }
+        )
+    return 0
+
+
+def cmd_anchor_package(args: argparse.Namespace) -> int:
+    container = ServiceContainer()
+    init_database(container.settings)
+    with container.unit_of_work() as uow:
+        result = AnchorEvidencePackageUseCase(uow, container.providers).execute(
+            AnchorEvidencePackageCommand(
+                evidence_package_id=ensure_uuid(args.package_id),
+                network_code=args.network_code,
+            )
+        )
+        _print_json(_anchor_payload(result))
+    return 0
+
+
+def cmd_query_anchor(args: argparse.Namespace) -> int:
+    container = ServiceContainer()
+    init_database(container.settings)
+    with container.unit_of_work() as uow:
+        result = QueryAnchoredEvidenceUseCase(uow, container.providers).execute(
+            QueryAnchoredEvidenceCommand(
+                evidence_package_id=ensure_uuid(args.package_id),
+                network_code=args.network_code,
+            )
+        )
+        _print_json(result)
+    return 0
+
+
+def cmd_verify_anchor(args: argparse.Namespace) -> int:
+    container = ServiceContainer()
+    init_database(container.settings)
+    with container.unit_of_work() as uow:
+        result = VerifyAnchoredEvidenceUseCase(uow, container.providers).execute(
+            VerifyAnchoredEvidenceCommand(
+                evidence_package_id=ensure_uuid(args.package_id),
+                network_code=args.network_code,
+            )
+        )
+        _print_json(
+            {
+                "evidence_package_id": str(result.evidence_package_id),
+                "offchain_valid": result.offchain_valid,
+                "onchain_found": result.onchain_found,
+                "package_hash_match": result.package_hash_match,
+                "merkle_root_match": result.merkle_root_match,
+                "network_match": result.network_match,
+                "contract_match": result.contract_match,
+                "overall_valid": result.overall_valid,
+                "details": result.details,
             }
         )
     return 0
@@ -163,6 +247,23 @@ def build_parser() -> argparse.ArgumentParser:
     simulate.add_argument("--package-id", required=True)
     simulate.add_argument("--network-code", default="local_simulated")
     simulate.set_defaults(func=cmd_simulate_anchoring)
+
+    anchor = subparsers.add_parser("anchor-package", help="Anchor evidence package on selected network")
+    anchor.add_argument("--package-id", required=True)
+    anchor.add_argument("--network-code", default="local_simulated")
+    anchor.set_defaults(func=cmd_anchor_package)
+
+    query = subparsers.add_parser("query-anchor", help="Query on-chain anchored evidence")
+    query.add_argument("--package-id", required=True)
+    query.add_argument("--network-code", required=True)
+    query.set_defaults(func=cmd_query_anchor)
+
+    verify_anchor = subparsers.add_parser(
+        "verify-anchor", help="Verify off-chain + on-chain evidence"
+    )
+    verify_anchor.add_argument("--package-id", required=True)
+    verify_anchor.add_argument("--network-code", required=True)
+    verify_anchor.set_defaults(func=cmd_verify_anchor)
 
     verify = subparsers.add_parser("verify-package", help="Verify evidence package integrity")
     verify.add_argument("--package-id", required=True)

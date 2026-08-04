@@ -326,10 +326,11 @@ def build_canonical_variables_snapshot(cycle: dict) -> list[dict]:
 
     merged = _merge_by_priority([from_projection, from_normalized])
     for v in merged:
+        # Nunca rotular como ontology se não veio de leitura OWL
         if v.get("origin") == "canonical_projection":
-            v["origin"] = "ontology"
+            v["origin"] = "canonical_projection"
         elif v.get("origin") == "normalized_fallback":
-            v["origin"] = "ontology"
+            v["origin"] = "normalized_fallback"
     return merged
 
 

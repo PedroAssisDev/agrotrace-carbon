@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from typing import Any
 
 from services.blockchain_view_service import is_blockchain_unlocked
+from utils.pipeline_logging import ids_from_cycle, log_decision
+
+logger = logging.getLogger("agrotrace.cycle_status")
 
 
 @dataclass(frozen=True)
@@ -200,4 +204,10 @@ def mark_pending_approval(cycle: dict) -> dict:
     cycle.setdefault("provenance_events", []).append(evt)
 
     save_cycle(cycle)
+    log_decision(
+        logger,
+        "mark_pending_approval",
+        **ids_from_cycle(cycle),
+        status=cycle.get("current_status"),
+    )
     return cycle

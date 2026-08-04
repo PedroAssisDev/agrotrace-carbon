@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS blockchain_transaction (
     anchored_at TEXT,
     request_payload_json TEXT,
     response_payload_json TEXT,
+    idempotency_key TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     FOREIGN KEY (evidence_package_id) REFERENCES evidence_package(evidence_package_id),
@@ -107,6 +108,9 @@ CREATE TABLE IF NOT EXISTS blockchain_transaction (
 );
 
 CREATE INDEX IF NOT EXISTS ix_blockchain_transaction_package ON blockchain_transaction(evidence_package_id);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_blockchain_transaction_idempotency
+    ON blockchain_transaction(idempotency_key)
+    WHERE idempotency_key IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS anchoring_attempt (
     anchoring_attempt_id TEXT PRIMARY KEY,

@@ -119,6 +119,7 @@ class BlockchainTransactionModel(Base):
     anchored_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     request_payload_json: Mapped[str | None] = mapped_column(Text)
     response_payload_json: Mapped[str | None] = mapped_column(Text)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 

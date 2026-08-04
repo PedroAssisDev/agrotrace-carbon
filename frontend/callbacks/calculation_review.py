@@ -19,6 +19,7 @@ from services.calculation_review_service import ensure_calculation_review, get_r
 from services.page_context import resolve_page_context
 from utils.cycle_helpers import cycle_store_summary, ensure_full_cycle
 from utils.file_helpers import save_cycle
+from utils.pipeline_logging import ids_from_cycle, log_decision, timed_op
 
 logger = logging.getLogger("agrotrace.calculation_review")
 
@@ -299,8 +300,22 @@ def finalize_cb(n, reviewer, justification, cycle_data, global_filter, context_c
     cycle = _working_cycle(cycle_data, global_filter, context_cycle_id, approval_cycle_id)
     if not cycle.get("cycle_id"):
         return no_update, "Ciclo não encontrado."
+    log_decision(
+        logger,
+        "finalize_start",
+        **ids_from_cycle(cycle),
+        reviewer=reviewer or "Revisor",
+    )
     try:
-        cycle = finalize_file_approval(cycle, reviewer=reviewer or "Revisor", justification=justification or "")
+        with timed_op() as timer:
+            cycle = finalize_file_approval(cycle, reviewer=reviewer or "Revisor", justification=justification or "")
+            log_decision(
+                logger,
+                "finalize_done",
+                **ids_from_cycle(cycle),
+                status=cycle.get("current_status"),
+                duration_ms=timer.duration_ms,
+            )
         return _save_and_return(cycle), "Aprovação final concluída. Publicação e blockchain iniciados."
     except Exception as exc:
         logger.exception("Erro ao finalizar aprovação: %s", exc)

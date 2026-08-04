@@ -75,18 +75,24 @@ def test_auto_after_approval() -> list[str]:
         errors.append("Merkle Root ausente após evidência")
     if not _has_event(events, "CALCULATION_APPROVED"):
         errors.append("evento ausente: CALCULATION_APPROVED")
-    if not _has_event(events, "FINAL_ONTOLOGY_PUBLISHED"):
-        errors.append("evento ausente: FINAL_ONTOLOGY_PUBLISHED")
+    if not _has_event(events, "APPROVED_RESULT_PUBLISHED") and not _has_event(events, "FINAL_ONTOLOGY_PUBLISHED"):
+        errors.append("evento ausente: APPROVED_RESULT_PUBLISHED")
+    if not cycle.get("publication", {}).get("publication_hash"):
+        errors.append("publication_hash ausente no manifesto")
     if not _has_event(events, "EVIDENCE_PACKAGE_CREATED"):
         errors.append("evento ausente: EVIDENCE_PACKAGE_CREATED")
     if not _has_event(events, "PROVENANCE_CHAIN_VERIFIED"):
         errors.append("evento ausente: PROVENANCE_CHAIN_VERIFIED")
 
-    if _has_event(events, "FINAL_ONTOLOGY_PUBLISHED") and _has_event(events, "EVIDENCE_PACKAGE_CREATED"):
-        idx_pub = next(i for i, e in enumerate(events) if e in ("FINAL_ONTOLOGY_PUBLISHED",) or canonical_event_type(e) == "FINAL_ONTOLOGY_PUBLISHED")
+    if _has_event(events, "APPROVED_RESULT_PUBLISHED") or _has_event(events, "FINAL_ONTOLOGY_PUBLISHED"):
+        idx_pub = next(
+            i for i, e in enumerate(events)
+            if e in ("APPROVED_RESULT_PUBLISHED", "FINAL_ONTOLOGY_PUBLISHED")
+            or canonical_event_type(e) in ("APPROVED_RESULT_PUBLISHED", "FINAL_ONTOLOGY_PUBLISHED")
+        )
         idx_ev = next(i for i, e in enumerate(events) if "EVIDENCE" in (e or ""))
         if idx_ev < idx_pub:
-            errors.append("EVIDENCE_PACKAGE_CREATED antes de FINAL_ONTOLOGY_PUBLISHED")
+            errors.append("EVIDENCE_PACKAGE_CREATED antes da publicação")
 
     return errors
 

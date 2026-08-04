@@ -1,0 +1,30 @@
+# Adapte os namespaces e os predicados à ontologia do projeto.
+# Os aliases SELECT devem permanecer com estes nomes canônicos.
+
+PREFIX ex: <http://example.org/carbonseco#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT
+  ?property_id
+  ?period
+  ?granularity
+  ?lactating_cows
+  ?milk_production_liters
+  ?total_ghg_emissions_tco2e
+  ?approval_status
+  ?publication_status
+WHERE {
+  ?result a ex:ApprovedResult ;
+          ex:propertyId ?property_id ;
+          ex:period ?period ;
+          ex:granularity ?granularity ;
+          ex:lactatingCows ?lactating_cows ;
+          ex:milkProductionLiters ?milk_production_liters ;
+          ex:totalGhgEmissionsTco2e ?total_ghg_emissions_tco2e ;
+          ex:approvalStatus ?approval_status ;
+          ex:publicationStatus ?publication_status .
+
+  FILTER(LCASE(STR(?approval_status)) = "approved")
+  FILTER(LCASE(STR(?publication_status)) = "published")
+}
+ORDER BY ?property_id ?period

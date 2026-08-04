@@ -100,6 +100,14 @@ class BlockchainTransactionRepositoryPort(ABC):
     def get_latest_for_package(self, evidence_package_id: UUID) -> BlockchainTransaction | None:
         raise NotImplementedError
 
+    @abstractmethod
+    def get_by_idempotency_key(self, idempotency_key: str) -> BlockchainTransaction | None:
+        raise NotImplementedError
+
+    def update(self, entity: BlockchainTransaction) -> None:
+        """Optional update for receipt recovery; default no-op for compatibility."""
+        raise NotImplementedError
+
 
 class AnchoringAttemptRepositoryPort(ABC):
     @abstractmethod
@@ -123,6 +131,10 @@ class VerificationLogRepositoryPort(ABC):
     @abstractmethod
     def add(self, entity: VerificationLog) -> None:
         raise NotImplementedError
+
+    def list_by_package(self, evidence_package_id: UUID) -> list[VerificationLog]:
+        """Optional listing for verification/audit; default empty."""
+        return []
 
 
 class AuditLogRepositoryPort(ABC):

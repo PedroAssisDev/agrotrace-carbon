@@ -27,6 +27,24 @@ class SimulateAnchoringCommand:
 
 
 @dataclass(frozen=True, slots=True)
+class AnchorEvidencePackageCommand:
+    evidence_package_id: UUID
+    network_code: str = "local_simulated"
+
+
+@dataclass(frozen=True, slots=True)
+class QueryAnchoredEvidenceCommand:
+    evidence_package_id: UUID
+    network_code: str
+
+
+@dataclass(frozen=True, slots=True)
+class VerifyAnchoredEvidenceCommand:
+    evidence_package_id: UUID
+    network_code: str
+
+
+@dataclass(frozen=True, slots=True)
 class VerifyEvidencePackageCommand:
     evidence_package_id: UUID
 

@@ -303,21 +303,26 @@ class SqlAlchemyBlockchainNetworkRepository(BlockchainNetworkRepositoryPort):
         )
 
     def ensure_default_networks(self) -> None:
-        existing = self.get_by_code("local_simulated")
-        if existing:
-            return
         now = utcnow()
-        self._session.add(
-            BlockchainNetworkModel(
-                network_id=str(new_id()),
-                network_code="local_simulated",
-                network_name="Local Simulated Network",
-                provider_type="simulated",
-                chain_id=None,
-                is_active=True,
-                created_at=now,
+        defaults = [
+            ("local_simulated", "Local Simulated Network", "simulated", None, True),
+            ("anvil_local", "Anvil Local EVM", "evm", "31337", True),
+            ("ethereum_sepolia", "Ethereum Sepolia", "evm", "11155111", True),
+        ]
+        for code, name, provider_type, chain_id, is_active in defaults:
+            if self.get_by_code(code):
+                continue
+            self._session.add(
+                BlockchainNetworkModel(
+                    network_id=str(new_id()),
+                    network_code=code,
+                    network_name=name,
+                    provider_type=provider_type,
+                    chain_id=chain_id,
+                    is_active=is_active,
+                    created_at=now,
+                )
             )
-        )
 
 
 class SqlAlchemyBlockchainTransactionRepository(BlockchainTransactionRepositoryPort):
@@ -337,20 +342,13 @@ class SqlAlchemyBlockchainTransactionRepository(BlockchainTransactionRepositoryP
                 anchored_at=entity.anchored_at,
                 request_payload_json=entity.request_payload_json,
                 response_payload_json=entity.response_payload_json,
+                idempotency_key=entity.idempotency_key,
                 created_at=entity.created_at,
                 updated_at=entity.updated_at,
             )
         )
 
-    def get_latest_for_package(self, evidence_package_id: UUID) -> BlockchainTransaction | None:
-        model = (
-            self._session.query(BlockchainTransactionModel)
-            .filter(BlockchainTransactionModel.evidence_package_id == str(evidence_package_id))
-            .order_by(BlockchainTransactionModel.created_at.desc())
-            .first()
-        )
-        if model is None:
-            return None
+    def _to_entity(self, model: BlockchainTransactionModel) -> BlockchainTransaction:
         return BlockchainTransaction(
             blockchain_transaction_id=UUID(model.blockchain_transaction_id),
             evidence_package_id=UUID(model.evidence_package_id),
@@ -364,7 +362,43 @@ class SqlAlchemyBlockchainTransactionRepository(BlockchainTransactionRepositoryP
             response_payload_json=model.response_payload_json,
             created_at=model.created_at,
             updated_at=model.updated_at,
+            idempotency_key=getattr(model, "idempotency_key", None),
         )
+
+    def get_latest_for_package(self, evidence_package_id: UUID) -> BlockchainTransaction | None:
+        model = (
+            self._session.query(BlockchainTransactionModel)
+            .filter(BlockchainTransactionModel.evidence_package_id == str(evidence_package_id))
+            .order_by(BlockchainTransactionModel.created_at.desc())
+            .first()
+        )
+        if model is None:
+            return None
+        return self._to_entity(model)
+
+    def get_by_idempotency_key(self, idempotency_key: str) -> BlockchainTransaction | None:
+        model = (
+            self._session.query(BlockchainTransactionModel)
+            .filter(BlockchainTransactionModel.idempotency_key == idempotency_key)
+            .one_or_none()
+        )
+        if model is None:
+            return None
+        return self._to_entity(model)
+
+    def update(self, entity: BlockchainTransaction) -> None:
+        model = self._session.get(
+            BlockchainTransactionModel, str(entity.blockchain_transaction_id)
+        )
+        if model is None:
+            raise KeyError(entity.blockchain_transaction_id)
+        model.anchoring_status = entity.anchoring_status
+        model.transaction_hash = entity.transaction_hash
+        model.block_number = entity.block_number
+        model.anchored_at = entity.anchored_at
+        model.response_payload_json = entity.response_payload_json
+        model.idempotency_key = entity.idempotency_key
+        model.updated_at = entity.updated_at
 
 
 class SqlAlchemyAnchoringAttemptRepository(AnchoringAttemptRepositoryPort):
@@ -389,7 +423,10 @@ class SqlAlchemyAnchoringAttemptRepository(AnchoringAttemptRepositoryPort):
     def update(self, entity: AnchoringAttempt) -> None:
         model = self._session.get(AnchoringAttemptModel, str(entity.anchoring_attempt_id))
         if model is None:
-            raise KeyError(entity.anchoring_attempt_id)
+            # Defense-in-depth: if add() was not flushed, recreate instead of KeyError
+            # after a successful on-chain submit.
+            self.add(entity)
+            return
         model.status = entity.status
         model.error_code = entity.error_code
         model.error_message = entity.error_message
@@ -429,6 +466,27 @@ class SqlAlchemyVerificationLogRepository(VerificationLogRepositoryPort):
                 details_json=entity.details_json,
             )
         )
+
+    def list_by_package(self, evidence_package_id: UUID) -> list[VerificationLog]:
+        rows = (
+            self._session.query(VerificationLogModel)
+            .filter(VerificationLogModel.evidence_package_id == str(evidence_package_id))
+            .order_by(VerificationLogModel.verified_at.asc())
+            .all()
+        )
+        return [
+            VerificationLog(
+                verification_log_id=UUID(row.verification_log_id),
+                evidence_package_id=UUID(row.evidence_package_id),
+                verification_type=row.verification_type,
+                expected_hash=row.expected_hash,
+                computed_hash=row.computed_hash,
+                is_valid=row.is_valid,
+                verified_at=row.verified_at,
+                details_json=row.details_json,
+            )
+            for row in rows
+        ]
 
 
 class SqlAlchemyAuditLogRepository(AuditLogRepositoryPort):

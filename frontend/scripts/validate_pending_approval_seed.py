@@ -62,7 +62,7 @@ def main() -> int:
         for cid in SAMPLE_CYCLE_IDS
         if cid in by_id
     }
-    v.check("três fazendas distintas", len(property_ids) == 3, str(property_ids))
+    v.check("duas fazendas distintas (mensal+anual)", len(property_ids) == 2, str(property_ids))
 
     granularities = {infer_granularity(by_id[cid]) for cid in SAMPLE_CYCLE_IDS if cid in by_id}
     v.check(
@@ -71,20 +71,21 @@ def main() -> int:
         str(granularities),
     )
 
-    daily_cycle = by_id.get("MONTHLY-2026-01-FARM-DAILY-001")
-    if daily_cycle:
-        coverage = daily_cycle.get("temporal_coverage") or {}
-        v.check(
-            "diario consolidado mensal",
-            coverage.get("source_granularity") == "daily"
-            and coverage.get("granularity") == "monthly",
-            str(coverage),
-        )
-        v.check(
-            "janeiro com 31 entradas diarias",
-            len(daily_cycle.get("data_entries") or []) == 31,
-            str(len(daily_cycle.get("data_entries") or [])),
-        )
+    # Diário desativado temporariamente.
+    # daily_cycle = by_id.get("MONTHLY-2026-01-FARM-DAILY-001")
+    # if daily_cycle:
+    #     coverage = daily_cycle.get("temporal_coverage") or {}
+    #     v.check(
+    #         "diario consolidado mensal",
+    #         coverage.get("source_granularity") == "daily"
+    #         and coverage.get("granularity") == "monthly",
+    #         str(coverage),
+    #     )
+    #     v.check(
+    #         "janeiro com 31 entradas diarias",
+    #         len(daily_cycle.get("data_entries") or []) == 31,
+    #         str(len(daily_cycle.get("data_entries") or [])),
+    #     )
 
     validate_seed_collection(cycles, v.errors)
 
@@ -127,7 +128,7 @@ def main() -> int:
 
     v.check(
         "total de entradas esperado",
-        EXPECTED_ENTRY_COUNT == 198,
+        EXPECTED_ENTRY_COUNT == 17,
         str(EXPECTED_ENTRY_COUNT),
     )
 

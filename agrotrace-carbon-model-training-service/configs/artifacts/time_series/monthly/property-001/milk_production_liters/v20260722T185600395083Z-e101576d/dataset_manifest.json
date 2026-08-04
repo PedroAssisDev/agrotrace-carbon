@@ -1,0 +1,12 @@
+{
+  "sha256": "e101576d9908ef812854b4d46582f5d76475f69b751e51f2371d767c25c87de1",
+  "row_count": 18,
+  "columns": [
+    "property_id",
+    "period",
+    "milk_production_liters"
+  ],
+  "property_count": 1,
+  "period_start": "2024-01-01T00:00:00",
+  "period_end": "2025-06-01T00:00:00"
+}

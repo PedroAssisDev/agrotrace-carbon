@@ -236,6 +236,7 @@ def build_dashboard_indicators(
     temporal: TemporalModel | None = None,
 ) -> dict:
     from utils.global_filter import filter_cycles_by_data_mode, normalize_view_granularity
+    from services.ontology_query_adapter import get_indicators_for_cycles
 
     all_in_scope = list(cycles)
     data_mode = normalize_data_mode(global_filter.get("data_mode"))
@@ -245,13 +246,63 @@ def build_dashboard_indicators(
     temporal = temporal or (
         build_temporal_model(cycles, active_cycle, view_gr, data_mode=data_mode) if cycles else None
     )
-    series = chart_period_series(temporal, cycles)
-    operational = [p.to_dict() for p in temporal.operational_daily_series] if temporal else []
-    emissions = aggregate_emissions(cycles)
-    delta = filter_range_delta(series, all_cycles, global_filter)
-    from services.emission_timeseries_service import build_emission_timeseries
 
-    emission_ts = build_emission_timeseries(cycles, temporal)
+    onto_ind = get_indicators_for_cycles(cycles) if cycles else {
+        "source": "ontology",
+        "co2e_total_kg": None,
+        "milk_liters": None,
+        "intensity": None,
+        "animals": None,
+        "by_source": {},
+        "by_gas": {},
+        "timeseries": {"labels": [], "co2e_kg": [], "intensity": [], "milk_liters": [], "has_multi_point": False},
+        "cycle_count": 0,
+        "summaries": [],
+    }
+
+    series = chart_period_series(temporal, cycles)
+    ts = onto_ind.get("timeseries") or {}
+    if ts.get("labels") and any(v is not None for v in (ts.get("co2e_kg") or [])):
+        series = []
+        for i, label in enumerate(ts["labels"]):
+            series.append({
+                "period_label": label,
+                "period_key": label,
+                "co2e_kg": (ts.get("co2e_kg") or [None])[i] if i < len(ts.get("co2e_kg") or []) else None,
+                "milk_liters": (ts.get("milk_liters") or [None])[i] if i < len(ts.get("milk_liters") or []) else None,
+                "intensity": (ts.get("intensity") or [None])[i] if i < len(ts.get("intensity") or []) else None,
+            })
+
+    operational = [p.to_dict() for p in temporal.operational_daily_series] if temporal else []
+    emissions = {
+        **aggregate_emissions(cycles),
+        "co2e_total_kg": onto_ind.get("co2e_total_kg") if onto_ind.get("co2e_total_kg") is not None else aggregate_emissions(cycles).get("co2e_total_kg"),
+        "by_source": onto_ind.get("by_source") or aggregate_emissions(cycles).get("by_source") or {},
+        "by_gas": onto_ind.get("by_gas") or aggregate_emissions(cycles).get("by_gas") or {},
+    }
+    # Prefer ontologia; se vazia (ciclos ainda não migrados), aggregate_emissions como bootstrap transitório
+    if onto_ind.get("by_source"):
+        emissions["by_source"] = onto_ind["by_source"]
+        emissions["co2e_total_kg"] = onto_ind.get("co2e_total_kg")
+        emissions["by_gas"] = onto_ind.get("by_gas") or {}
+        emissions["ch4_total_kg"] = emissions["by_gas"].get("CH4", 0)
+        emissions["n2o_total_kg"] = emissions["by_gas"].get("N2O", 0)
+        emissions["co2_total_kg"] = emissions["by_gas"].get("CO2", 0)
+
+    delta = filter_range_delta(series, all_cycles, global_filter)
+    emission_ts = {
+        **(onto_ind.get("timeseries") or {}),
+        "by_source": {},
+        "has_multi_point": bool((onto_ind.get("timeseries") or {}).get("has_multi_point")),
+        "source": "ontology",
+    }
+    for s in onto_ind.get("summaries") or []:
+        for src, val in (s.get("by_source") or {}).items():
+            emission_ts.setdefault("by_source", {}).setdefault(src, []).append(float(val))
+    if not emission_ts.get("by_source"):
+        from services.emission_timeseries_service import build_emission_timeseries
+        emission_ts = build_emission_timeseries(cycles, temporal)
+
     delta_by_source = source_delta_by_range(
         emission_ts.get("by_source") or {},
         source_names=list(emissions["by_source"].keys()),
@@ -260,9 +311,14 @@ def build_dashboard_indicators(
     audit = audit_counts(cycles, provenance_events)
     quality = data_quality_block(cycles, lambda c: period_series(c, temporal))
 
-    total_milk = sum(r["milk_liters"] for r in series if r.get("milk_liters") is not None)
+    total_milk = onto_ind.get("milk_liters")
+    if total_milk is None:
+        total_milk = sum(r["milk_liters"] for r in series if r.get("milk_liters") is not None)
     milk_values = [r["milk_liters"] for r in series if r.get("milk_liters") is not None]
-    total_animals, animals_mode = aggregate_animals_representative(cycles)
+    total_animals = onto_ind.get("animals")
+    animals_mode = "ontology" if total_animals is not None else "legacy"
+    if total_animals is None:
+        total_animals, animals_mode = aggregate_animals_representative(cycles)
     days_in_period, days_mode = estimate_days_in_period(cycles, series)
 
     intensities = [r["intensity"] for r in series if r.get("intensity") is not None]
@@ -278,9 +334,12 @@ def build_dashboard_indicators(
 
     main_source = max(emissions["by_source"], key=emissions["by_source"].get) if emissions["by_source"] else _NA
     co2e_total = emissions["co2e_total_kg"]
-    intensity_consolidated = (
-        round(co2e_total / total_milk, 4) if co2e_total and milk_values and total_milk else _NA
-    )
+    # Intensidade oficial: preferir valor ontológico consolidado (já persistido), sem recalcular como fonte
+    intensity_consolidated = onto_ind.get("intensity")
+    if intensity_consolidated is None:
+        intensity_consolidated = (
+            round(co2e_total / total_milk, 4) if co2e_total and milk_values and total_milk else _NA
+        )
 
     bio_pct = None
     energy_pct = None

@@ -53,6 +53,7 @@ def _register_farms_from_manifest(manifest: dict[str, Any]) -> None:
     for farm in manifest.get("farms", []):
         register_farm(
             farm["name"],
+            property_id=farm.get("property_id"),
             municipality=farm.get("municipality", ""),
             state=farm.get("state", ""),
             production_type=farm.get("production_type"),

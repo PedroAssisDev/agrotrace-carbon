@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-07-31T15:04:57.330540+00:00",
+  "status": "PASSOU",
+  "RPC sanitizado": "https://eth-sepolia.g.alchemy.com/v2/********",
+  "Conectado": true,
+  "Client version": "reth/v1.10.2-8e3b5e6/x86_64-unknown-linux-gnu",
+  "Chain ID": 11155111,
+  "Bloco atual": 11390167,
+  "Timestamp do bloco mais recente": 1785510288
+}

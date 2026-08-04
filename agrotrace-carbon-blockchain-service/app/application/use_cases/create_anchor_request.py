@@ -7,7 +7,8 @@ from app.domain.value_objects.statuses import AnchorRequestStatus
 from app.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
 from app.infrastructure.logging.audit_logger import AuditLogger
 from app.shared.clock import utcnow
-from app.shared.constants import ELIGIBLE_ANCHOR_EVENT_TYPES, EVENT_TO_REQUEST_SCOPE
+from app.domain.services.final_publication_gate import require_final_publication_event
+from app.shared.constants import EVENT_TO_REQUEST_SCOPE
 from app.shared.exceptions import NotFoundError
 from app.shared.ids import new_id
 
@@ -30,8 +31,7 @@ class CreateAnchorRequestUseCase:
         event = self._event_reader.get_event_by_id(command.source_event_id)
         if event is None:
             raise NotFoundError(f"Event not found: {command.source_event_id}")
-        if event.event_type not in ELIGIBLE_ANCHOR_EVENT_TYPES:
-            raise ValueError(f"Event type not eligible: {event.event_type}")
+        require_final_publication_event(event.event_type, context="create_anchor_request")
 
         now = utcnow()
         request = AnchorRequest(

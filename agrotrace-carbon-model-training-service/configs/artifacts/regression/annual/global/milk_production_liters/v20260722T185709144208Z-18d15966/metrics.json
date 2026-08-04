@@ -1,0 +1,60 @@
+{
+  "selected": {
+    "mae": 346.5288818230013,
+    "rmse": 382.7897943658426,
+    "r2": 0.999867454801438,
+    "mape": 0.097189056044067
+  },
+  "candidates": [
+    {
+      "candidate": "mean_per_cow_baseline",
+      "status": "success",
+      "cv_mae": 470.5637196950386,
+      "best_params": {}
+    },
+    {
+      "candidate": "linear_regression",
+      "status": "success",
+      "cv_mae": 346.5288818230013,
+      "best_params": {}
+    },
+    {
+      "candidate": "ridge",
+      "status": "success",
+      "cv_mae": 518.2895719980152,
+      "best_params": {
+        "alpha": 0.1
+      }
+    },
+    {
+      "candidate": "svr",
+      "status": "success",
+      "cv_mae": 38806.948595654474,
+      "best_params": {
+        "C": 10.0,
+        "epsilon": 0.1,
+        "kernel": "linear"
+      }
+    },
+    {
+      "candidate": "gradient_boosting",
+      "status": "success",
+      "cv_mae": 7635.918140852275,
+      "best_params": {
+        "learning_rate": 0.1,
+        "max_depth": 2,
+        "n_estimators": 50
+      }
+    },
+    {
+      "candidate": "random_forest",
+      "status": "success",
+      "cv_mae": 9967.430555555555,
+      "best_params": {
+        "max_depth": null,
+        "min_samples_leaf": 1,
+        "n_estimators": 50
+      }
+    }
+  ]
+}

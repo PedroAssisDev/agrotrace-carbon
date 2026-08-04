@@ -1,0 +1,213 @@
+"""Previsoes de producao e emissoes — gestao de modelos + inferencia."""
+
+from __future__ import annotations
+
+import dash_bootstrap_components as dbc
+from dash import dcc, html
+
+from components.agro_tabs import AgroTabs
+from components.cards import AlertBox, SectionHeader
+from components.empty_state import EmptyFilterState
+from components.page_header import PageHeader
+from services import model_training_adapter as mta
+from services.model_training_view_service import (
+    build_action_bar,
+    build_custom_panel,
+    build_history_table,
+    build_model_cards,
+    build_models_header,
+    build_retrain_modal,
+    build_run_panel,
+    infer_cta_for_family,
+)
+from services.page_context import resolve_page_context
+from utils.global_filter import get_farm_id
+
+_PAGE_TITLE = "Previsoes de Producao e Emissoes"
+_PAGE_SUBTITLE = (
+    "Gestao dinamica de modelos, cenarios por rebanho (regressao global) e "
+    "projecao historica mensal por propriedade."
+)
+
+
+def layout(
+    cycle: dict,
+    global_filter: dict | None = None,
+    filter_options: dict | None = None,
+    context_cycle_id: str | None = None,
+) -> html.Div:
+    ctx = resolve_page_context(cycle, global_filter, context_cycle_id)
+    gf = ctx.global_filter
+    farm_id = get_farm_id(gf) or ctx.farm_id
+
+    if ctx.no_farm_selected or not farm_id:
+        return html.Div(
+            [
+                PageHeader(_PAGE_TITLE, _PAGE_SUBTITLE, gf, filter_options),
+                EmptyFilterState(no_farm=True),
+            ],
+            className="page-forecasts page-content-inner",
+        )
+
+    property_label = ctx.farm_name or farm_id
+    report = mta.get_model_availability(farm_id)
+    history = mta.list_training_runs(farm_id)
+    active_runs = report.get("active_training_runs") or []
+    current_run = active_runs[0] if active_runs else (history[0] if history else None)
+
+    models_tab = dbc.Tab(
+        _models_panel(report, property_label, farm_id, history, current_run),
+        label="Modelos",
+        tab_id="fc-tab-models",
+    )
+    regression_tab = dbc.Tab(
+        _regression_panel(report),
+        label="Cenario por rebanho",
+        tab_id="fc-tab-regression",
+    )
+    timeseries_tab = dbc.Tab(
+        _timeseries_panel(report),
+        label="Projecao historica",
+        tab_id="fc-tab-timeseries",
+    )
+
+    return html.Div(
+        [
+            PageHeader(_PAGE_TITLE, _PAGE_SUBTITLE, gf, filter_options, cycle=ctx.active_cycle),
+            dcc.Store(id="fc-models-refresh", data=0),
+            dcc.Interval(id="fc-training-poll", interval=2000, n_intervals=0, disabled=not bool(active_runs)),
+            AgroTabs(
+                [models_tab, regression_tab, timeseries_tab],
+                id="fc-tabs",
+                active_tab="fc-tab-models",
+            ),
+            build_retrain_modal(),
+        ],
+        className="page-forecasts page-content-inner",
+    )
+
+
+def _models_panel(report, property_label, farm_id, history, current_run) -> html.Div:
+    return html.Div(
+        [
+            html.Div(id="fc-models-header", children=build_models_header(report, property_label)),
+            html.Div(id="fc-model-cards", children=build_model_cards(report)),
+            html.Div(id="fc-action-bar", children=build_action_bar(report)),
+            build_custom_panel(report, farm_id),
+            html.Div(id="fc-run-panel-wrap", children=build_run_panel(current_run)),
+            html.Div(id="fc-history-wrap", children=build_history_table(history)),
+        ],
+        className="pt-3",
+    )
+
+
+def _regression_panel(report: dict) -> html.Div:
+    models = [m for m in (report.get("models") or []) if m.get("family") == "regression"]
+    has_any = any(m.get("status") in {"available", "stale"} for m in models)
+    training = any(m.get("status") == "training" for m in models)
+
+    return html.Div(
+        [
+            SectionHeader(
+                "Cenario por rebanho",
+                "Informe a quantidade esperada de vacas em lactacao. O modelo global "
+                "estima producao e emissoes para o proximo periodo (mes ou ano).",
+            ),
+            html.Div(id="fc-regression-cta", children=infer_cta_for_family(report, "regression")),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.Label("Granularidade", className="form-label small mb-1"),
+                            dcc.Dropdown(
+                                id="fc-regression-granularity",
+                                options=[
+                                    {"label": "Mensal", "value": "monthly"},
+                                    {"label": "Anual", "value": "annual"},
+                                ],
+                                value="monthly",
+                                clearable=False,
+                                className="mb-2",
+                            ),
+                        ],
+                        md=3,
+                    ),
+                    dbc.Col(
+                        [
+                            html.Label(
+                                id="fc-cows-label",
+                                children="Vacas em lactacao esperadas (proximo mes)",
+                                className="form-label small mb-1",
+                            ),
+                            dbc.Input(
+                                id="fc-expected-cows",
+                                type="number",
+                                min=0,
+                                step=1,
+                                placeholder="Ex.: 120",
+                                className="mb-2",
+                                disabled=training,
+                            ),
+                        ],
+                        md=4,
+                    ),
+                    dbc.Col(
+                        [
+                            html.Label("\u00a0", className="form-label small mb-1 d-block"),
+                            dbc.Button(
+                                "Calcular previsao",
+                                id="fc-regression-run",
+                                color="success",
+                                className="w-100",
+                                disabled=not has_any or training,
+                            ),
+                        ],
+                        md=3,
+                    ),
+                ],
+                className="g-2 align-items-end mb-3",
+            ),
+            html.Div(id="fc-regression-feedback"),
+            html.Div(id="fc-regression-kpis"),
+            html.Div(id="fc-regression-charts"),
+            html.Div(id="fc-regression-details"),
+        ],
+        className="pt-3",
+    )
+
+
+def _timeseries_panel(report: dict) -> html.Div:
+    models = [m for m in (report.get("models") or []) if m.get("family") == "time_series"]
+    has_any = any(m.get("status") in {"available", "stale"} for m in models)
+    training = any(m.get("status") == "training" for m in models)
+    summary = report.get("data_summary") or {}
+
+    notice_extra = html.Small(
+        f"Registros mensais da propriedade: {summary.get('property_monthly_records', 0)} "
+        f"(minimo {summary.get('min_ts_records', 12)}).",
+        className="text-aux d-block mb-2",
+    )
+
+    return html.Div(
+        [
+            SectionHeader(
+                "Projecao historica",
+                "Gera a projecao dos proximos 3 meses com base na serie temporal mensal "
+                "da propriedade — sem variaveis exogenas nem entrada de vacas.",
+            ),
+            notice_extra,
+            html.Div(id="fc-timeseries-cta", children=infer_cta_for_family(report, "time_series")),
+            dbc.Button(
+                "Gerar projecao",
+                id="fc-timeseries-run",
+                color="success",
+                className="mb-3",
+                disabled=not has_any or training,
+            ),
+            html.Div(id="fc-timeseries-feedback"),
+            html.Div(id="fc-timeseries-table"),
+            html.Div(id="fc-timeseries-charts"),
+            html.Div(id="fc-timeseries-details"),
+        ],
+        className="pt-3",
+    )

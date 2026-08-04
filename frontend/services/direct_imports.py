@@ -38,7 +38,21 @@ except Exception as exc:
 
 # ── Ontologia ─────────────────────────────────────────────────────────────────
 try:
-    from ontology import build_full_ontology, export_ontology, populate_from_dataframe
+    from ontology import (
+        build_full_ontology,
+        export_ontology,
+        populate_from_dataframe,
+        set_groups_status,
+        set_parameter_status,
+        upsert_emission_factor_value,
+        upsert_gwp_value,
+        upsert_emission_cycle,
+        upsert_emission_result,
+        upsert_observation,
+        upsert_property,
+        set_results_status,
+        set_cycle_status,
+    )
     from ontology.validators import validate_all
 except Exception as exc:
     logger.warning("ontology-manager indisponível: %s", exc)
@@ -46,6 +60,16 @@ except Exception as exc:
     export_ontology = None
     populate_from_dataframe = None
     validate_all = None
+    upsert_emission_factor_value = None
+    upsert_gwp_value = None
+    set_parameter_status = None
+    set_groups_status = None
+    upsert_emission_cycle = None
+    upsert_emission_result = None
+    upsert_observation = None
+    upsert_property = None
+    set_results_status = None
+    set_cycle_status = None
 
 # ── Proveniência ──────────────────────────────────────────────────────────────
 try:
@@ -106,15 +130,22 @@ except Exception as exc:
 try:
     from app.application.container import ServiceContainer, init_database
     from app.application.dto.commands import (
+        AnchorEvidencePackageCommand,
         BuildEvidencePackageCommand,
         ObserveEventsCommand,
+        QueryAnchoredEvidenceCommand,
         SimulateAnchoringCommand,
+        VerifyAnchoredEvidenceCommand,
         VerifyEvidencePackageCommand,
     )
+    from app.application.use_cases.anchor_evidence_package import AnchorEvidencePackageUseCase
     from app.application.use_cases.build_evidence_package import BuildEvidencePackageUseCase
     from app.application.use_cases.observe_provenance_events import ObserveProvenanceEventsUseCase
+    from app.application.use_cases.query_anchored_evidence import QueryAnchoredEvidenceUseCase
     from app.application.use_cases.simulate_anchoring import SimulateAnchoringUseCase
+    from app.application.use_cases.verify_anchored_evidence import VerifyAnchoredEvidenceUseCase
     from app.application.use_cases.verify_evidence_package import VerifyEvidencePackageUseCase
+    from app.domain.services.canonical_json_service import to_canonical_json
     from app.domain.services.merkle_service import build_merkle_root
     from app.domain.services.sha256_service import sha256_hex
 except Exception as exc:
@@ -124,13 +155,20 @@ except Exception as exc:
     ObserveEventsCommand = None
     BuildEvidencePackageCommand = None
     SimulateAnchoringCommand = None
+    AnchorEvidencePackageCommand = None
+    QueryAnchoredEvidenceCommand = None
+    VerifyAnchoredEvidenceCommand = None
     VerifyEvidencePackageCommand = None
     ObserveProvenanceEventsUseCase = None
     BuildEvidencePackageUseCase = None
     SimulateAnchoringUseCase = None
+    AnchorEvidencePackageUseCase = None
+    QueryAnchoredEvidenceUseCase = None
+    VerifyAnchoredEvidenceUseCase = None
     VerifyEvidencePackageUseCase = None
     sha256_hex = None
     build_merkle_root = None
+    to_canonical_json = None
 
 
 def availability() -> dict[str, bool]:

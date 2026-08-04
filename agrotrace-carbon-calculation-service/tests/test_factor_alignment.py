@@ -34,3 +34,18 @@ def test_align_enteric_strict_raises_without_proration():
             factor_temporal_basis=TemporalScope.YEARLY,
             auto_prorate=False,
         )
+
+
+def test_align_energy_intensities_not_prorated_monthly():
+    """Fatores de energia são intensidades (kg/unidade) — não dividir por 12."""
+    from emissions.factor_alignment import align_energy_factors_to_scope
+
+    yearly = {"Diesel": 2.68, "Electricity_Grid": 0.233}
+    monthly = align_energy_factors_to_scope(
+        yearly,
+        temporal_scope=TemporalScope.MONTHLY,
+        factor_temporal_basis=TemporalScope.YEARLY,
+        auto_prorate=True,
+    )
+    assert monthly["Diesel"] == pytest.approx(2.68)
+    assert monthly["Electricity_Grid"] == pytest.approx(0.233)

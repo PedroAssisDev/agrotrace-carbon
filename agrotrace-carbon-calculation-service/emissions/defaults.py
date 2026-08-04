@@ -72,6 +72,10 @@ def default_enteric_ch4_kg_per_animal_yearly() -> dict[str, float]:
     }
 
 
+# Nome canônico (annual); yearly permanece como alias de leitura/legado.
+default_enteric_ch4_kg_per_animal_annual = default_enteric_ch4_kg_per_animal_yearly
+
+
 def default_manure_kg_per_kg_bw_per_day() -> dict[str, float]:
     """kg esterco / (kg peso vivo · dia) — valores didáticos do legado."""
     return {
@@ -84,13 +88,24 @@ def default_manure_kg_per_kg_bw_per_day() -> dict[str, float]:
 
 
 def default_manure_ch4_kg_per_kg_manure() -> dict[str, float]:
-    """kg CH4 por kg de esterco — valores didáticos do legado."""
+    """
+    kg CH4 por kg de esterco úmido — defaults didáticos recalibrados.
+
+    Os valores legados (~0,10–0,20) foram definidos antes da multiplicação explícita
+    por ``days_in_period`` e implicavam ~17% da massa úmida convertida em CH4
+    (~2 700 kg CH4/vaca lactante/ano), fisicamente inviável e ~27× a entérica.
+
+    Os valores abaixo mantêm a fórmula ``n×w×md×ef×dias`` e produzem ordem de
+    grandeza compatível com IPCC Tier 1 para manejo de dejetos leiteiros
+    (~10–20 kg CH4/cabeça/ano para lactante 550 kg com md=0,08):
+    ``550 × 0,08 × 0,001 × 365 ≈ 16 kg CH4/ano``.
+    """
     return {
-        "Lactating_Cows": 0.17,
-        "Dry_Cows": 0.14,
-        "Heifers": 0.12,
-        "Calves": 0.10,
-        "Bulls": 0.20,
+        "Lactating_Cows": 0.001,
+        "Dry_Cows": 0.0008,
+        "Heifers": 0.0007,
+        "Calves": 0.0006,
+        "Bulls": 0.0012,
     }
 
 
@@ -106,6 +121,9 @@ def default_energy_co2_kg_per_unit_yearly_basis() -> dict[str, float]:
         "Electricity_Grid": 0.233,
         "Photovoltaic_Energy": 0.0,
     }
+
+
+default_energy_co2_kg_per_unit_annual_basis = default_energy_co2_kg_per_unit_yearly_basis
 
 
 def default_fertilizer_factors() -> dict[str, float]:

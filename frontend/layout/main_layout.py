@@ -34,12 +34,19 @@ def create_main_layout() -> html.Div:
             dcc.Store(id="upload-feedback-store", data=None),
             dcc.Store(id="cr-selected-item-store", data=None),
             dcc.Store(id="ta-active-tab-store", data="ta-summary"),
+            dcc.Store(id="forecast-availability-store", data=None),
+            dcc.Store(id="forecast-regression-result-store", data=None),
+            dcc.Store(id="forecast-timeseries-result-store", data=None),
+            dcc.Store(id="forecast-ui-store", data=None),
+            dcc.Store(id="model-availability-store", data=None),
+            dcc.Store(id="training-run-store", data=None),
+            dcc.Store(id="training-history-store", data=None),
             create_sidebar(),
             html.Div(
                 id="app-main",
                 className="app-main",
                 children=[
-                    create_navbar(),
+                    create_navbar(filter_options),
                     html.Div(
                         id="page-content",
                         className="page-content",

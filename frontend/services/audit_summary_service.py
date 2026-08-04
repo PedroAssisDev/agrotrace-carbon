@@ -190,6 +190,16 @@ def build_summary_cards(ctx: PageContext) -> list[dict[str, Any]]:
             action_href="/approval" if not unlocked else None,
         ),
         _card(
+            "ontology_link",
+            "Vínculo ontológico",
+            ((cycle.get("ontology") or {}).get("ontology_version") or "—")[:40],
+            (
+                f"path={(cycle.get('ontology') or {}).get('published_ontology_path') or ((cycle.get('ontology') or {}).get('export_paths') or {}).get('owl') or '—'} "
+                f"• hash={((cycle.get('ontology') or {}).get('ontology_hash') or '—')[:16]}"
+            ),
+            "ontology-manager",
+        ),
+        _card(
             "blockchain",
             "Blockchain",
             "Liberado" if unlocked else "Bloqueado",

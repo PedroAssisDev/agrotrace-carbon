@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -7,20 +8,24 @@ from uuid import uuid4
 import pytest
 
 from app.application.dto.commands import (
+    AnchorEvidencePackageCommand,
     BuildEvidencePackageCommand,
     ObserveEventsCommand,
-    SimulateAnchoringCommand,
     VerifyEvidencePackageCommand,
 )
+from app.application.use_cases.anchor_evidence_package import AnchorEvidencePackageUseCase
 from app.application.use_cases.build_evidence_package import BuildEvidencePackageUseCase
 from app.application.use_cases.observe_provenance_events import ObserveProvenanceEventsUseCase
-from app.application.use_cases.simulate_anchoring import SimulateAnchoringUseCase
 from app.application.use_cases.verify_evidence_package import VerifyEvidencePackageUseCase
+from app.domain.services.canonical_json_service import parse_canonical_json, to_canonical_json
+from app.domain.value_objects.statuses import VerificationType
+from app.infrastructure.anchoring.providers_registry import ProvidersRegistry
 from app.infrastructure.provenance.sqlite_provenance_event_reader import (
     SQLiteProvenanceDataReader,
     SQLiteProvenanceEventReader,
 )
 from app.shared.config import Settings
+from app.shared.exceptions import FinalPublicationRequiredError
 
 
 def _create_provenance_schema(db_path) -> None:
@@ -91,7 +96,7 @@ def _create_provenance_schema(db_path) -> None:
     conn.close()
 
 
-def _seed_provenance(db_path) -> str:
+def _seed_provenance(db_path, event_type: str = "FINAL_ONTOLOGY_PUBLISHED") -> str:
     event_id = str(uuid4())
     pipeline_run_id = str(uuid4())
     reporting_period_id = str(uuid4())
@@ -102,9 +107,7 @@ def _seed_provenance(db_path) -> str:
 
     conn = sqlite3.connect(db_path)
     conn.execute(
-        """
-        INSERT INTO reporting_period VALUES (?, ?, ?, ?, ?)
-        """,
+        "INSERT INTO reporting_period VALUES (?, ?, ?, ?, ?)",
         (
             reporting_period_id,
             "2026-01-01T00:00:00+00:00",
@@ -114,15 +117,8 @@ def _seed_provenance(db_path) -> str:
         ),
     )
     conn.execute(
-        """
-        INSERT INTO pipeline_pipeline_run VALUES (?, ?, ?, ?)
-        """,
-        (
-            pipeline_run_id,
-            "0xfarm",
-            "0xproject",
-            reporting_period_id,
-        ),
+        "INSERT INTO pipeline_pipeline_run VALUES (?, ?, ?, ?)",
+        (pipeline_run_id, "0xfarm", "0xproject", reporting_period_id),
     )
     conn.execute(
         "INSERT INTO calculation_calculation_method_version VALUES (?)",
@@ -133,15 +129,11 @@ def _seed_provenance(db_path) -> str:
         (parameter_set_id,),
     )
     conn.execute(
-        """
-        INSERT INTO calculation_calculation_execution VALUES (?, ?, ?)
-        """,
+        "INSERT INTO calculation_calculation_execution VALUES (?, ?, ?)",
         (execution_id, method_version_id, parameter_set_id),
     )
     conn.execute(
-        """
-        INSERT INTO calculation_calculation_result_set VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
+        "INSERT INTO calculation_calculation_result_set VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             result_set_id,
             pipeline_run_id,
@@ -151,13 +143,11 @@ def _seed_provenance(db_path) -> str:
             "direct",
             reporting_period_id,
             datetime.now(UTC).isoformat(),
-            None,
+            datetime.now(UTC).isoformat(),
         ),
     )
     conn.execute(
-        """
-        INSERT INTO audit_hash_record VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
+        "INSERT INTO audit_hash_record VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             str(uuid4()),
             "calculation_method_version",
@@ -169,9 +159,7 @@ def _seed_provenance(db_path) -> str:
         ),
     )
     conn.execute(
-        """
-        INSERT INTO audit_hash_record VALUES (?, ?, ?, ?, ?, ?, ?)
-        """,
+        "INSERT INTO audit_hash_record VALUES (?, ?, ?, ?, ?, ?, ?)",
         (
             str(uuid4()),
             "calculation_parameter_set",
@@ -194,7 +182,7 @@ def _seed_provenance(db_path) -> str:
             event_id,
             "calculation_result_set",
             result_set_id,
-            "CALCULATION_APPROVED",
+            event_type,
             "{}",
             datetime.now(UTC).isoformat(),
             "pending",
@@ -222,6 +210,29 @@ def seeded_settings(tmp_path) -> Settings:
     )
 
 
+@pytest.fixture
+def preliminary_settings(tmp_path) -> Settings:
+    provenance_db = tmp_path / "provenance.db"
+    _create_provenance_schema(provenance_db)
+    _seed_provenance(provenance_db, event_type="CALCULATION_APPROVED")
+    return Settings(
+        database_url=f"sqlite:///{tmp_path / 'blockchain.db'}",
+        provenance_database_url=str(provenance_db),
+    )
+
+
+def _build_package(settings, uow_factory):
+    uow = uow_factory(settings)
+    reader = SQLiteProvenanceEventReader(settings)
+    data_reader = SQLiteProvenanceDataReader(settings)
+    observe = ObserveProvenanceEventsUseCase(uow, reader).execute(ObserveEventsCommand(limit=10))
+    assert observe.created_request_ids, "expected final publication to create anchor request"
+    build = BuildEvidencePackageUseCase(uow, data_reader, reader).execute(
+        BuildEvidencePackageCommand(anchor_request_id=observe.created_request_ids[0])
+    )
+    return uow, build
+
+
 def test_observe_events_creates_anchor_request(seeded_settings, uow_factory) -> None:
     uow = uow_factory(seeded_settings)
     reader = SQLiteProvenanceEventReader(seeded_settings)
@@ -231,24 +242,114 @@ def test_observe_events_creates_anchor_request(seeded_settings, uow_factory) -> 
     uow.close()
 
 
-def test_end_to_end_build_simulate_verify(seeded_settings, uow_factory) -> None:
-    uow = uow_factory(seeded_settings)
-    reader = SQLiteProvenanceEventReader(seeded_settings)
-    data_reader = SQLiteProvenanceDataReader(seeded_settings)
-    observe = ObserveProvenanceEventsUseCase(uow, reader).execute(ObserveEventsCommand(limit=10))
-    request_id = observe.created_request_ids[0]
-    build = BuildEvidencePackageUseCase(uow, data_reader, reader).execute(
-        BuildEvidencePackageCommand(anchor_request_id=request_id)
-    )
-    from app.infrastructure.anchoring.providers_registry import ProvidersRegistry
+def test_calculation_approved_is_not_observed(preliminary_settings, uow_factory) -> None:
+    uow = uow_factory(preliminary_settings)
+    reader = SQLiteProvenanceEventReader(preliminary_settings)
+    result = ObserveProvenanceEventsUseCase(uow, reader).execute(ObserveEventsCommand(limit=10))
+    uow.commit()
+    assert result.created_request_ids == []
+    uow.close()
 
-    simulate = SimulateAnchoringUseCase(uow, ProvidersRegistry()).execute(
-        SimulateAnchoringCommand(evidence_package_id=build.evidence_package_id)
+
+def test_end_to_end_build_simulate_verify(seeded_settings, uow_factory) -> None:
+    uow, build = _build_package(seeded_settings, uow_factory)
+    providers = ProvidersRegistry()
+    anchor = AnchorEvidencePackageUseCase(uow, providers).execute(
+        AnchorEvidencePackageCommand(evidence_package_id=build.evidence_package_id)
     )
     verify = VerifyEvidencePackageUseCase(uow).execute(
         VerifyEvidencePackageCommand(evidence_package_id=build.evidence_package_id)
     )
     uow.commit()
-    assert simulate.transaction_hash.startswith("0x")
+    assert anchor.transaction_hash and anchor.transaction_hash.startswith("0x")
+    assert anchor.anchoring_status == "simulated"
     assert verify.is_valid is True
+    uow.close()
+
+
+def test_idempotent_simulated_anchoring(seeded_settings, uow_factory) -> None:
+    uow, build = _build_package(seeded_settings, uow_factory)
+    providers = ProvidersRegistry()
+    uc = AnchorEvidencePackageUseCase(uow, providers)
+    first = uc.execute(AnchorEvidencePackageCommand(evidence_package_id=build.evidence_package_id))
+    second = uc.execute(AnchorEvidencePackageCommand(evidence_package_id=build.evidence_package_id))
+    uow.commit()
+    assert first.idempotent_reuse is False
+    assert second.idempotent_reuse is True
+    assert first.transaction_hash == second.transaction_hash
+    uow.close()
+
+
+def test_tamper_item_fails_verification(seeded_settings, uow_factory) -> None:
+    uow, build = _build_package(seeded_settings, uow_factory)
+    items = uow.evidence_items.list_by_package(build.evidence_package_id)
+    assert items
+    item = items[0]
+    payload = parse_canonical_json(item.canonical_payload_json or "{}")
+    payload["tampered"] = True
+    item.canonical_payload_json = to_canonical_json(payload)
+    # Keep stored item_hash as original expected hash so verification detects mismatch
+    uow.evidence_items.update(item)
+    uow.flush()
+
+    verify = VerifyEvidencePackageUseCase(uow).execute(
+        VerifyEvidencePackageCommand(evidence_package_id=build.evidence_package_id)
+    )
+    logs = uow.verification_logs.list_by_package(build.evidence_package_id)
+    uow.commit()
+    assert verify.is_valid is False
+    assert any(not r["is_valid"] for r in verify.details["items"])
+    assert verify.details["merkle_root_valid"] is False
+    assert any(
+        log.verification_type == VerificationType.ITEM_HASH.value and not log.is_valid for log in logs
+    )
+    assert any(
+        log.verification_type == VerificationType.MERKLE_ROOT.value and not log.is_valid for log in logs
+    )
+    assert any(
+        log.verification_type == VerificationType.FULL.value and not log.is_valid for log in logs
+    )
+    uow.close()
+
+
+def test_tamper_manifest_fails_verification(seeded_settings, uow_factory) -> None:
+    uow, build = _build_package(seeded_settings, uow_factory)
+    package = uow.evidence_packages.get(build.evidence_package_id)
+    assert package is not None
+    payload = parse_canonical_json(package.canonical_payload_json or "{}")
+    payload["tampered_manifest"] = "yes"
+    package.canonical_payload_json = to_canonical_json(payload)
+    # Keep package_hash as original expected value
+    uow.evidence_packages.update(package)
+    uow.flush()
+
+    verify = VerifyEvidencePackageUseCase(uow).execute(
+        VerifyEvidencePackageCommand(evidence_package_id=build.evidence_package_id)
+    )
+    logs = uow.verification_logs.list_by_package(build.evidence_package_id)
+    uow.commit()
+    assert verify.is_valid is False
+    assert verify.details["package_hash_valid"] is False
+    assert any(
+        log.verification_type == VerificationType.PACKAGE_HASH.value and not log.is_valid for log in logs
+    )
+    assert any(
+        log.verification_type == VerificationType.FULL.value and not log.is_valid for log in logs
+    )
+    uow.close()
+
+
+def test_anchor_rejects_non_final_request(seeded_settings, uow_factory) -> None:
+    uow, build = _build_package(seeded_settings, uow_factory)
+    package = uow.evidence_packages.get(build.evidence_package_id)
+    from app.infrastructure.db.models import AnchorRequestModel
+
+    model = uow._session.get(AnchorRequestModel, str(package.anchor_request_id))
+    assert model is not None
+    model.source_event_type = "CALCULATION_APPROVED"
+    uow.flush()
+    with pytest.raises(FinalPublicationRequiredError):
+        AnchorEvidencePackageUseCase(uow, ProvidersRegistry()).execute(
+            AnchorEvidencePackageCommand(evidence_package_id=build.evidence_package_id)
+        )
     uow.close()

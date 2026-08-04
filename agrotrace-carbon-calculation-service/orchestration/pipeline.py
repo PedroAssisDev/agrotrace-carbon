@@ -24,7 +24,7 @@ from emissions.temporal_scope import TemporalScope
 
 METHOD_CODE = "ECOFARM-T1-DAIRY"
 METHOD_VERSION = "1.0.0"
-IMPLEMENTATION_VERSION = "0.3.0"
+IMPLEMENTATION_VERSION = "0.3.1"
 
 
 def _resolve_default_factors(

@@ -1,0 +1,60 @@
+{
+  "selected": {
+    "mae": 0.33171157218505815,
+    "rmse": 0.3718518995252111,
+    "r2": 0.99970580543649,
+    "mape": 0.14367854284012274
+  },
+  "candidates": [
+    {
+      "candidate": "mean_per_cow_baseline",
+      "status": "success",
+      "cv_mae": 0.4705637196950529,
+      "best_params": {}
+    },
+    {
+      "candidate": "linear_regression",
+      "status": "success",
+      "cv_mae": 0.3465288818230097,
+      "best_params": {}
+    },
+    {
+      "candidate": "ridge",
+      "status": "success",
+      "cv_mae": 0.45824816413052955,
+      "best_params": {
+        "alpha": 0.1
+      }
+    },
+    {
+      "candidate": "svr",
+      "status": "success",
+      "cv_mae": 0.33171157218505815,
+      "best_params": {
+        "C": 10.0,
+        "epsilon": 0.1,
+        "kernel": "linear"
+      }
+    },
+    {
+      "candidate": "gradient_boosting",
+      "status": "success",
+      "cv_mae": 5.128240073045387,
+      "best_params": {
+        "learning_rate": 0.1,
+        "max_depth": 2,
+        "n_estimators": 50
+      }
+    },
+    {
+      "candidate": "random_forest",
+      "status": "success",
+      "cv_mae": 6.538180555555514,
+      "best_params": {
+        "max_depth": null,
+        "min_samples_leaf": 1,
+        "n_estimators": 50
+      }
+    }
+  ]
+}

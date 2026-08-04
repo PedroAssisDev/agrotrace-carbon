@@ -7,31 +7,38 @@ SCHEMA_VERSION_EVIDENCE_ITEM = "evidence_item_v1"
 SCHEMA_VERSION_EVIDENCE_PACKAGE = "evidence_package_v1"
 SCHEMA_VERSION_ANCHOR_PAYLOAD = "anchor_payload_v1"
 
+# Only final ontology publication unlocks anchoring (ADR-003 / FINAL_ONTOLOGY_PUBLISHED gate).
+# Aliases represent the same milestone across frontend and provenance outbox naming.
 ELIGIBLE_ANCHOR_EVENT_TYPES: frozenset[str] = frozenset(
     {
-        "CALCULATION_APPROVED",
-        "MONTHLY_RESULT_CONSOLIDATED",
-        "ANNUAL_RESULT_CONSOLIDATED",
+        "FINAL_ONTOLOGY_PUBLISHED",
+        "APPROVED_RESULT_PUBLISHED",
         "APPROVED_RESULT_PUBLISHED_TO_ONTOLOGY",
-        "DAILY_DATA_AGGREGATED_TO_MONTHLY",
-        "MONTHLY_DATA_AGGREGATED_TO_ANNUAL",
     }
 )
 
+FINAL_PUBLICATION_EVENT_TYPES: frozenset[str] = ELIGIBLE_ANCHOR_EVENT_TYPES
+
 EVENT_TO_PACKAGE_TYPE: dict[str, str] = {
-    "CALCULATION_APPROVED": "annual_carbon_result",
-    "MONTHLY_RESULT_CONSOLIDATED": "monthly_carbon_result",
-    "ANNUAL_RESULT_CONSOLIDATED": "annual_carbon_result",
+    "FINAL_ONTOLOGY_PUBLISHED": "ontology_publication",
+    "APPROVED_RESULT_PUBLISHED": "ontology_publication",
     "APPROVED_RESULT_PUBLISHED_TO_ONTOLOGY": "ontology_publication",
-    "DAILY_DATA_AGGREGATED_TO_MONTHLY": "daily_to_monthly_aggregation",
-    "MONTHLY_DATA_AGGREGATED_TO_ANNUAL": "monthly_to_annual_aggregation",
 }
 
 EVENT_TO_REQUEST_SCOPE: dict[str, str] = {
-    "CALCULATION_APPROVED": "annual",
-    "MONTHLY_RESULT_CONSOLIDATED": "monthly",
-    "ANNUAL_RESULT_CONSOLIDATED": "annual",
+    "FINAL_ONTOLOGY_PUBLISHED": "manual",
+    "APPROVED_RESULT_PUBLISHED": "manual",
     "APPROVED_RESULT_PUBLISHED_TO_ONTOLOGY": "manual",
-    "DAILY_DATA_AGGREGATED_TO_MONTHLY": "aggregation",
-    "MONTHLY_DATA_AGGREGATED_TO_ANNUAL": "aggregation",
 }
+
+NETWORK_CODE_LOCAL_SIMULATED = "local_simulated"
+NETWORK_CODE_ANVIL_LOCAL = "anvil_local"
+NETWORK_CODE_ETHEREUM_SEPOLIA = "ethereum_sepolia"
+
+SUPPORTED_NETWORK_CODES: frozenset[str] = frozenset(
+    {
+        NETWORK_CODE_LOCAL_SIMULATED,
+        NETWORK_CODE_ANVIL_LOCAL,
+        NETWORK_CODE_ETHEREUM_SEPOLIA,
+    }
+)

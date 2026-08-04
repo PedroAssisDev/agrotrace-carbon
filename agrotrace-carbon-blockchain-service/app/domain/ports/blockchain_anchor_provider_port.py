@@ -24,6 +24,26 @@ class AnchorSubmitResult:
     response_payload: dict
 
 
+@dataclass(frozen=True, slots=True)
+class AnchorQueryRequest:
+    evidence_package_id: UUID
+    package_hash: str | None = None
+    merkle_root: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AnchorQueryResult:
+    found: bool
+    evidence_key: str | None
+    package_hash: str | None
+    merkle_root: str | None
+    anchored_at: int | None
+    submitter: str | None
+    network_code: str
+    chain_id: int | None
+    contract_address: str | None
+
+
 class BlockchainAnchorProviderPort(ABC):
     @abstractmethod
     def submit(self, request: AnchorSubmitRequest) -> AnchorSubmitResult:
@@ -37,4 +57,12 @@ class BlockchainAnchorProviderPort(ABC):
     @property
     @abstractmethod
     def provider_type(self) -> str:
+        raise NotImplementedError
+
+
+class BlockchainAnchorQueryPort(ABC):
+    """Optional query port for EVM providers (architectural extension)."""
+
+    @abstractmethod
+    def query(self, request: AnchorQueryRequest) -> AnchorQueryResult:
         raise NotImplementedError

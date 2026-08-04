@@ -88,9 +88,6 @@ def get_available_periods(farm_id: str | None = None) -> list[str]:
     if not periods and farm_id:
         return []
 
-    if not periods:
-        periods.update(["2026-01", "2026-02", "2026-03"])
-
     return sorted(periods, reverse=True)
 
 

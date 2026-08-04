@@ -1,0 +1,97 @@
+{
+  "timestamp_utc": "2026-08-03T13:50:41.259199+00:00",
+  "backup_root": "C:\\Users\\PedroAssis\\AppData\\Local\\Temp\\agrotrace-audit-backup-20260803-104947",
+  "frontend_data_file_counts": {
+    "_tmp_no_registry_forecast": 0,
+    "cycles": 454,
+    "db": 6,
+    "evidence_packages": 0,
+    "logs": 1,
+    "normalized": 454,
+    "ontology": 0,
+    "ontology_exports": 908,
+    "properties": 77,
+    "publications": 1,
+    "raw_originals": 0,
+    "reports": 0
+  },
+  "databases": {
+    "frontend_provenance": {
+      "exists": true,
+      "size_bytes": 25751552,
+      "tables": {
+        "audit_audit_event": 453,
+        "audit_blockchain_anchor": 0,
+        "audit_hash_record": 2267,
+        "audit_outbox_event": 16322,
+        "calculation_calculation_execution": 453,
+        "calculation_calculation_method": 1,
+        "calculation_calculation_method_version": 1,
+        "calculation_calculation_parameter_set": 453,
+        "calculation_calculation_parameter_value": 10872,
+        "calculation_calculation_result_item": 453,
+        "calculation_calculation_result_set": 453,
+        "calculation_calculation_review": 453,
+        "calculation_result_aggregation_link": 0,
+        "calculation_result_publication_execution": 0,
+        "pipeline_normalized_batch": 454,
+        "pipeline_pipeline_run": 454,
+        "pipeline_source_artifact": 454,
+        "pipeline_source_artifact_revision": 0,
+        "pipeline_wrapper_definition": 1,
+        "pipeline_wrapper_execution": 454,
+        "prov_core_prov_activity": 1813,
+        "prov_core_prov_agent": 4,
+        "prov_core_prov_associated_with": 1813,
+        "prov_core_prov_attribute": 0,
+        "prov_core_prov_bundle": 1814,
+        "prov_core_prov_derived_from": 907,
+        "prov_core_prov_entity": 2267,
+        "prov_core_prov_generated": 1360,
+        "prov_core_prov_revision": 0,
+        "prov_core_prov_used": 2266,
+        "reporting_period": 42,
+        "semantic_canonical_snapshot": 453,
+        "semantic_canonical_snapshot_item": 0,
+        "semantic_ontology_resource_link": 0,
+        "semantic_semantic_integration_execution": 453
+      }
+    },
+    "frontend_blockchain": {
+      "exists": true,
+      "size_bytes": 106496,
+      "tables": {
+        "anchor_request": 0,
+        "anchoring_attempt": 0,
+        "audit_log": 0,
+        "blockchain_network": 3,
+        "blockchain_transaction": 0,
+        "evidence_item": 0,
+        "evidence_package": 0,
+        "hash_record": 0,
+        "observer_state": 0,
+        "verification_log": 0
+      }
+    },
+    "service_blockchain": {
+      "exists": true,
+      "size_bytes": 131072,
+      "tables": {
+        "anchor_request": 3,
+        "anchoring_attempt": 2,
+        "audit_log": 20,
+        "blockchain_network": 3,
+        "blockchain_transaction": 2,
+        "evidence_item": 3,
+        "evidence_package": 3,
+        "hash_record": 3,
+        "observer_state": 0,
+        "verification_log": 26
+      }
+    }
+  },
+  "cycles_total": 454,
+  "cycles_status": {
+    "None": 454
+  }
+}

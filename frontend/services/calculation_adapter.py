@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+import calendar
 import logging
+import re
+from datetime import date, datetime
 from typing import Any
 
 import config
 from services import direct_imports as di
 from services.mock_data import mock_calculation
 from utils.hash_helpers import sha256_dict
+from utils.pipeline_logging import log_call, log_fail, timed_op
 
 logger = logging.getLogger("agrotrace.calculation")
 
@@ -22,6 +26,34 @@ _FORMULAS: dict[str, str] = {
     "intensity_liter": "CO2e_total / litros_leite",
     "intensity_fpcm": "CO2e_total / kg_FPCM",
 }
+
+_ANIMAL_CATEGORIES: tuple[str, ...] = (
+    "Lactating_Cows",
+    "Dry_Cows",
+    "Heifers",
+    "Calves",
+    "Bulls",
+)
+
+# Pesos representativos por categoria quando o dado normalizado não traz peso (kg).
+_DEFAULT_BODY_WEIGHT_BY_CATEGORY: dict[str, float] = {
+    "Lactating_Cows": 550.0,
+    "Dry_Cows": 500.0,
+    "Heifers": 350.0,
+    "Calves": 120.0,
+    "Bulls": 700.0,
+}
+
+_ENERGY_VECTORS: tuple[str, ...] = (
+    "Diesel",
+    "Gasoline",
+    "Electricity_Grid",
+    "Photovoltaic_Energy",
+)
+
+_PERIOD_YM_RE = re.compile(r"^(\d{4})-(\d{2})")
+_PERIOD_YMD_RE = re.compile(r"^(\d{4})-(\d{2})-(\d{2})")
+_PERIOD_Y_RE = re.compile(r"^(\d{4})$")
 
 
 def _extract_records(canonical_dataset: dict) -> tuple[list[dict], str]:
@@ -81,8 +113,6 @@ def _select_ecofarm_row(records: list[dict], reporting_period: str | None) -> di
     return columnar[0]
 
 
-_DEFAULT_BODY_WEIGHT_KG = 450.0
-
 # Mapeamento agregado ECOFARM → slots legados FarmPeriodInput (documentado no relatório)
 _ECOFARM_HEADCOUNT_FIRST: list[tuple[str, tuple[str, ...]]] = [
     ("Lactating_Cows", ("lactating_cows", "number_of_lactating_cows")),
@@ -104,6 +134,125 @@ _ECOFARM_ENERGY_MAP: list[tuple[str, tuple[str, ...]]] = [
     ("Electricity_Grid", ("electricity_grid", "Electricity_Grid", "electricity")),
     ("Photovoltaic_Energy", ("photovoltaic_energy", "Photovoltaic_Energy", "photovoltaic")),
 ]
+
+
+def _parse_iso_date(value: Any) -> date | None:
+    if value is None or value == "":
+        return None
+    text = str(value).strip()[:10]
+    try:
+        return datetime.strptime(text, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def _days_between(start: date, end: date) -> int:
+    return max((end - start).days + 1, 1)
+
+
+def _days_for_reporting_period(reporting_period: str | None) -> int | None:
+    if not reporting_period:
+        return None
+    text = str(reporting_period).strip()
+    ymd = _PERIOD_YMD_RE.match(text)
+    if ymd:
+        return 1
+    ym = _PERIOD_YM_RE.match(text)
+    if ym:
+        year, month = int(ym.group(1)), int(ym.group(2))
+        if 1 <= month <= 12:
+            return calendar.monthrange(year, month)[1]
+        return None
+    if _PERIOD_Y_RE.match(text):
+        return 365
+    return None
+
+
+def _infer_temporal_scope_key(
+    params: dict,
+    normalized_batch: dict,
+    records: list[dict],
+) -> str:
+    """Resolve escopo calculation-service: monthly | annual."""
+    from services.domain_catalog import normalize_temporal, temporal_to_calc_scope
+
+    explicit = params.get("temporal_scope")
+    if explicit:
+        return temporal_to_calc_scope(normalize_temporal(str(explicit)))
+
+    for key in ("frequency", "granularity", "data_granularity"):
+        raw = normalized_batch.get(key) or (normalized_batch.get("wrapper") or {}).get(key)
+        if raw:
+            return temporal_to_calc_scope(normalize_temporal(str(raw)))
+
+    reporting_period = (
+        normalized_batch.get("reporting_period")
+        or (normalized_batch.get("wrapper") or {}).get("reporting_period")
+        or params.get("reporting_period")
+    )
+    if reporting_period:
+        text = str(reporting_period).strip()
+        if _PERIOD_Y_RE.match(text) and len(text) == 4:
+            return "annual"
+        if _PERIOD_YM_RE.match(text) or _PERIOD_YMD_RE.match(text):
+            return "monthly"
+
+    for rec in records:
+        if not isinstance(rec, dict):
+            continue
+        temporal = rec.get("_temporal_context") or {}
+        gran = temporal.get("granularity")
+        if gran:
+            return temporal_to_calc_scope(normalize_temporal(str(gran)))
+
+    return "monthly"
+
+
+def _resolve_days_in_period(
+    *,
+    params: dict,
+    normalized_batch: dict,
+    records: list[dict],
+    calc_scope_key: str,
+    ecofarm_row: dict | None,
+) -> int:
+    if params.get("days_in_period") is not None:
+        return int(params["days_in_period"])
+
+    candidates: list[dict] = []
+    if ecofarm_row:
+        candidates.append(ecofarm_row)
+    candidates.extend(r for r in records if isinstance(r, dict))
+
+    for row in candidates:
+        temporal = row.get("_temporal_context") or {}
+        start = _parse_iso_date(temporal.get("start") or row.get("period_start"))
+        end = _parse_iso_date(temporal.get("end") or row.get("period_end"))
+        if start and end:
+            return _days_between(start, end)
+
+    reporting_period = (
+        normalized_batch.get("reporting_period")
+        or (normalized_batch.get("wrapper") or {}).get("reporting_period")
+        or params.get("reporting_period")
+    )
+    calendar_days = _days_for_reporting_period(reporting_period)
+    if calendar_days is not None:
+        return calendar_days
+
+    return 30 if calc_scope_key == "monthly" else 365
+
+
+def _empty_headcounts() -> dict[str, float]:
+    return {k: 0.0 for k in _ANIMAL_CATEGORIES}
+
+
+def _empty_energy() -> dict[str, float]:
+    return {k: 0.0 for k in _ENERGY_VECTORS}
+
+
+def _default_body_weight(category: str) -> float:
+    return float(_DEFAULT_BODY_WEIGHT_BY_CATEGORY.get(category, 450.0))
 
 
 def _resolution_entry(
@@ -166,54 +315,62 @@ def _apply_ecofarm_row(
                     unit="head",
                     status="FOUND",
                 ))
-        for category in headcounts:
+        for category in list(headcounts.keys()):
             weight_key = f"{category}_Weight"
-            weight_val = _row_float(row, weight_key.lower(), f"{category.lower()}_weight")
+            weight_val, weight_col = _row_first_float(
+                row, weight_key.lower(), f"{category.lower()}_weight", weight_key
+            )
             if weight_val is not None:
                 body_weights[category] = weight_val
                 input_resolution.append(_resolution_entry(
                     f"body_weight:{category}",
-                    weight_key,
+                    weight_col or weight_key,
                     weight_val,
                     unit="kg",
                     status="FOUND",
                 ))
             else:
-                body_weights.setdefault(category, _DEFAULT_BODY_WEIGHT_KG)
+                assumed = _default_body_weight(category)
+                body_weights[category] = assumed
                 input_resolution.append(_resolution_entry(
                     f"body_weight:{category}",
                     f"{category}_Weight (default)",
-                    _DEFAULT_BODY_WEIGHT_KG,
+                    assumed,
                     unit="kg",
                     status="DEFAULT_ASSUMED",
                 ))
 
     if "milk" not in locked:
-        milk_val = _row_float(row, "milk_production", "milk_sales", "Milk_Liters", "milk")
+        milk_val, milk_col = _row_first_float(
+            row, "milk_production", "Milk_Liters", "milk", "milk_sales"
+        )
         if milk_val is not None:
             milk_liters = milk_val
             used = True
             input_resolution.append(_resolution_entry(
                 "milk_liters",
-                "milk_production",
+                milk_col or "milk_production",
                 milk_val,
                 unit="L",
                 status="FOUND",
             ))
 
     if "nitrogen" not in locked:
-        n_val = _row_float(row, "non_organic_fertilizer", "Non_Organic_Fertilizer", "nitrogen_applied")
+        n_val, n_col = _row_first_float(
+            row, "non_organic_fertilizer", "Non_Organic_Fertilizer", "nitrogen_applied"
+        )
         if n_val is not None:
             nitrogen = n_val
             used = True
             input_resolution.append(_resolution_entry(
                 "nitrogen_applied_kg",
-                "non_organic_fertilizer",
+                n_col or "non_organic_fertilizer",
                 n_val,
                 unit="kg N",
                 status="FOUND",
             ))
         else:
+            nitrogen = 0.0
             input_resolution.append(_resolution_entry(
                 "nitrogen_applied_kg",
                 "non_organic_fertilizer",
@@ -224,19 +381,19 @@ def _apply_ecofarm_row(
 
     if "energy" not in locked:
         for vector, columns in _ECOFARM_ENERGY_MAP:
-            e_val = _row_float(row, *columns)
+            e_val, e_col = _row_first_float(row, *columns)
             if e_val is not None:
                 energy[vector] = e_val
                 used = True
                 input_resolution.append(_resolution_entry(
                     f"energy:{vector}",
-                    columns[0],
+                    e_col or columns[0],
                     e_val,
                     unit="L" if vector in {"Diesel", "Gasoline"} else "kWh",
                     status="FOUND",
                 ))
             else:
-                energy.setdefault(vector, 0.0)
+                energy[vector] = 0.0
                 input_resolution.append(_resolution_entry(
                     f"energy:{vector}",
                     columns[0],
@@ -251,23 +408,16 @@ def _apply_ecofarm_row(
 def _build_farm_input(normalized_batch: dict, params: dict) -> tuple[Any, dict[str, Any], str, list[dict[str, Any]]]:
     """Retorna (FarmPeriodInput, inputs_dict, data_source, input_resolution)."""
     records, data_source = _extract_records(normalized_batch)
-    temporal = params.get("temporal_scope", "MONTHLY")
 
-    headcounts = {
-        "Lactating_Cows": 19.0,
-        "Dry_Cows": 5.0,
-        "Heifers": 22.0,
-        "Calves": 5.0,
-        "Bulls": 0.0,
-    }
-    body_weights = {k: 450.0 for k in headcounts}
-    milk_liters = 12659.0
-    nitrogen = 120.0
-    energy = {"Diesel": 500.0, "Electricity_Grid": 1200.0}
+    headcounts = _empty_headcounts()
+    body_weights = {k: _default_body_weight(k) for k in _ANIMAL_CATEGORIES}
+    milk_liters = 0.0
+    nitrogen = 0.0
+    energy = _empty_energy()
     used_records = False
     input_resolution: list[dict[str, Any]] = []
 
-    # input_overrides tem prioridade sobre normalized_data e defaults
+    # input_overrides tem prioridade sobre normalized_data
     overrides = params.get("input_overrides") or {}
     locked: set[str] = set()
     if overrides.get("headcounts_by_category"):
@@ -294,6 +444,7 @@ def _build_farm_input(normalized_batch: dict, params: dict) -> tuple[Any, dict[s
     reporting_period = (
         normalized_batch.get("reporting_period")
         or (normalized_batch.get("wrapper") or {}).get("reporting_period")
+        or params.get("reporting_period")
     )
     ecofarm_row = _select_ecofarm_row(records, reporting_period)
     if ecofarm_row:
@@ -317,7 +468,7 @@ def _build_farm_input(normalized_batch: dict, params: dict) -> tuple[Any, dict[s
         if not var:
             continue
         used_records = True
-        if "milk" not in locked and ("milk" in var or "leite" in var):
+        if "milk" not in locked and ("milk" in var or "leite" in var) and "sale" not in var and "venda" not in var:
             milk_liters = val
         if "headcounts" not in locked:
             if "lactating" in var or "lactante" in var:
@@ -337,10 +488,26 @@ def _build_farm_input(normalized_batch: dict, params: dict) -> tuple[Any, dict[s
                 energy["Electricity_Grid"] = val
 
     if not used_records:
-        data_source = "fallback_defaults"
+        data_source = "empty_inputs"
+        logger.warning(
+            "Cálculo sem registros de atividade utilizáveis; entradas permanecem zeradas "
+            "(sem seeds demo)."
+        )
 
-    scope = di.TemporalScope.MONTHLY if temporal == "MONTHLY" else di.TemporalScope.YEARLY
-    days = int(params.get("days_in_period") or (30 if scope == di.TemporalScope.MONTHLY else 365))
+    # Garantir pesos para todas as categorias presentes em headcounts
+    if "body_weights" not in locked:
+        for category in headcounts:
+            body_weights.setdefault(category, _default_body_weight(category))
+
+    calc_scope_key = _infer_temporal_scope_key(params, normalized_batch, records)
+    scope = di.TemporalScope.MONTHLY if calc_scope_key == "monthly" else di.TemporalScope.ANNUAL
+    days = _resolve_days_in_period(
+        params=params,
+        normalized_batch=normalized_batch,
+        records=records,
+        calc_scope_key=calc_scope_key,
+        ecofarm_row=ecofarm_row,
+    )
 
     inputs = {
         "headcounts_by_category": dict(headcounts),
@@ -364,65 +531,66 @@ def _build_farm_input(normalized_batch: dict, params: dict) -> tuple[Any, dict[s
     return farm_input, inputs, data_source, input_resolution
 
 
-def _resolve_factors(params: dict, farm_input: Any) -> dict[str, Any]:
-    """Resolve os 5 grupos de fatores + GWP a partir de params ou defaults."""
-    from emissions.defaults import (
-        default_energy_co2_kg_per_unit_yearly_basis,
-        default_enteric_ch4_kg_per_animal_yearly,
-        default_fertilizer_factors,
-        default_manure_ch4_kg_per_kg_manure,
-        default_manure_kg_per_kg_bw_per_day,
-    )
-    from emissions.factor_alignment import (
-        align_energy_factors_to_scope,
-        align_enteric_factors_to_scope,
-    )
+def _resolve_factors(
+    params: dict,
+    farm_input: Any,
+    *,
+    factor_catalog: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Resolve fatores + GWP a partir do catálogo ontológico (obrigatório)."""
+    from emissions.factor_alignment import align_enteric_factors_to_scope
 
     auto_prorate = params.get("auto_prorate_factors", True)
     scope = farm_input.temporal_scope
-
-    raw_enteric = params.get("enteric_ch4_kg_per_animal") or default_enteric_ch4_kg_per_animal_yearly()
-    if params.get("enteric_ch4_kg_per_animal") is not None:
-        enteric = {k: float(v) for k, v in raw_enteric.items()}
-    else:
-        enteric = align_enteric_factors_to_scope(
-            raw_enteric,
-            temporal_scope=scope,
-            auto_prorate=auto_prorate,
+    catalog = factor_catalog or {}
+    sources: dict[str, str] = {}
+    required = (
+        "enteric_ch4_kg_per_animal",
+        "manure_kg_per_kg_bw_per_day",
+        "manure_ch4_kg_per_kg_manure",
+        "energy_co2_kg_per_unit",
+        "fertilizer_factors",
+        "gwp",
+    )
+    missing = [k for k in required if catalog.get(k) is None]
+    if missing:
+        raise RuntimeError(
+            "Parâmetros obrigatórios ausentes na ontologia (factor_catalog): "
+            + ", ".join(missing)
+            + ". Insira defaults como pending antes do cálculo."
         )
 
-    raw_energy = params.get("energy_co2_kg_per_unit") or default_energy_co2_kg_per_unit_yearly_basis()
+    def _pick_group(key: str) -> dict:
+        sources[key] = str(catalog.get("_source") or "ontology")
+        return {k: float(v) for k, v in dict(catalog[key]).items() if not str(k).startswith("_")}
+
+    raw_enteric = _pick_group("enteric_ch4_kg_per_animal")
+    enteric = align_enteric_factors_to_scope(
+        raw_enteric,
+        temporal_scope=scope,
+        auto_prorate=auto_prorate,
+    )
+
+    raw_energy = _pick_group("energy_co2_kg_per_unit")
     energy_keys = farm_input.energy_consumption_by_vector
-    raw_energy_filtered = {k: v for k, v in raw_energy.items() if k in energy_keys}
-    if params.get("energy_co2_kg_per_unit") is not None:
-        energy = {k: float(v) for k, v in raw_energy_filtered.items()}
-    else:
-        energy = align_energy_factors_to_scope(
-            raw_energy_filtered,
-            temporal_scope=scope,
-            auto_prorate=auto_prorate,
-        )
+    energy = {k: float(v) for k, v in raw_energy.items() if k in energy_keys}
 
-    gwp = params.get("gwp")
-    if gwp is None and di.gwp_ipcc_ar4:
-        gwp = di.gwp_ipcc_ar4()
-    else:
-        gwp = gwp or config.DEFAULT_GWP
+    manure_md = _pick_group("manure_kg_per_kg_bw_per_day")
+    manure_ef = _pick_group("manure_ch4_kg_per_kg_manure")
+    fert = _pick_group("fertilizer_factors")
+    gwp = _pick_group("gwp")
+    if not gwp:
+        raise RuntimeError("GWP ausente na ontologia (factor_catalog['gwp']).")
 
     return {
         "enteric_ch4_kg_per_animal": enteric,
-        "manure_kg_per_kg_bw_per_day": dict(
-            params.get("manure_kg_per_kg_bw_per_day") or default_manure_kg_per_kg_bw_per_day()
-        ),
-        "manure_ch4_kg_per_kg_manure": dict(
-            params.get("manure_ch4_kg_per_kg_manure") or default_manure_ch4_kg_per_kg_manure()
-        ),
+        "manure_kg_per_kg_bw_per_day": {k: float(v) for k, v in manure_md.items()},
+        "manure_ch4_kg_per_kg_manure": {k: float(v) for k, v in manure_ef.items()},
         "energy_co2_kg_per_unit": energy,
-        "fertilizer_factors": dict(
-            params.get("fertilizer_factors") or default_fertilizer_factors()
-        ),
+        "fertilizer_factors": {k: float(v) for k, v in fert.items()},
         "gwp": dict(gwp),
         "auto_prorate_factors": auto_prorate,
+        "factor_sources": sources,
     }
 
 
@@ -544,110 +712,151 @@ def _mock(canonical_dataset: dict, params: dict, reason: str | None = None) -> d
 
 
 def run_emission_calculation(canonical_dataset: dict, params: dict | None = None) -> dict[str, Any]:
-    """Executa cálculo real se disponível."""
+    """Executa cálculo real. Sem mock silencioso no fluxo real."""
     params = params or {}
-    if config.USE_MOCK_DATA or not config.USE_DIRECT_FUNCTION_CALLS or di.compute_farm_period_emissions is None:
-        return _mock(canonical_dataset, params)
-
-    try:
-        farm_input, inputs, data_source, input_resolution = _build_farm_input(canonical_dataset, params)
-        factors = _resolve_factors(params, farm_input)
-
-        scope_label = (
-            farm_input.temporal_scope.value.upper()
-            if hasattr(farm_input.temporal_scope, "value")
-            else str(params.get("temporal_scope", "MONTHLY"))
-        )
-        inputs["days_in_period"] = farm_input.days_in_period
-        inputs["temporal_scope"] = scope_label
-
-        bundle = di.compute_farm_period_emissions(
-            farm_input,
-            enteric_ch4_kg_per_animal=factors["enteric_ch4_kg_per_animal"],
-            manure_kg_per_kg_bw_per_day=factors["manure_kg_per_kg_bw_per_day"],
-            manure_ch4_kg_per_kg_manure=factors["manure_ch4_kg_per_kg_manure"],
-            energy_co2_kg_per_unit=factors["energy_co2_kg_per_unit"],
-            fertilizer_factors=factors["fertilizer_factors"],
-            gwp=factors["gwp"],
-            auto_prorate_factors=factors["auto_prorate_factors"],
-            include_provenance=True,
-        )
-        flat = bundle.to_flat_dict()
-        gwp = factors["gwp"]
-
-        by_source = {
-            "Fermentação entérica — CH₄": flat.get("ch4_enteric_kg", 0) * gwp["CH4"],
-            "Manejo de dejetos — CH₄": flat.get("ch4_manure_kg", 0) * gwp["CH4"],
-            "Fertilizantes — N₂O": flat.get("n2o_fertilizer_kg", 0) * gwp["N2O"],
-            "Energia — CO₂": flat.get("co2_energy_kg", 0),
-        }
-
-        prov = bundle.provenance
-        method = {
-            "code": prov.method_code if prov else "ECOFARM-T1-DAIRY",
-            "version": prov.method_version if prov else "1.0.0",
-            "implementation_version": prov.implementation_version if prov else "0.3.0",
-            "methodology_label": params.get("methodology", "IPCC/IDF-compatible"),
-        }
-
-        temporal = {
-            "scope": scope_label,
-            "days_in_period": farm_input.days_in_period,
-            "auto_prorate_factors": factors["auto_prorate_factors"],
-        }
-
-        factors_used = {
-            "enteric_ch4_kg_per_animal": factors["enteric_ch4_kg_per_animal"],
-            "manure_kg_per_kg_bw_per_day": factors["manure_kg_per_kg_bw_per_day"],
-            "manure_ch4_kg_per_kg_manure": factors["manure_ch4_kg_per_kg_manure"],
-            "energy_co2_kg_per_unit": factors["energy_co2_kg_per_unit"],
-            "fertilizer_factors": factors["fertilizer_factors"],
-            "gwp": factors["gwp"],
-        }
-
-        subcalculations = _build_subcalculations(bundle, flat, inputs, factors_used, gwp)
-
-        result = {
-            "source": "real",
-            "mode": "real",
-            "data_source": data_source,
-            "method": method,
-            "temporal": temporal,
-            "inputs": inputs,
-            "input_resolution": input_resolution,
-            "factors_used": factors_used,
-            "subcalculations": subcalculations,
-            "ch4_enteric_kg": flat.get("ch4_enteric_kg", 0),
-            "ch4_manure_kg": flat.get("ch4_manure_kg", 0),
-            "n2o_fertilizer_kg": flat.get("n2o_fertilizer_kg", 0),
-            "co2_energy_kg": flat.get("co2_energy_kg", 0),
-            "co2e_total_kg": flat.get("co2e_total_kg", 0),
-            "co2e_intensity_per_milk_liter": flat.get("co2e_intensity_per_milk_liter", 0),
-            "co2e_per_animal": flat.get("co2e_total_kg", 0) / max(sum(farm_input.headcounts_by_category.values()), 1),
-            "methodology": method["methodology_label"],
-            "calculation_version": method["implementation_version"],
-            "ontology_version": canonical_dataset.get("ontology_version", "agromrv_lite"),
-            "gwp": gwp,
-            "by_source": by_source,
-            "by_gas": {
-                "CH4": flat.get("co2e_ch4_portion_kg", 0),
-                "N2O": flat.get("co2e_n2o_portion_kg", 0),
-                "CO2": flat.get("co2_energy_portion_kg", 0),
-            },
-            "flat": flat,
-        }
-        hash_payload = {
-            "method": result["method"],
-            "temporal": result["temporal"],
-            "inputs": result["inputs"],
-            "factors_used": result["factors_used"],
-            "subcalculations": result["subcalculations"],
-            "co2e_total_kg": result["co2e_total_kg"],
-        }
-        result["preliminary_hash"] = sha256_dict(hash_payload)
-        return result
-    except Exception as exc:
-        logger.warning("Cálculo real falhou: %s", exc)
+    if config.USE_MOCK_DATA:
         if not config.ALLOW_MOCK_FALLBACK:
+            raise RuntimeError("USE_MOCK_DATA exige ALLOW_MOCK_FALLBACK apenas em testes explícitos.")
+        log_call(logger, "calculation.mock", mode="mock", reason="USE_MOCK_DATA")
+        return _mock(canonical_dataset, params)
+    if not config.USE_DIRECT_FUNCTION_CALLS or di.compute_farm_period_emissions is None:
+        raise RuntimeError("calculation-service indisponível (compute_farm_period_emissions não importado).")
+
+    log_call(logger, "calculation.start", period=params.get("reporting_period") or canonical_dataset.get("reporting_period"))
+    with timed_op() as timer:
+        try:
+            farm_input, inputs, data_source, input_resolution = _build_farm_input(canonical_dataset, params)
+            factor_catalog = (
+                params.get("factor_catalog")
+                or canonical_dataset.get("factor_catalog")
+                or (canonical_dataset.get("ontology") or {}).get("factor_catalog")
+            )
+            factors = _resolve_factors(params, farm_input, factor_catalog=factor_catalog)
+
+            from services.domain_catalog import calc_scope_to_canonical
+
+            scope_canonical = calc_scope_to_canonical(
+                farm_input.temporal_scope.value
+                if hasattr(farm_input.temporal_scope, "value")
+                else str(params.get("temporal_scope", "monthly"))
+            )
+            scope_label = scope_canonical.value
+            inputs["days_in_period"] = farm_input.days_in_period
+            inputs["temporal_scope"] = scope_label
+
+            bundle = di.compute_farm_period_emissions(
+                farm_input,
+                enteric_ch4_kg_per_animal=factors["enteric_ch4_kg_per_animal"],
+                manure_kg_per_kg_bw_per_day=factors["manure_kg_per_kg_bw_per_day"],
+                manure_ch4_kg_per_kg_manure=factors["manure_ch4_kg_per_kg_manure"],
+                energy_co2_kg_per_unit=factors["energy_co2_kg_per_unit"],
+                fertilizer_factors=factors["fertilizer_factors"],
+                gwp=factors["gwp"],
+                auto_prorate_factors=factors["auto_prorate_factors"],
+                include_provenance=True,
+            )
+            flat = bundle.to_flat_dict()
+            gwp = factors["gwp"]
+            if not gwp:
+                raise RuntimeError("GWP não resolvido; calculation-service deve receber GWP explícito.")
+
+            by_source = {
+                "Fermentação entérica — CH₄": flat.get("ch4_enteric_kg", 0) * gwp["CH4"],
+                "Manejo de dejetos — CH₄": flat.get("ch4_manure_kg", 0) * gwp["CH4"],
+                "Fertilizantes — N₂O": flat.get("n2o_fertilizer_kg", 0) * gwp["N2O"],
+                "Energia — CO₂": flat.get("co2_energy_kg", 0),
+            }
+
+            prov = bundle.provenance
+            method = {
+                "code": prov.method_code if prov else "ECOFARM-T1-DAIRY",
+                "version": prov.method_version if prov else "1.0.0",
+                "implementation_version": prov.implementation_version if prov else "0.3.1",
+                "methodology_label": params.get("methodology", "IPCC/IDF-compatible"),
+            }
+
+            temporal = {
+                "scope": scope_label,
+                "days_in_period": farm_input.days_in_period,
+                "auto_prorate_factors": factors["auto_prorate_factors"],
+            }
+
+            factors_used = {
+                "enteric_ch4_kg_per_animal": factors["enteric_ch4_kg_per_animal"],
+                "manure_kg_per_kg_bw_per_day": factors["manure_kg_per_kg_bw_per_day"],
+                "manure_ch4_kg_per_kg_manure": factors["manure_ch4_kg_per_kg_manure"],
+                "energy_co2_kg_per_unit": factors["energy_co2_kg_per_unit"],
+                "fertilizer_factors": factors["fertilizer_factors"],
+                "gwp": factors["gwp"],
+            }
+
+            subcalculations = _build_subcalculations(bundle, flat, inputs, factors_used, gwp)
+
+            result = {
+                "source": "real",
+                "mode": "real",
+                "data_source": data_source,
+                "method": method,
+                "temporal": temporal,
+                "inputs": inputs,
+                "input_resolution": input_resolution,
+                "factors_used": factors_used,
+                "factor_sources": factors.get("factor_sources") or {},
+                "subcalculations": subcalculations,
+                "ch4_enteric_kg": flat.get("ch4_enteric_kg", 0),
+                "ch4_manure_kg": flat.get("ch4_manure_kg", 0),
+                "n2o_fertilizer_kg": flat.get("n2o_fertilizer_kg", 0),
+                "co2_energy_kg": flat.get("co2_energy_kg", 0),
+                "ch4_kg": float(flat.get("ch4_enteric_kg", 0) or 0) + float(flat.get("ch4_manure_kg", 0) or 0),
+                "n2o_kg": flat.get("n2o_fertilizer_kg", 0),
+                "co2_kg": flat.get("co2_energy_kg", 0),
+                "co2e_total_kg": flat.get("co2e_total_kg", 0),
+                "co2e_intensity_per_milk_liter": flat.get("co2e_intensity_per_milk_liter", 0),
+                "co2e_per_animal": flat.get("co2e_total_kg", 0) / max(sum(farm_input.headcounts_by_category.values()), 1),
+                "methodology": method["methodology_label"],
+                "calculation_version": method["implementation_version"],
+                "ontology_version": canonical_dataset.get("ontology_version", "agromrv_lite"),
+                "gwp": gwp,
+                "by_source": by_source,
+                "by_gas": {
+                    "CH4": flat.get("co2e_ch4_portion_kg", 0),
+                    "N2O": flat.get("co2e_n2o_portion_kg", 0),
+                    "CO2": flat.get("co2_energy_portion_kg", 0),
+                },
+                "flat": flat,
+            }
+            hash_payload = {
+                "method": result["method"],
+                "temporal": result["temporal"],
+                "inputs": result["inputs"],
+                "factors_used": result["factors_used"],
+                "subcalculations": result["subcalculations"],
+                "co2e_total_kg": result["co2e_total_kg"],
+            }
+            result["preliminary_hash"] = sha256_dict(hash_payload)
+            log_call(
+                logger,
+                "calculation.done",
+                mode="real",
+                data_source=data_source,
+                co2e_total_kg=result["co2e_total_kg"],
+                duration_ms=timer.duration_ms,
+            )
+            return result
+        except Exception as exc:
+            log_fail(
+                logger,
+                "calculation.failed",
+                error=str(exc),
+                duration_ms=timer.duration_ms,
+            )
+            if config.ALLOW_MOCK_FALLBACK:
+                log_call(
+                    logger,
+                    "calculation.mock",
+                    mode="mock",
+                    reason=str(exc),
+                    duration_ms=timer.duration_ms,
+                )
+                return _mock(canonical_dataset, params, reason=str(exc))
             raise
-        return _mock(canonical_dataset, params, reason=str(exc))

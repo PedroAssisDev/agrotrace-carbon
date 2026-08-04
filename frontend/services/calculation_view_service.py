@@ -6,6 +6,7 @@ from typing import Any
 
 import config
 from services.blockchain_view_service import is_blockchain_unlocked
+from services.gwp import resolve_gwp
 
 _FACTOR_GROUP_LABELS: dict[str, str] = {
     "enteric_ch4_kg_per_animal": "Fermentação entérica (kg CH₄/animal/período)",
@@ -18,18 +19,44 @@ _FACTOR_GROUP_LABELS: dict[str, str] = {
 
 
 def build_preliminary_result(cycle: dict) -> dict[str, Any]:
+    """Preferência: resumo ontológico; espelho calculation só se marcado deprecated."""
+    try:
+        from services.ontology_query_adapter import get_emission_summary_for_cycle
+
+        summary = get_emission_summary_for_cycle(cycle)
+        if summary.get("co2e_total_kg") is not None or summary.get("source") == "ontology":
+            co2e = summary.get("co2e_total_kg")
+            return {
+                "co2e_total_kg": co2e,
+                "co2e_total_t": (co2e or 0) / 1000 if co2e else None,
+                "intensity": summary.get("intensity"),
+                "milk_production": summary.get("milk_liters"),
+                "ch4_kg": (summary.get("by_gas") or {}).get("CH4"),
+                "n2o_kg": (summary.get("by_gas") or {}).get("N2O"),
+                "co2_kg": (summary.get("by_gas") or {}).get("CO2"),
+                "status": (cycle.get("steps") or {}).get("approval", {}).get("status", "AWAITING_APPROVAL"),
+                "hash": (cycle.get("calculation") or {}).get("preliminary_hash"),
+                "mode": "ontology",
+                "domain_source": "ontology",
+            }
+    except Exception:
+        pass
     c = cycle.get("calculation") or {}
+    ch4_kg = c.get("ch4_kg")
+    if ch4_kg is None:
+        ch4_kg = float(c.get("ch4_enteric_kg") or 0) + float(c.get("ch4_manure_kg") or 0)
     return {
         "co2e_total_kg": c.get("co2e_total_kg"),
         "co2e_total_t": (c.get("co2e_total_kg") or 0) / 1000 if c.get("co2e_total_kg") else None,
         "intensity": c.get("co2e_intensity_per_milk_liter"),
         "milk_production": c.get("milk_production_l") or (c.get("inputs") or {}).get("milk_liters"),
-        "ch4_kg": c.get("ch4_kg"),
-        "n2o_kg": c.get("n2o_kg"),
-        "co2_kg": c.get("co2_kg"),
+        "ch4_kg": ch4_kg,
+        "n2o_kg": c.get("n2o_kg", c.get("n2o_fertilizer_kg")),
+        "co2_kg": c.get("co2_kg", c.get("co2_energy_kg")),
         "status": (cycle.get("steps") or {}).get("approval", {}).get("status", "AWAITING_APPROVAL"),
         "hash": c.get("preliminary_hash") or c.get("result_hash"),
         "mode": c.get("mode") or c.get("source"),
+        "domain_source": "legacy_calculation_mirror",
     }
 
 
@@ -43,7 +70,7 @@ def build_calculation_parameters(cycle: dict) -> dict[str, Any]:
         "method_code": method.get("code", "—"),
         "method_version": method.get("version", "—"),
         "calculation_version": c.get("calculation_version") or method.get("implementation_version", "—"),
-        "gwp": c.get("gwp") or config.DEFAULT_GWP,
+        "gwp": c.get("gwp") or resolve_gwp(),
         "factors_used": c.get("factors_used") or {},
         "temporal": temporal,
         "inputs": c.get("inputs") or {},
@@ -211,7 +238,8 @@ def _select_enteric_observed_rows(cycle: dict, records: list[dict]) -> list[dict
 
 def _tier1_enteric_values(cycle: dict) -> dict[str, Any]:
     calc = cycle.get("calculation") or {}
-    gwp = calc.get("gwp") or config.DEFAULT_GWP
+    from services.gwp import resolve_gwp
+    gwp = resolve_gwp(calc.get("gwp"))
     gwp_ch4 = float(gwp.get("CH4", 25))
 
     ch4_kg = calc.get("ch4_enteric_kg")
@@ -348,7 +376,7 @@ def rebuild_calculation_params_from_factor_inputs(
     temporal = calc.get("temporal") or {}
 
     params: dict[str, Any] = {
-        "gwp": dict(factors_used.get("gwp") or base.get("gwp") or config.DEFAULT_GWP),
+        "gwp": dict(factors_used.get("gwp") or base.get("gwp") or resolve_gwp()),
         "enteric_ch4_kg_per_animal": dict(factors_used.get("enteric_ch4_kg_per_animal") or {}),
         "manure_kg_per_kg_bw_per_day": dict(factors_used.get("manure_kg_per_kg_bw_per_day") or {}),
         "manure_ch4_kg_per_kg_manure": dict(factors_used.get("manure_ch4_kg_per_kg_manure") or {}),

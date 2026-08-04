@@ -1,0 +1,52 @@
+paths:
+  processed_data_dir: ../data/processed
+  artifacts_dir: ../artifacts
+
+# Fonte padrão de resultados aprovados/publicados (CSV local do protótipo).
+# SPARQL/ontologia RDF ainda não está integrada; configure type: sparql quando disponível.
+data_source:
+  type: csv
+  path: ../examples/approved_results.csv
+
+validation:
+  approved_values: [approved, aprovado]
+  published_values: [published, publicado]
+  duplicate_policy: reject
+  # reject: não treina a série e registra o motivo
+  # skip_property: ignora a propriedade (todos os alvos) e registra o motivo
+  monthly_gap_policy: reject
+
+selection:
+  # Métricas suportadas: mae | rmse (menor é melhor). Tolerância de ponto flutuante: 0.0 (comparação estrita).
+  metric: mae
+  minimum_improvement_over_baseline: 0.0
+
+regression:
+  enabled: true
+  granularities: [monthly, annual]
+  targets:
+    - milk_production_liters
+    - total_ghg_emissions_tco2e
+  # Regressão contemporânea aplicada a um cenário futuro: treina em (vacas_X, alvo_X).
+  feature: lactating_cows
+  scope: global
+  min_records: 8
+  random_state: 42
+  max_cv_splits: 5
+  candidate_profile: core
+
+time_series:
+  enabled: true
+  granularity: monthly
+  targets:
+    - milk_production_liters
+    - total_ghg_emissions_tco2e
+  min_records: 12
+  forecast_horizon: 3
+  max_validation_folds: 3
+  minimum_train_size: 8
+  seasonal_period: 12
+  enable_seasonal_models_from: 24
+  # LSTM experimental permanece fora do pipeline; true apenas registra skip explícito.
+  enable_lstm: false
+  lstm_min_records: 36

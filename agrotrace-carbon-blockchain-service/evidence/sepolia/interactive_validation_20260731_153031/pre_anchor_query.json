@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-07-31T15:30:46.285694+00:00",
+  "status": "PASSOU",
+  "found": false,
+  "evidence_key": "0xf3963aca683cb67f206eb8bd1dd5b8d7b1ef5e22aa37a6759f1828dd48f01906",
+  "package_hash on-chain": null,
+  "merkle_root on-chain": null,
+  "anchored_at": null,
+  "submitter": null,
+  "independent_web3": {
+    "exists": false,
+    "package_hash": null,
+    "merkle_root": null,
+    "anchored_at": null,
+    "submitter": null,
+    "evidence_key": "0xf3963aca683cb67f206eb8bd1dd5b8d7b1ef5e22aa37a6759f1828dd48f01906"
+  }
+}

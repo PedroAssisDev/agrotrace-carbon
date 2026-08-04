@@ -1,0 +1,13 @@
+{
+  "sha256": "b423d990ccce2034e298c42a37151af89ba4f986f98f32e15dfcf144a2158422",
+  "row_count": 54,
+  "columns": [
+    "property_id",
+    "period",
+    "lactating_cows",
+    "total_ghg_emissions_tco2e"
+  ],
+  "property_count": 3,
+  "period_start": "2024-01-01T00:00:00",
+  "period_end": "2025-06-01T00:00:00"
+}

@@ -24,7 +24,7 @@ EXPECTED_APPROVAL_COUNT = expected_approval_count()
 EXPECTED_PROPERTY_IDS = frozenset({
     "FARM-MONTHLY-001",
     "FARM-ANNUAL-001",
-    "FARM-DAILY-001",
+    # "FARM-DAILY-001",  # diário desativado temporariamente
 })
 
 SAMPLE_ENTRY_IDS = (
@@ -32,8 +32,8 @@ SAMPLE_ENTRY_IDS = (
     "ANNUAL-2026-FARM-MONTHLY-012",
     "ANNUAL-2021-2025-FARM-ANNUAL-001",
     "ANNUAL-2021-2025-FARM-ANNUAL-005",
-    "DAILY-2026-01-2026-06-FARM-DAILY-001",
-    "DAILY-2026-01-2026-06-FARM-DAILY-181",
+    # "DAILY-2026-01-2026-06-FARM-DAILY-001",
+    # "DAILY-2026-01-2026-06-FARM-DAILY-181",
 )
 
 SAMPLE_CYCLE_IDS = (
@@ -41,8 +41,8 @@ SAMPLE_CYCLE_IDS = (
     "ANNUAL-2026-FARM-MONTHLY-012",
     "ANNUAL-2021-2025-FARM-ANNUAL-001",
     "ANNUAL-2021-2025-FARM-ANNUAL-005",
-    "MONTHLY-2026-01-FARM-DAILY-001",
-    "MONTHLY-2026-06-FARM-DAILY-006",
+    # "MONTHLY-2026-01-FARM-DAILY-001",
+    # "MONTHLY-2026-06-FARM-DAILY-006",
 )
 
 FORBIDDEN_POST_APPROVAL_EVENTS = {
@@ -148,7 +148,9 @@ def validate_seed_collection(
         )
 
     if len({c.get("property_id") for c in seed_cycles}) != len(EXPECTED_PROPERTY_IDS):
-        errors.append("esperadas 3 propriedades distintas nos ciclos seed")
+        errors.append(
+            f"esperadas {len(EXPECTED_PROPERTY_IDS)} propriedades distintas nos ciclos seed"
+        )
 
     if count_pending_approval(seed_cycles) != EXPECTED_APPROVAL_COUNT:
         errors.append(
@@ -177,32 +179,33 @@ def validate_seed_collection(
 
     monthly_cycles = [c for c in seed_cycles if c.get("property_id") == "FARM-MONTHLY-001"]
     annual_cycles = [c for c in seed_cycles if c.get("property_id") == "FARM-ANNUAL-001"]
-    daily_cycles = [c for c in seed_cycles if c.get("property_id") == "FARM-DAILY-001"]
+    # daily_cycles = [c for c in seed_cycles if c.get("property_id") == "FARM-DAILY-001"]
 
     if len(monthly_cycles) != 12:
         errors.append(f"esperados 12 ciclos mensais Boa Vista, obteve {len(monthly_cycles)}")
     if len(annual_cycles) != 5:
         errors.append(f"esperados 5 ciclos anuais Santa Clara, obteve {len(annual_cycles)}")
-    if len(daily_cycles) != 6:
-        errors.append(f"esperados 6 ciclos diários consolidados, obteve {len(daily_cycles)}")
-
-    for cycle in daily_cycles:
-        coverage = cycle.get("temporal_coverage") or {}
-        if coverage.get("source_granularity") != "daily":
-            errors.append(
-                f"{cycle.get('cycle_id')}: source_granularity deveria ser daily "
-                f"({coverage})"
-            )
-        if coverage.get("granularity") != "monthly":
-            errors.append(
-                f"{cycle.get('cycle_id')}: granularity de aprovação deveria ser monthly"
-            )
-        entry_count = len(cycle.get("data_entries") or [])
-        if entry_count < 28 or entry_count > 31:
-            errors.append(
-                f"{cycle.get('cycle_id')}: esperado 28-31 entradas diárias no mês, "
-                f"obteve {entry_count}"
-            )
+    # Diário desativado temporariamente.
+    # if len(daily_cycles) != 6:
+    #     errors.append(f"esperados 6 ciclos diários consolidados, obteve {len(daily_cycles)}")
+    #
+    # for cycle in daily_cycles:
+    #     coverage = cycle.get("temporal_coverage") or {}
+    #     if coverage.get("source_granularity") != "daily":
+    #         errors.append(
+    #             f"{cycle.get('cycle_id')}: source_granularity deveria ser daily "
+    #             f"({coverage})"
+    #         )
+    #     if coverage.get("granularity") != "monthly":
+    #         errors.append(
+    #             f"{cycle.get('cycle_id')}: granularity de aprovação deveria ser monthly"
+    #         )
+    #     entry_count = len(cycle.get("data_entries") or [])
+    #     if entry_count < 28 or entry_count > 31:
+    #         errors.append(
+    #             f"{cycle.get('cycle_id')}: esperado 28-31 entradas diárias no mês, "
+    #             f"obteve {entry_count}"
+    #         )
 
     for cycle in monthly_cycles + annual_cycles:
         if len(cycle.get("data_entries") or []) != 1:

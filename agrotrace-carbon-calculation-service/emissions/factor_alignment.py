@@ -9,8 +9,8 @@ from emissions.exceptions import CalculationError, TemporalInconsistencyError
 from emissions.temporal_scope import TemporalScope
 
 # Fatores default legados são definidos com base anual (kg CH4/animal/ano).
-DEFAULT_ENTERIC_FACTOR_TEMPORAL_BASIS = TemporalScope.YEARLY
-DEFAULT_ENERGY_FACTOR_TEMPORAL_BASIS = TemporalScope.YEARLY
+DEFAULT_ENTERIC_FACTOR_TEMPORAL_BASIS = TemporalScope.ANNUAL
+DEFAULT_ENERGY_FACTOR_TEMPORAL_BASIS = TemporalScope.ANNUAL
 
 
 def align_enteric_factors_to_scope(
@@ -30,7 +30,7 @@ def align_enteric_factors_to_scope(
         return {k: float(v) for k, v in factors.items()}
 
     if (
-        factor_temporal_basis is TemporalScope.YEARLY
+        factor_temporal_basis is TemporalScope.ANNUAL
         and temporal_scope is TemporalScope.MONTHLY
     ):
         if not auto_prorate:
@@ -45,11 +45,11 @@ def align_enteric_factors_to_scope(
 
     if (
         factor_temporal_basis is TemporalScope.MONTHLY
-        and temporal_scope is TemporalScope.YEARLY
+        and temporal_scope is TemporalScope.ANNUAL
     ):
         raise TemporalInconsistencyError(
             "Fatores enteric com base mensal não podem ser usados diretamente com "
-            "temporal_scope='yearly'. Some 12 meses ou forneça fatores anuais."
+            "temporal_scope='annual'. Some 12 meses ou forneça fatores anuais."
         )
 
     raise CalculationError(
@@ -68,35 +68,16 @@ def align_energy_factors_to_scope(
     """
     Alinha fatores de energia ao escopo temporal.
 
-    Os defaults legados (kg CO2/unidade) são intensidades por unidade física e normalmente
-    não variam com o período; consumo é que deve estar no mesmo período. Esta função
-    valida coerência quando o chamador declara base anual explícita em escopo mensal
-    (alguns inventários armazenam fatores anuais agregados).
+    Os defaults (kg CO2 por unidade física: L ou kWh) são **intensidades** e não
+    devem ser prorratados por mês/ano — o consumo já está no período do cálculo.
+    Esta função apenas normaliza tipos e valida combinações de base declarada.
     """
-    if factor_temporal_basis == temporal_scope:
-        return {k: float(v) for k, v in factors.items()}
-
-    if (
-        factor_temporal_basis is TemporalScope.YEARLY
-        and temporal_scope is TemporalScope.MONTHLY
-    ):
-        if not auto_prorate:
-            raise TemporalInconsistencyError(
-                "Fatores de energia com base anual declarada não podem ser usados com "
-                "temporal_scope='monthly' sem prorratação. "
-                "Passe fatores alinhados ao período ou defina auto_prorate=True."
-            )
-        return {
-            k: uniform_monthly_from_yearly_per_animal(float(v)) for k, v in factors.items()
-        }
-
+    del auto_prorate  # intensidades não usam prorratação temporal
     if (
         factor_temporal_basis is TemporalScope.MONTHLY
-        and temporal_scope is TemporalScope.YEARLY
+        and temporal_scope is TemporalScope.ANNUAL
     ):
-        raise TemporalInconsistencyError(
-            "Fatores de energia com base mensal não podem ser usados diretamente com "
-            "temporal_scope='yearly'."
-        )
+        # Intensidades mensais e anuais são semanticamente iguais (kg/unidade).
+        return {k: float(v) for k, v in factors.items()}
 
     return {k: float(v) for k, v in factors.items()}

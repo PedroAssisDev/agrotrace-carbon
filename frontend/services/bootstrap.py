@@ -14,12 +14,14 @@ from config import (
     CALCULATION_SERVICE_DIR,
     CYCLES_DIR,
     EVIDENCE_PACKAGES_DIR,
+    MODEL_TRAINING_SERVICE_DIR,
     NORMALIZED_DIR,
     ONTOLOGY_DIR,
     ONTOLOGY_EXPORTS_DIR,
     ONTOLOGY_SERVICE_DIR,
     PROPERTIES_DIR,
     PROV_DB_PATH,
+    PUBLICATIONS_DIR,
     RAW_ORIGINALS_DIR,
     REPORTS_DIR,
     SAMPLE_DATA_DIR,
@@ -85,6 +87,8 @@ def configure_paths() -> None:
     _add_to_path(ONTOLOGY_SERVICE_DIR)
     _add_to_path(BLOCKCHAIN_SERVICE_DIR)
     _add_to_path(TRACEABILITY_SRC_DIR)
+    # Necessário para unpickle de forecasters (model.joblib de séries temporais).
+    _add_to_path(MODEL_TRAINING_SERVICE_DIR / "src")
 
 
 def configure_env() -> None:
@@ -230,6 +234,7 @@ def wipe_all_test_data(*, recreate_dbs: bool = True) -> dict[str, Any]:
         ONTOLOGY_DIR,
         ONTOLOGY_EXPORTS_DIR,
         EVIDENCE_PACKAGES_DIR,
+        PUBLICATIONS_DIR,
         REPORTS_DIR,
         SAMPLE_DATA_DIR / "seed",
     ):

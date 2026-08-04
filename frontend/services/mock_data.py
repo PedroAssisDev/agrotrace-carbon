@@ -137,8 +137,8 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
             "Calves": 0.05, "Bulls": 0.09,
         },
         "manure_ch4_kg_per_kg_manure": {
-            "Lactating_Cows": 0.17, "Dry_Cows": 0.14, "Heifers": 0.12,
-            "Calves": 0.10, "Bulls": 0.20,
+            "Lactating_Cows": 0.001, "Dry_Cows": 0.0008, "Heifers": 0.0007,
+            "Calves": 0.0006, "Bulls": 0.0012,
         },
         "energy_co2_kg_per_unit": {"Diesel": 2.68, "Electricity_Grid": 0.233},
         "fertilizer_factors": {
@@ -173,8 +173,8 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         {
             "id": "manure", "label": "Manejo de dejetos",
             "formula": "Σ(n × peso × ef_esterco/dia × ef_CH4/esterco × dias)",
-            "gas": "CH4", "result_kg": 412.5, "unit": "kg CH4",
-            "co2e_kg": 10312.5,
+            "gas": "CH4", "result_kg": 2.43, "unit": "kg CH4",
+            "co2e_kg": 60.75,
             "inputs": {
                 "headcounts_by_category": inputs["headcounts_by_category"],
                 "body_weight_kg_by_category": inputs["body_weight_kg_by_category"],
@@ -204,22 +204,22 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         {
             "id": "total", "label": "Total GEE",
             "formula": "CH4_total × GWP_CH4 + N2O × GWP_N2O + CO2",
-            "gas": "CO2e", "result_kg": 94521.3, "unit": "kg CO2e",
-            "co2e_kg": 94521.3, "inputs": {}, "factors": {"gwp": gwp},
+            "gas": "CO2e", "result_kg": 82631.35, "unit": "kg CO2e",
+            "co2e_kg": 82631.35, "inputs": {}, "factors": {"gwp": gwp},
         },
         {
             "id": "intensity_liter", "label": "Intensidade por litro",
             "formula": "CO2e_total / litros_leite",
-            "gas": "CO2e", "result_kg": 0.746, "unit": "kg CO2e/L",
+            "gas": "CO2e", "result_kg": 6.527, "unit": "kg CO2e/L",
             "co2e_kg": None,
-            "inputs": {"milk_liters": 12659.0, "co2e_total_kg": 94521.3},
+            "inputs": {"milk_liters": 12659.0, "co2e_total_kg": 82631.35},
             "factors": {},
         },
     ]
     method = {
         "code": "ECOFARM-T1-DAIRY",
         "version": "1.0.0",
-        "implementation_version": "0.3.0",
+        "implementation_version": "0.3.1",
         "methodology_label": "IPCC/IDF-compatible",
     }
     temporal = {
@@ -229,14 +229,14 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
     }
     results = {
         "ch4_enteric_kg": 2987.88,
-        "ch4_manure_kg": 412.5,
+        "ch4_manure_kg": 2.43,
         "n2o_fertilizer_kg": 18.2,
         "co2_energy_kg": 2450.0,
-        "co2e_total_kg": 94521.3,
-        "co2e_intensity_per_milk_liter": 0.746,
-        "co2e_per_animal": 525.12,
+        "co2e_total_kg": 82631.35,
+        "co2e_intensity_per_milk_liter": 6.527,
+        "co2e_per_animal": 458.0,
         "methodology": "IPCC/IDF-compatible",
-        "calculation_version": "0.3.0",
+        "calculation_version": "0.3.1",
         "ontology_version": "agromrv_lite_v2026_01",
         "method": method,
         "temporal": temporal,
@@ -246,11 +246,11 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         "gwp": gwp,
         "by_source": {
             "Fermentação entérica — CH₄": 74697.0,
-            "Manejo de dejetos — CH₄": 10312.5,
+            "Manejo de dejetos — CH₄": 60.75,
             "Fertilizantes — N₂O": 5423.6,
             "Energia — CO₂": 2450.0,
         },
-        "by_gas": {"CH4": 85009.5, "N2O": 5423.6, "CO2": 2450.0},
+        "by_gas": {"CH4": 74757.75, "N2O": 5423.6, "CO2": 2450.0},
     }
     results["source"] = "mock"
     hash_payload = {
@@ -259,7 +259,7 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         "inputs": inputs,
         "factors_used": factors_used,
         "subcalculations": subcalculations,
-        "co2e_total_kg": 94521.3,
+        "co2e_total_kg": 82631.35,
     }
     results["preliminary_hash"] = sha256_dict(hash_payload)
     return results

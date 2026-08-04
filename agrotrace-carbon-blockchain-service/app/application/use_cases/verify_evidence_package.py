@@ -6,7 +6,7 @@ from app.application.dto.commands import VerifyEvidencePackageCommand
 from app.application.dto.results import VerifyEvidencePackageResult
 from app.domain.entities import VerificationLog
 from app.domain.services.canonical_json_service import parse_canonical_json, to_canonical_json
-from app.domain.services.merkle_service import MerkleLeaf, build_merkle_root, verify_merkle_root
+from app.domain.services.merkle_service import MerkleLeaf, build_merkle_root
 from app.domain.services.sha256_service import sha256_hex
 from app.domain.value_objects.statuses import EvidencePackageStatus, VerificationType
 from app.infrastructure.db.unit_of_work import SqlAlchemyUnitOfWork
@@ -29,12 +29,20 @@ class VerifyEvidencePackageUseCase:
         items = self._uow.evidence_items.list_by_package(package.evidence_package_id)
         item_results: list[dict] = []
         all_items_valid = True
+        computed_leaves: list[MerkleLeaf] = []
 
         for item in items:
             payload = parse_canonical_json(item.canonical_payload_json or "{}")
             computed = sha256_hex(payload)
             is_valid = computed == item.item_hash
             all_items_valid = all_items_valid and is_valid
+            computed_leaves.append(
+                MerkleLeaf(
+                    item_id=str(item.evidence_item_id),
+                    item_order=item.item_order,
+                    item_hash=computed,
+                )
+            )
             self._uow.verification_logs.add(
                 VerificationLog(
                     verification_log_id=new_id(),
@@ -71,33 +79,15 @@ class VerifyEvidencePackageUseCase:
             )
         )
 
-        merkle_valid = verify_merkle_root(
-            [
-                MerkleLeaf(
-                    item_id=str(item.evidence_item_id),
-                    item_order=item.item_order,
-                    item_hash=item.item_hash or "",
-                )
-                for item in items
-            ],
-            package.merkle_root or "",
-        )
+        computed_merkle = build_merkle_root(computed_leaves).merkle_root if computed_leaves else ""
+        merkle_valid = computed_merkle == (package.merkle_root or "")
         self._uow.verification_logs.add(
             VerificationLog(
                 verification_log_id=new_id(),
                 evidence_package_id=package.evidence_package_id,
                 verification_type=VerificationType.MERKLE_ROOT.value,
                 expected_hash=package.merkle_root,
-                computed_hash=build_merkle_root(
-                    [
-                        MerkleLeaf(
-                            item_id=str(item.evidence_item_id),
-                            item_order=item.item_order,
-                            item_hash=item.item_hash or "",
-                        )
-                        for item in items
-                    ]
-                ).merkle_root,
+                computed_hash=computed_merkle,
                 is_valid=merkle_valid,
                 verified_at=utcnow(),
                 details_json=None,

@@ -42,6 +42,10 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
         class Location(FarmEntity):
             pass
 
+        class EmissionCycle(FarmEntity):
+            """Reporting cycle linking property, period, granularity and status."""
+            pass
+
         # ------------------------------------------------------------------ #
         # Record Module
         # ------------------------------------------------------------------ #
@@ -348,12 +352,20 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
             range = [TemporalContext]
 
         class refersToProperty(ObjectProperty):
-            domain = [DataRecord, Observation]
+            domain = [DataRecord, Observation, EmissionCycle, EmissionResult, CalculationResult]
             range = [Property]
 
         class refersToAnimal(ObjectProperty):
             domain = [DataRecord, Observation]
             range = [Animal]
+
+        class belongsToCycle(ObjectProperty):
+            domain = [Observation, EmissionResult, CalculationResult, CalculationExecution]
+            range = [EmissionCycle]
+
+        class hasPreviousResult(ObjectProperty):
+            domain = [EmissionResult, CalculationResult]
+            range = [CalculationResult]
 
         class hasObservation(ObjectProperty):
             domain = [DataRecord]
@@ -517,11 +529,88 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
         class hasParameterValue(DataProperty):
             range = [float]
 
+        class hasParameterLifecycleStatus(DataProperty):
+            """Lifecycle: pending | corrected | confirmed | published."""
+            domain = [CalculationParameter]
+            range = [str]
+
         class hasNumericResult(DataProperty):
             range = [float]
 
         class hasResultUnit(DataProperty):
             range = [str]
+
+        class hasResultLifecycleStatus(DataProperty):
+            """Lifecycle: preliminary | recalculated | approved | published."""
+            domain = [CalculationResult]
+            range = [str]
+
+        class hasResultKey(DataProperty):
+            """Deterministic logical key for upsert of results."""
+            domain = [CalculationResult]
+            range = [str]
+
+        class hasCO2eValue(DataProperty):
+            domain = [CalculationResult]
+            range = [float]
+
+        class hasCO2eUnit(DataProperty):
+            domain = [CalculationResult]
+            range = [str]
+
+        class hasFormulaId(DataProperty):
+            domain = [CalculationResult, CalculationExecution]
+            range = [str]
+
+        class hasMethodId(DataProperty):
+            domain = [CalculationResult]
+            range = [str]
+
+        class hasMethodVersion(DataProperty):
+            domain = [CalculationResult]
+            range = [str]
+
+        class hasCalculatedAt(DataProperty):
+            domain = [CalculationResult]
+            range = [str]
+
+        class hasOntologyVersion(DataProperty):
+            domain = [EmissionCycle, CalculationResult]
+            range = [str]
+
+        class hasCycleId(DataProperty):
+            domain = [EmissionCycle]
+            range = [str]
+
+        class hasCycleStatus(DataProperty):
+            """PendingApproval | Approved | Rejected | Published."""
+            domain = [EmissionCycle]
+            range = [str]
+
+        class hasReportingPeriod(DataProperty):
+            domain = [EmissionCycle, CalculationResult]
+            range = [str]
+
+        class hasWorkingOntologyPath(DataProperty):
+            domain = [EmissionCycle]
+            range = [str]
+
+        class hasPublishedOntologyPath(DataProperty):
+            domain = [EmissionCycle]
+            range = [str]
+
+        class hasObservationLifecycleStatus(DataProperty):
+            """pending | corrected | confirmed | published for activity values."""
+            domain = [Observation]
+            range = [str]
+
+        class hasObservationOrigin(DataProperty):
+            domain = [Observation]
+            range = [str]
+
+        class isActiveResult(DataProperty):
+            domain = [CalculationResult]
+            range = [bool]
 
         class hasGWP_CH4(DataProperty):
             range = [float]
@@ -580,7 +669,7 @@ def define_schema(base_iri: str = "http://example.org/agromrv-lite#") -> object:
 # Registry for validators and tests
 REQUIRED_CLASSES = [
     "Context", "OrganizationalContext", "TemporalContext",
-    "FarmEntity", "Property", "Animal", "Location",
+    "FarmEntity", "Property", "Animal", "Location", "EmissionCycle",
     "DataRecord", "AnnualPropertyInventoryRecord", "MonthlyPropertyRecord",
     "DailyAnimalProductionRecord", "DailyAnimalNutritionRecord",
     "Observation", "QuantitativeObservation", "QualitativeObservation",
@@ -618,7 +707,8 @@ REQUIRED_CLASSES = [
 
 REQUIRED_OBJECT_PROPERTIES = [
     "hasOrganizationalContext", "hasTemporalContext", "refersToProperty",
-    "refersToAnimal", "hasObservation", "observesVariable", "hasUnit",
+    "refersToAnimal", "belongsToCycle", "hasPreviousResult",
+    "hasObservation", "observesVariable", "hasUnit",
     "belongsToRecord", "hasRecordType", "hasCalculationMethod",
     "implementedByFunction", "implementedInSoftwareComponent", "calculatesGas",
     "calculatesEmissionSource", "requiresInputVariable", "usesEmissionFactor",
@@ -634,7 +724,13 @@ REQUIRED_DATA_PROPERTIES = [
     "hasNumericValue", "hasTextValue", "hasCanonicalName", "hasDisplayName",
     "hasOriginalColumnName", "hasExpectedUnit", "hasFunctionName", "hasModulePath",
     "hasFormulaExpression", "hasCalculationVersion", "hasMethodDescription",
-    "hasParameterName", "hasParameterValue", "hasNumericResult", "hasResultUnit",
+    "hasParameterName", "hasParameterValue", "hasParameterLifecycleStatus",
+    "hasNumericResult", "hasResultUnit",
+    "hasResultLifecycleStatus", "hasResultKey", "hasCO2eValue", "hasCO2eUnit",
+    "hasFormulaId", "hasMethodId", "hasMethodVersion", "hasCalculatedAt",
+    "hasOntologyVersion", "hasCycleId", "hasCycleStatus", "hasReportingPeriod",
+    "hasWorkingOntologyPath", "hasPublishedOntologyPath",
+    "hasObservationLifecycleStatus", "hasObservationOrigin", "isActiveResult",
     "hasGWP_CH4", "hasGWP_N2O", "hasGWP_CO2", "hasAggregationStrategy",
     "hasCompatibilityMode", "hasSourceLayout", "requiresGWPParameterSet",
 ]

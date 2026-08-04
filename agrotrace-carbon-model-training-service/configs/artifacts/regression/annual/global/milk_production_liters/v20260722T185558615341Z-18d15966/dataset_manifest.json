@@ -1,0 +1,13 @@
+{
+  "sha256": "18d15966cd597c29f438e430a8b1a7e0b9a93d6b72c84418881d6b174c871ec7",
+  "row_count": 24,
+  "columns": [
+    "property_id",
+    "period",
+    "lactating_cows",
+    "milk_production_liters"
+  ],
+  "property_count": 3,
+  "period_start": "2018-01-01T00:00:00",
+  "period_end": "2025-01-01T00:00:00"
+}

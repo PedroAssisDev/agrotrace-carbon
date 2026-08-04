@@ -1,0 +1,96 @@
+{
+  "timestamp": "2026-07-31T15:16:24.925674+00:00",
+  "status": "FALHOU",
+  "overall": "FAILURE",
+  "results": [
+    {
+      "name": "Raiz do módulo",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Arquivo .env",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Configuração",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "RPC Sepolia",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Carteira",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Saldo",
+      "status": "PASSOU",
+      "message": "derivado do teste de carteira"
+    },
+    {
+      "name": "Contrato",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "ABI",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Owner",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Banco",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Pacote",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Gate final",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Verificação off-chain",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Cálculos derivados",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Consulta prévia",
+      "status": "PASSOU",
+      "message": ""
+    },
+    {
+      "name": "Ancoragem real ou reaproveitamento",
+      "status": "FALHOU",
+      "message": "Ancoragem real falhou: KeyError: UUID('76c5e8fb-f7ac-44ff-94e6-315a4359e4b7')"
+    }
+  ],
+  "chain_id": 11155111,
+  "wallet": "0xa7f4F8b38f6c6a6c2ce47A849463E448d72A95A5",
+  "contract": "0x7dFc5d077c0911DcD29881aEf4B4EF5FFc1573Aa",
+  "package_id": "49a1dd76-7820-48f5-b630-4489a49887ec",
+  "evidence_key": "0x99071f8b7483349f48a48b38f5320459431a6a15bd1b87cb09ca81f9d2596849",
+  "package_hash": "0x6482c49265254b90530b4913c37ac98aef4d7d9eb968752b17c0794825e9ab83",
+  "merkle_root": "0xe09e32963a8c7563dd856865e455722377f5d7c5988507d0444120f2deae5c09",
+  "transaction_hash": null,
+  "block_number": null
+}

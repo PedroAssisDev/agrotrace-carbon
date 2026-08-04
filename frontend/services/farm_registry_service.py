@@ -65,7 +65,49 @@ def save_property(entry: dict[str, Any]) -> dict[str, Any]:
         raise FarmRegistryError("property_id é obrigatório para salvar a fazenda.")
     path = config.PROPERTIES_DIR / f"{property_id}.json"
     path.write_text(json.dumps(entry, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        from services.property_registry import invalidate_property_catalog_cache
+
+        invalidate_property_catalog_cache()
+    except Exception:
+        pass
     return entry
+
+
+def ensure_farm(
+    property_id: str,
+    name: str,
+    *,
+    municipality: str = "",
+    state: str = "",
+    production_type: str | None = None,
+) -> dict[str, Any]:
+    """Garante fazenda com ``property_id`` explícito (idempotente)."""
+    clean_id = (property_id or "").strip()
+    clean_name = " ".join((name or "").strip().split())
+    if not clean_id:
+        raise FarmRegistryError("property_id é obrigatório.")
+    if not clean_name:
+        raise FarmRegistryError("Informe o nome da fazenda.")
+
+    path = config.PROPERTIES_DIR / f"{clean_id}.json"
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict) and data.get("property_id"):
+                return data
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    entry = {
+        "property_id": clean_id,
+        "name": clean_name,
+        "municipality": (municipality or "").strip(),
+        "state": (state or "").strip().upper()[:2],
+        "production_type": production_type,
+        "created_at": now_iso(),
+    }
+    return save_property(entry)
 
 
 def register_farm(
@@ -74,19 +116,29 @@ def register_farm(
     municipality: str = "",
     state: str = "",
     production_type: str | None = None,
+    property_id: str | None = None,
 ) -> dict[str, Any]:
     """Cadastra fazenda nova ou reutiliza existente com o mesmo nome."""
     clean_name = " ".join((name or "").strip().split())
     if not clean_name:
         raise FarmRegistryError("Informe o nome da fazenda.")
 
+    if property_id:
+        return ensure_farm(
+            property_id,
+            clean_name,
+            municipality=municipality,
+            state=state,
+            production_type=production_type,
+        )
+
     existing = find_by_name(clean_name)
     if existing:
         return existing
 
-    property_id = f"FARM-{_slugify(clean_name)}-{uuid.uuid4().hex[:6].upper()}"
+    generated_id = f"FARM-{_slugify(clean_name)}-{uuid.uuid4().hex[:6].upper()}"
     entry = {
-        "property_id": property_id,
+        "property_id": generated_id,
         "name": clean_name,
         "municipality": (municipality or "").strip(),
         "state": (state or "").strip().upper()[:2],

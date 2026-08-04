@@ -292,7 +292,21 @@ def sync_controls_from_store(global_filter, context_cycle_id, cycle_data, filter
 def resync_after_pipeline(cycle_data, global_filter, context_cycle_id):
     """Re-normaliza após pipeline — preserva janela analítica quando possível."""
     if not cycle_data or not cycle_data.get("cycle_id"):
-        return no_update, no_update, no_update, refresh_filter_options(global_filter)
+        return no_update, no_update, no_update, no_update
+
+    gf = global_filter or {}
+    # Atalho: identidade fazenda/ciclo já alinhada — evita list_cycles + normalize
+    # (status-only no filtro já era descartado pelo _filter_state_equal).
+    if (
+        cycle_data.get("cycle_id") == gf.get("cycle_id")
+        and cycle_data.get("cycle_id") == context_cycle_id
+        and (
+            not cycle_data.get("property_id")
+            or cycle_data.get("property_id") == gf.get("farm_id")
+        )
+    ):
+        return no_update, no_update, no_update, no_update
+
     all_cycles = list_cycles()
     prev = normalize_filter_state(global_filter, all_cycles, context_cycle_id=context_cycle_id)
     period = cycle_period(cycle_data)
@@ -309,6 +323,7 @@ def resync_after_pipeline(cycle_data, global_filter, context_cycle_id):
 
     raw = {
         "farm_id": cycle_data.get("property_id") or prev.get("farm_id"),
+        "farm_name": cycle_data.get("property_name") or prev.get("farm_name"),
         "cycle_id": cycle_data.get("cycle_id"),
         "analysis_period_start": ap_start,
         "analysis_period_end": ap_end,
@@ -324,7 +339,16 @@ def resync_after_pipeline(cycle_data, global_filter, context_cycle_id):
         and _cycle_store_same(active, cycle_data)
     ):
         return no_update, no_update, no_update, no_update
-    return normalized, normalized.get("cycle_id"), active, refresh_filter_options(normalized)
+
+    # Só recalcula options quando muda fazenda ou ciclo (catálogo/períodos).
+    if (
+        normalized.get("farm_id") == gf.get("farm_id")
+        and normalized.get("cycle_id") == gf.get("cycle_id")
+    ):
+        options_out = no_update
+    else:
+        options_out = refresh_filter_options(normalized)
+    return normalized, normalized.get("cycle_id"), active, options_out
 
 
 def _get_farm_id(global_filter):
@@ -344,9 +368,22 @@ def update_filter_badge(global_filter, options):
 @callback(
     Output("filter-options-store", "data", allow_duplicate=True),
     Input("global-filter-store", "data"),
+    State("filter-options-store", "data"),
     prevent_initial_call=True,
 )
-def refresh_filter_options_on_store(global_filter):
+def refresh_filter_options_on_store(global_filter, current_options):
+    """Recarrega options só se a fazenda mudou (sync/clear já atualizam o store)."""
+    gf = global_filter or {}
+    farm_id = gf.get("farm_id")
+    cur = current_options or {}
+    # Se options já refletem a fazenda atual (sync_global_filter acabou de setar), não refaz.
+    props = cur.get("properties") or []
+    cycles = cur.get("cycles") or []
+    if farm_id and cycles:
+        # Options presentes e tipicamente já refreshados pelo sync — evita cascade.
+        # Ainda assim refresh se a lista de properties estiver vazia (bootstrap).
+        if props:
+            return no_update
     return refresh_filter_options(global_filter)
 
 

@@ -58,3 +58,34 @@ def individual_name(prefix: str, *parts: str) -> str:
     tokens = [normalize_token(p) for p in parts if p]
     name = "_".join([normalize_token(prefix), *tokens]) if tokens else normalize_token(prefix)
     return name
+
+
+def cycle_iri(cycle_id: str) -> str:
+    return f"cycle_{normalize_token(cycle_id)}"
+
+
+def result_iri(result_key: str) -> str:
+    return f"result_{normalize_token(result_key)}_{short_hash(result_key)}"
+
+
+def make_result_key(
+    *,
+    cycle_id: str,
+    formula_id: str,
+    gas: str,
+    period: str,
+    granularity: str,
+    org_scope: str = "property",
+    emission_source: str = "",
+) -> str:
+    return "|".join(
+        [
+            normalize_token(cycle_id),
+            normalize_token(formula_id or emission_source),
+            normalize_token(gas),
+            normalize_token(period),
+            normalize_token(granularity),
+            normalize_token(org_scope),
+            normalize_token(emission_source),
+        ]
+    )

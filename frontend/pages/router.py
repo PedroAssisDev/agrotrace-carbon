@@ -9,6 +9,7 @@ from pages import (
     dashboard,
     data_entry,
     emission_calculations,
+    forecasts,
     settings,
     sustainability_indicators,
     technical_audit,
@@ -20,6 +21,7 @@ ROUTES = {
     "/calculations": emission_calculations.layout,
     "/approval": approval_review.layout,
     "/indicators": sustainability_indicators.layout,
+    "/previsoes": forecasts.layout,
     "/technical-audit": technical_audit.layout,
     "/settings": settings.layout,
 }

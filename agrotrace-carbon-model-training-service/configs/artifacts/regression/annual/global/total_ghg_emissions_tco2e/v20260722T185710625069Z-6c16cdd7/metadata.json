@@ -1,0 +1,46 @@
+{
+  "model_id": "regression-annual-global-total_ghg_emissions_tco2e-v20260722T185710625069Z-6c16cdd7",
+  "version": "v20260722T185710625069Z-6c16cdd7",
+  "model_family": "regression",
+  "model_scope": "global",
+  "property_id": null,
+  "granularity": "annual",
+  "target": "total_ghg_emissions_tco2e",
+  "feature_schema": [
+    {
+      "name": "lactating_cows",
+      "type": "number",
+      "minimum": 0
+    }
+  ],
+  "feature_columns": [
+    "lactating_cows"
+  ],
+  "forecast_horizon": 1,
+  "regression_contract": "contemporaneous_applied_to_future_scenario",
+  "selected_candidate": "svr",
+  "selected_params": {
+    "C": 10.0,
+    "epsilon": 0.1,
+    "kernel": "linear"
+  },
+  "selection_comparison": {
+    "selected_candidate": "svr",
+    "baseline_name": "mean_per_cow_baseline",
+    "baseline_metric": 0.4705637196950529,
+    "winner_metric": 0.33171157218505815,
+    "absolute_improvement": 0.13885214750999475,
+    "percent_improvement": 29.507618564384302,
+    "selection_reason": "Candidato 'svr' selecionado: mae=0.33171157218505815 melhorou o baseline 'mean_per_cow_baseline'=0.4705637196950529 (delta_abs=0.13885214750999475, melhoria mínima=0.0).",
+    "metric_name": "mae",
+    "minimum_improvement_over_baseline": 0.0,
+    "float_comparison_tolerance": 0.0
+  },
+  "validation_strategy": "group_kfold_3",
+  "traceability": {
+    "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+    "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+    "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+  },
+  "created_at": "2026-07-22T18:57:10.625069+00:00"
+}

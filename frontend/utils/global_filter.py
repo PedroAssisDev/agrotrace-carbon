@@ -124,15 +124,18 @@ def is_no_farm_selected(filters: dict[str, Any] | None) -> bool:
     return not get_farm_id(filters)
 
 
-def _farm_name_from_id(farm_id: str | None) -> str | None:
+def _farm_name_from_id(
+    farm_id: str | None,
+    cycles: list[dict] | None = None,
+    *,
+    known_name: str | None = None,
+) -> str | None:
+    """Resolve nome sem varredura OWL — usa ciclos / registro persistido."""
     if not farm_id:
         return None
-    from services.property_registry import load_property_catalog
+    from services.property_registry import resolve_farm_name
 
-    for p in load_property_catalog():
-        if p.get("property_id") == farm_id:
-            return p.get("name") or farm_id
-    return farm_id
+    return resolve_farm_name(farm_id, cycles=cycles, known_name=known_name)
 
 
 def derive_status_fields(cycle: dict | None) -> dict[str, Any]:
@@ -539,7 +542,8 @@ def normalize_filter_state(
     if not farm_id:
         return copy.deepcopy(DEFAULT_GLOBAL_FILTER)
 
-    farm_name = _farm_name_from_id(farm_id)
+    known_name = (raw_filters or {}).get("farm_name") if raw_filters else None
+    farm_name = _farm_name_from_id(farm_id, all_cycles, known_name=known_name)
     farm_cycles = cycles_for_farm(all_cycles, farm_id)
     if not farm_cycles:
         return _empty_context(farm_id, farm_name)

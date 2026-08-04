@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-07-31T15:31:06.675508+00:00",
+  "status": "PASSOU",
+  "evidenceKey": "0xf3963aca683cb67f206eb8bd1dd5b8d7b1ef5e22aa37a6759f1828dd48f01906",
+  "packageHash": "0x5eaf17bac404289f9ae7a7416c5c29dd981a283a0247b314f5184a1da759787e",
+  "merkleRoot": "0x15918c3470eb5bda586139ef65f29b1a042acb09999bc1dd05f8025fbe9b853a",
+  "submitter": "0xa7f4F8b38f6c6a6c2ce47A849463E448d72A95A5",
+  "anchoredAt": 1785511860,
+  "event_evidence_key_match": true,
+  "event_package_hash_match": true,
+  "event_merkle_root_match": true,
+  "event_submitter_match": true
+}

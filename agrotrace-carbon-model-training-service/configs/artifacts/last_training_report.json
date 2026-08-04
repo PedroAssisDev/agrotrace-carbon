@@ -1,0 +1,431 @@
+{
+  "status": "completed",
+  "input_rows": 78,
+  "approved_rows": 78,
+  "datasets": {
+    "canonical": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\approved_results_canonical.csv",
+    "monthly_global": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\monthly\\global\\monthly_global.csv",
+    "monthly:property-001": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\monthly\\properties\\property-001.csv",
+    "monthly:property-002": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\monthly\\properties\\property-002.csv",
+    "monthly:property-003": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\monthly\\properties\\property-003.csv",
+    "annual_global": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\global\\annual_global.csv",
+    "annual:property-001": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\properties\\property-001.csv",
+    "audit_only:annual:property-001": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\properties\\property-001.csv",
+    "annual:property-002": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\properties\\property-002.csv",
+    "audit_only:annual:property-002": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\properties\\property-002.csv",
+    "annual:property-003": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\properties\\property-003.csv",
+    "audit_only:annual:property-003": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed\\annual\\properties\\property-003.csv"
+  },
+  "models": [
+    {
+      "model_id": "regression-monthly-global-milk_production_liters-v20260722T185706247087Z-8433582e",
+      "version": "v20260722T185706247087Z-8433582e",
+      "model_family": "regression",
+      "model_scope": "global",
+      "property_id": null,
+      "granularity": "monthly",
+      "target": "milk_production_liters",
+      "feature_schema": [
+        {
+          "name": "lactating_cows",
+          "type": "number",
+          "minimum": 0
+        }
+      ],
+      "feature_columns": [
+        "lactating_cows"
+      ],
+      "forecast_horizon": 1,
+      "regression_contract": "contemporaneous_applied_to_future_scenario",
+      "selected_candidate": "linear_regression",
+      "selected_params": {},
+      "selection_comparison": {
+        "selected_candidate": "linear_regression",
+        "baseline_name": "mean_per_cow_baseline",
+        "baseline_metric": 202.81402598463197,
+        "winner_metric": 201.90768818483934,
+        "absolute_improvement": 0.9063377997926239,
+        "percent_improvement": 0.4468812230280862,
+        "selection_reason": "Candidato 'linear_regression' selecionado: mae=201.90768818483934 melhorou o baseline 'mean_per_cow_baseline'=202.81402598463197 (delta_abs=0.9063377997926239, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "group_kfold_3",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:06.247087+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\regression\\monthly\\global\\milk_production_liters\\v20260722T185706247087Z-8433582e",
+      "baseline": "mean_per_cow_baseline",
+      "winner": "linear_regression"
+    },
+    {
+      "model_id": "regression-monthly-global-total_ghg_emissions_tco2e-v20260722T185707648542Z-b423d990",
+      "version": "v20260722T185707648542Z-b423d990",
+      "model_family": "regression",
+      "model_scope": "global",
+      "property_id": null,
+      "granularity": "monthly",
+      "target": "total_ghg_emissions_tco2e",
+      "feature_schema": [
+        {
+          "name": "lactating_cows",
+          "type": "number",
+          "minimum": 0
+        }
+      ],
+      "feature_columns": [
+        "lactating_cows"
+      ],
+      "forecast_horizon": 1,
+      "regression_contract": "contemporaneous_applied_to_future_scenario",
+      "selected_candidate": "linear_regression",
+      "selected_params": {},
+      "selection_comparison": {
+        "selected_candidate": "linear_regression",
+        "baseline_name": "mean_per_cow_baseline",
+        "baseline_metric": 0.08351043511095436,
+        "winner_metric": 0.0684735393732458,
+        "absolute_improvement": 0.01503689573770857,
+        "percent_improvement": 18.006008132672424,
+        "selection_reason": "Candidato 'linear_regression' selecionado: mae=0.0684735393732458 melhorou o baseline 'mean_per_cow_baseline'=0.08351043511095436 (delta_abs=0.01503689573770857, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "group_kfold_3",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:07.648542+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\regression\\monthly\\global\\total_ghg_emissions_tco2e\\v20260722T185707648542Z-b423d990",
+      "baseline": "mean_per_cow_baseline",
+      "winner": "linear_regression"
+    },
+    {
+      "model_id": "regression-annual-global-milk_production_liters-v20260722T185709144208Z-18d15966",
+      "version": "v20260722T185709144208Z-18d15966",
+      "model_family": "regression",
+      "model_scope": "global",
+      "property_id": null,
+      "granularity": "annual",
+      "target": "milk_production_liters",
+      "feature_schema": [
+        {
+          "name": "lactating_cows",
+          "type": "number",
+          "minimum": 0
+        }
+      ],
+      "feature_columns": [
+        "lactating_cows"
+      ],
+      "forecast_horizon": 1,
+      "regression_contract": "contemporaneous_applied_to_future_scenario",
+      "selected_candidate": "linear_regression",
+      "selected_params": {},
+      "selection_comparison": {
+        "selected_candidate": "linear_regression",
+        "baseline_name": "mean_per_cow_baseline",
+        "baseline_metric": 470.5637196950386,
+        "winner_metric": 346.5288818230013,
+        "absolute_improvement": 124.03483787203731,
+        "percent_improvement": 26.358776225337007,
+        "selection_reason": "Candidato 'linear_regression' selecionado: mae=346.5288818230013 melhorou o baseline 'mean_per_cow_baseline'=470.5637196950386 (delta_abs=124.03483787203731, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "group_kfold_3",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:09.144208+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\regression\\annual\\global\\milk_production_liters\\v20260722T185709144208Z-18d15966",
+      "baseline": "mean_per_cow_baseline",
+      "winner": "linear_regression"
+    },
+    {
+      "model_id": "regression-annual-global-total_ghg_emissions_tco2e-v20260722T185710625069Z-6c16cdd7",
+      "version": "v20260722T185710625069Z-6c16cdd7",
+      "model_family": "regression",
+      "model_scope": "global",
+      "property_id": null,
+      "granularity": "annual",
+      "target": "total_ghg_emissions_tco2e",
+      "feature_schema": [
+        {
+          "name": "lactating_cows",
+          "type": "number",
+          "minimum": 0
+        }
+      ],
+      "feature_columns": [
+        "lactating_cows"
+      ],
+      "forecast_horizon": 1,
+      "regression_contract": "contemporaneous_applied_to_future_scenario",
+      "selected_candidate": "svr",
+      "selected_params": {
+        "C": 10.0,
+        "epsilon": 0.1,
+        "kernel": "linear"
+      },
+      "selection_comparison": {
+        "selected_candidate": "svr",
+        "baseline_name": "mean_per_cow_baseline",
+        "baseline_metric": 0.4705637196950529,
+        "winner_metric": 0.33171157218505815,
+        "absolute_improvement": 0.13885214750999475,
+        "percent_improvement": 29.507618564384302,
+        "selection_reason": "Candidato 'svr' selecionado: mae=0.33171157218505815 melhorou o baseline 'mean_per_cow_baseline'=0.4705637196950529 (delta_abs=0.13885214750999475, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "group_kfold_3",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:10.625069+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\regression\\annual\\global\\total_ghg_emissions_tco2e\\v20260722T185710625069Z-6c16cdd7",
+      "baseline": "mean_per_cow_baseline",
+      "winner": "svr"
+    },
+    {
+      "model_id": "time-series-monthly-property-001-milk_production_liters-v20260722T185711516084Z-e101576d",
+      "version": "v20260722T185711516084Z-e101576d",
+      "model_family": "time_series",
+      "model_scope": "property",
+      "property_id": "property-001",
+      "granularity": "monthly",
+      "target": "milk_production_liters",
+      "feature_schema": [],
+      "uses_exogenous_variables": false,
+      "forecast_horizon": 3,
+      "selected_candidate": "autoreg_1",
+      "selection_comparison": {
+        "selected_candidate": "autoreg_1",
+        "baseline_name": "naive",
+        "baseline_metric": 1206.6666666666667,
+        "winner_metric": 606.7448254463662,
+        "absolute_improvement": 599.9218412203005,
+        "percent_improvement": 49.71727965914092,
+        "selection_reason": "Candidato 'autoreg_1' selecionado: mae=606.7448254463662 melhorou o baseline 'naive'=1206.6666666666667 (delta_abs=599.9218412203005, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "temporal_expanding_origin",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:11.516084+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\time_series\\monthly\\property-001\\milk_production_liters\\v20260722T185711516084Z-e101576d",
+      "baseline": "naive",
+      "winner": "autoreg_1"
+    },
+    {
+      "model_id": "time-series-monthly-property-001-total_ghg_emissions_tco2e-v20260722T185712296669Z-6b46674f",
+      "version": "v20260722T185712296669Z-6b46674f",
+      "model_family": "time_series",
+      "model_scope": "property",
+      "property_id": "property-001",
+      "granularity": "monthly",
+      "target": "total_ghg_emissions_tco2e",
+      "feature_schema": [],
+      "uses_exogenous_variables": false,
+      "forecast_horizon": 3,
+      "selected_candidate": "autoreg_1",
+      "selection_comparison": {
+        "selected_candidate": "autoreg_1",
+        "baseline_name": "naive",
+        "baseline_metric": 0.7755555555555554,
+        "winner_metric": 0.3884314828933435,
+        "absolute_improvement": 0.38712407266221194,
+        "percent_improvement": 49.91571137478378,
+        "selection_reason": "Candidato 'autoreg_1' selecionado: mae=0.3884314828933435 melhorou o baseline 'naive'=0.7755555555555554 (delta_abs=0.38712407266221194, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "temporal_expanding_origin",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:12.296669+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\time_series\\monthly\\property-001\\total_ghg_emissions_tco2e\\v20260722T185712296669Z-6b46674f",
+      "baseline": "naive",
+      "winner": "autoreg_1"
+    },
+    {
+      "model_id": "time-series-monthly-property-002-milk_production_liters-v20260722T185713316315Z-e8079607",
+      "version": "v20260722T185713316315Z-e8079607",
+      "model_family": "time_series",
+      "model_scope": "property",
+      "property_id": "property-002",
+      "granularity": "monthly",
+      "target": "milk_production_liters",
+      "feature_schema": [],
+      "uses_exogenous_variables": false,
+      "forecast_horizon": 3,
+      "selected_candidate": "autoreg_1",
+      "selection_comparison": {
+        "selected_candidate": "autoreg_1",
+        "baseline_name": "naive",
+        "baseline_metric": 1206.6666666666667,
+        "winner_metric": 606.7448254464697,
+        "absolute_improvement": 599.921841220197,
+        "percent_improvement": 49.71727965913235,
+        "selection_reason": "Candidato 'autoreg_1' selecionado: mae=606.7448254464697 melhorou o baseline 'naive'=1206.6666666666667 (delta_abs=599.921841220197, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "temporal_expanding_origin",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:13.316315+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\time_series\\monthly\\property-002\\milk_production_liters\\v20260722T185713316315Z-e8079607",
+      "baseline": "naive",
+      "winner": "autoreg_1"
+    },
+    {
+      "model_id": "time-series-monthly-property-002-total_ghg_emissions_tco2e-v20260722T185714631362Z-f22ca195",
+      "version": "v20260722T185714631362Z-f22ca195",
+      "model_family": "time_series",
+      "model_scope": "property",
+      "property_id": "property-002",
+      "granularity": "monthly",
+      "target": "total_ghg_emissions_tco2e",
+      "feature_schema": [],
+      "uses_exogenous_variables": false,
+      "forecast_horizon": 3,
+      "selected_candidate": "autoreg_1",
+      "selection_comparison": {
+        "selected_candidate": "autoreg_1",
+        "baseline_name": "naive",
+        "baseline_metric": 0.7755555555555548,
+        "winner_metric": 0.3884314828932567,
+        "absolute_improvement": 0.3871240726622981,
+        "percent_improvement": 49.91571137479494,
+        "selection_reason": "Candidato 'autoreg_1' selecionado: mae=0.3884314828932567 melhorou o baseline 'naive'=0.7755555555555548 (delta_abs=0.3871240726622981, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "temporal_expanding_origin",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:14.631362+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\time_series\\monthly\\property-002\\total_ghg_emissions_tco2e\\v20260722T185714631362Z-f22ca195",
+      "baseline": "naive",
+      "winner": "autoreg_1"
+    },
+    {
+      "model_id": "time-series-monthly-property-003-milk_production_liters-v20260722T185716081223Z-1109fa6c",
+      "version": "v20260722T185716081223Z-1109fa6c",
+      "model_family": "time_series",
+      "model_scope": "property",
+      "property_id": "property-003",
+      "granularity": "monthly",
+      "target": "milk_production_liters",
+      "feature_schema": [],
+      "uses_exogenous_variables": false,
+      "forecast_horizon": 3,
+      "selected_candidate": "autoreg_1",
+      "selection_comparison": {
+        "selected_candidate": "autoreg_1",
+        "baseline_name": "naive",
+        "baseline_metric": 1206.6666666666667,
+        "winner_metric": 606.7448254464257,
+        "absolute_improvement": 599.921841220241,
+        "percent_improvement": 49.717279659136,
+        "selection_reason": "Candidato 'autoreg_1' selecionado: mae=606.7448254464257 melhorou o baseline 'naive'=1206.6666666666667 (delta_abs=599.921841220241, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "temporal_expanding_origin",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:16.081223+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\time_series\\monthly\\property-003\\milk_production_liters\\v20260722T185716081223Z-1109fa6c",
+      "baseline": "naive",
+      "winner": "autoreg_1"
+    },
+    {
+      "model_id": "time-series-monthly-property-003-total_ghg_emissions_tco2e-v20260722T185717438602Z-4c614d30",
+      "version": "v20260722T185717438602Z-4c614d30",
+      "model_family": "time_series",
+      "model_scope": "property",
+      "property_id": "property-003",
+      "granularity": "monthly",
+      "target": "total_ghg_emissions_tco2e",
+      "feature_schema": [],
+      "uses_exogenous_variables": false,
+      "forecast_horizon": 3,
+      "selected_candidate": "autoreg_1",
+      "selection_comparison": {
+        "selected_candidate": "autoreg_1",
+        "baseline_name": "naive",
+        "baseline_metric": 0.7755555555555552,
+        "winner_metric": 0.38843148289325113,
+        "absolute_improvement": 0.3871240726623041,
+        "percent_improvement": 49.91571137479568,
+        "selection_reason": "Candidato 'autoreg_1' selecionado: mae=0.38843148289325113 melhorou o baseline 'naive'=0.7755555555555552 (delta_abs=0.3871240726623041, melhoria mínima=0.0).",
+        "metric_name": "mae",
+        "minimum_improvement_over_baseline": 0.0,
+        "float_comparison_tolerance": 0.0
+      },
+      "validation_strategy": "temporal_expanding_origin",
+      "traceability": {
+        "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+        "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+        "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+      },
+      "created_at": "2026-07-22T18:57:17.438602+00:00",
+      "artifact_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\time_series\\monthly\\property-003\\total_ghg_emissions_tco2e\\v20260722T185717438602Z-4c614d30",
+      "baseline": "naive",
+      "winner": "autoreg_1"
+    }
+  ],
+  "skipped": [],
+  "skipped_properties": [],
+  "errors": [],
+  "gap_policy": "reject",
+  "selection": {
+    "metric": "mae",
+    "minimum_improvement_over_baseline": 0.0
+  },
+  "validation_strategies_used": [
+    "group_kfold_3",
+    "temporal_expanding_origin"
+  ],
+  "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+  "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json",
+  "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+  "duration_seconds": 12.692
+}

@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-07-31T15:24:12.950744+00:00",
+  "status": "PASSOU",
+  "evidence_package_id": "548d2a85-f445-458a-b293-c94f4891863e",
+  "network_code": "ethereum_sepolia",
+  "chain_id": 11155111,
+  "contract_address": "0x7dFc5d077c0911DcD29881aEf4B4EF5FFc1573Aa",
+  "evidence_key": "0x721e3ac1463d30f3bace316dcba726fd255945f1583e016bdbabdc5ccce5c632",
+  "package_hash": "0x491cb71d88b64c23dadcfd1c96a6ac17ec74de0209f3c1d11a7d9224fe4960b6",
+  "merkle_root": "0x61cdffece878863c5207fb8c02757888c4193b12c94a7639f0b88886c03a4ef9",
+  "transaction_hash": "0x229c5ccaec1a6065e2b6729a31d85605d641fdc927db200212d7f69778d0a44e",
+  "block_number": 11390263,
+  "anchoring_status": "confirmed",
+  "receipt_status": 1,
+  "gas_used": 92378,
+  "effective_gas_price": 2077652289,
+  "from_address": "0xa7f4F8b38f6c6a6c2ce47A849463E448d72A95A5",
+  "anchored_at": 1785511452,
+  "confirmations": 1,
+  "explorer_url": "https://sepolia.etherscan.io/tx/0x229c5ccaec1a6065e2b6729a31d85605d641fdc927db200212d7f69778d0a44e",
+  "idempotent_reuse": false,
+  "anchoring_mode": "real"
+}

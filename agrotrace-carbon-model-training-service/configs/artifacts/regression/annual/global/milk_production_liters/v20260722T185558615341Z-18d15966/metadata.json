@@ -1,0 +1,42 @@
+{
+  "model_id": "regression-annual-global-milk_production_liters-v20260722T185558615341Z-18d15966",
+  "version": "v20260722T185558615341Z-18d15966",
+  "model_family": "regression",
+  "model_scope": "global",
+  "property_id": null,
+  "granularity": "annual",
+  "target": "milk_production_liters",
+  "feature_schema": [
+    {
+      "name": "lactating_cows",
+      "type": "number",
+      "minimum": 0
+    }
+  ],
+  "feature_columns": [
+    "lactating_cows"
+  ],
+  "forecast_horizon": 1,
+  "regression_contract": "contemporaneous_applied_to_future_scenario",
+  "selected_candidate": "linear_regression",
+  "selected_params": {},
+  "selection_comparison": {
+    "selected_candidate": "linear_regression",
+    "baseline_name": "mean_per_cow_baseline",
+    "baseline_metric": 470.5637196950386,
+    "winner_metric": 346.5288818230013,
+    "absolute_improvement": 124.03483787203731,
+    "percent_improvement": 26.358776225337007,
+    "selection_reason": "Candidato 'linear_regression' selecionado: mae=346.5288818230013 melhorou o baseline 'mean_per_cow_baseline'=470.5637196950386 (Δabs=124.03483787203731, melhoria mínima=0.0).",
+    "metric_name": "mae",
+    "minimum_improvement_over_baseline": 0.0,
+    "float_comparison_tolerance": 0.0
+  },
+  "validation_strategy": "group_kfold_3",
+  "traceability": {
+    "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+    "environment_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\training_environment.json",
+    "resolved_config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts\\resolved_config.json"
+  },
+  "created_at": "2026-07-22T18:55:58.615341+00:00"
+}

@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-07-31T15:31:04.843720+00:00",
+  "status": 1,
+  "transactionHash": "0xca2d00fa0a3f943af459183e2692bf00fddea7f6a3e75fa4390a914aa3628f1c",
+  "blockNumber": 11390296,
+  "blockHash": "0x35161839fa1e038da9dc5982c3b66712abeeab9fbf410947f66452809175e357",
+  "transactionIndex": 28,
+  "from": "0xa7f4F8b38f6c6a6c2ce47A849463E448d72A95A5",
+  "to": "0x7dFc5d077c0911DcD29881aEf4B4EF5FFc1573Aa",
+  "gasUsed": 92378,
+  "effectiveGasPrice": 2054759001,
+  "cumulativeGasUsed": 5450316,
+  "logs count": 1,
+  "confirmations atuais": 1,
+  "explorer_url": "https://sepolia.etherscan.io/tx/0xca2d00fa0a3f943af459183e2692bf00fddea7f6a3e75fa4390a914aa3628f1c"
+}

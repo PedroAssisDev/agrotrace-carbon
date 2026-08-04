@@ -1,0 +1,12 @@
+{
+  "sha256": "6b46674f631b98ccb8e46546faf28d087ff518c29f759d379d79bc34f1fa46ad",
+  "row_count": 18,
+  "columns": [
+    "property_id",
+    "period",
+    "total_ghg_emissions_tco2e"
+  ],
+  "property_count": 1,
+  "period_start": "2024-01-01T00:00:00",
+  "period_end": "2025-06-01T00:00:00"
+}

@@ -24,6 +24,7 @@ from utils.file_helpers import (
 )
 from utils.global_filter import default_upload_period, normalize_filter_state, normalize_global_filter
 from utils.callback_logging import log_callback, log_filter_summary
+from utils.pipeline_logging import timed_op
 
 logger = logging.getLogger("agrotrace.upload")
 
@@ -175,44 +176,47 @@ def register_raw(
     )
 
     try:
-        if contents and filename:
-            _, content_string = contents.split(",", 1)
-            decoded = base64.b64decode(content_string)
-            raw_meta = save_uploaded_content(
-                decoded,
-                property_id=effective_id,
-                reporting_period=effective_period,
-                original_filename=filename,
-            )
-        elif sample:
-            src = SAMPLE_DATA_DIR / sample
-            raw_meta = save_raw_file(src, property_id=effective_id, reporting_period=effective_period)
-        else:
-            return no_update, no_update, no_update, no_update
+        with timed_op() as timer:
+            if contents and filename:
+                _, content_string = contents.split(",", 1)
+                decoded = base64.b64decode(content_string)
+                raw_meta = save_uploaded_content(
+                    decoded,
+                    property_id=effective_id,
+                    reporting_period=effective_period,
+                    original_filename=filename,
+                )
+            elif sample:
+                src = SAMPLE_DATA_DIR / sample
+                raw_meta = save_raw_file(src, property_id=effective_id, reporting_period=effective_period)
+            else:
+                return no_update, no_update, no_update, no_update
 
-        result = strip_private_keys(local_orchestrator.run_auto_pipeline_after_ingestion(
-            raw_meta,
-            property_id=effective_id,
-            property_name=effective_name,
-            reporting_period=effective_period,
-            layout_name=layout_name,
-            layout_id=layout_id,
-            frequency=frequency,
-            uploaded_by=uploaded_by or "frontend@agrotrace",
-        ))
-        save_cycle(result)
-        normalized, options = _sync_stores_after_upload(
-            global_filter,
-            effective_id,
-            effective_name,
-            result.get("cycle_id"),
-        )
-        logger.info(
-            "[UPLOAD] done cycle=%s reporting_period=%s status=%s",
-            result.get("cycle_id"),
-            result.get("reporting_period"),
-            result.get("current_status"),
-        )
+            result = strip_private_keys(local_orchestrator.run_auto_pipeline_after_ingestion(
+                raw_meta,
+                property_id=effective_id,
+                property_name=effective_name,
+                reporting_period=effective_period,
+                layout_name=layout_name,
+                layout_id=layout_id,
+                frequency=frequency,
+                uploaded_by=uploaded_by or "frontend@agrotrace",
+            ))
+            save_cycle(result)
+            normalized, options = _sync_stores_after_upload(
+                global_filter,
+                effective_id,
+                effective_name,
+                result.get("cycle_id"),
+            )
+            logger.info(
+                "[UPLOAD] done cycle=%s pipeline_run_id=%s reporting_period=%s status=%s duration_ms=%.1f",
+                result.get("cycle_id"),
+                result.get("pipeline_run_id"),
+                result.get("reporting_period"),
+                result.get("current_status"),
+                timer.duration_ms,
+            )
         used_demo_warning = not farm_id and not (farm_name_input or "").strip()
         return (
             cycle_store_summary(append_demo_warning(result, used_demo_warning)),
@@ -256,68 +260,21 @@ def run_verify_cb(n_ok, n_bad, selected_cycle_id, cycle):
 @callback(
     Output("cycle-store", "data", allow_duplicate=True),
     Input("btn-run-full-pipeline", "n_clicks", allow_optional=True),
-    State("cycle-store", "data"),
-    State("upload-sample", "value", allow_optional=True),
-    State("global-filter-store", "data"),
-    State("filter-options-store", "data"),
     prevent_initial_call=True,
 )
-def run_full_pipeline_cb(n, cycle, sample, global_filter, filter_options):
-    if not n:
-        return no_update
-    gf = normalize_global_filter(global_filter)
-    catalog = (filter_options or {}).get("properties") or []
-    farm_id = get_selected_farm(gf)
-    property_id, property_name = resolve_pipeline_property(
-        farm_id, catalog, MOCK_FARM["property_id"], MOCK_FARM["name"]
-    )
-    if property_id is None:
-        cycle = cycle or {}
-        cycle.setdefault("errors", []).append({
-            "step": "raw_data",
-            "message": "Selecione uma fazenda no filtro global para executar a pipeline.",
-        })
-        return cycle
-    sample = sample or "monthly_report.csv"
-    src = SAMPLE_DATA_DIR / sample
-    if not src.exists():
-        src = SAMPLE_DATA_DIR / "calculate_data_mensal.csv"
-    reporting_period = (cycle or {}).get("reporting_period") or default_upload_period(gf)
-    raw_meta = save_raw_file(src, property_id=property_id, reporting_period=reporting_period)
-    result = strip_private_keys(local_orchestrator.run_full_pipeline(
-        raw_meta,
-        property_id=property_id,
-        property_name=property_name,
-        reporting_period=reporting_period,
-        layout_name="monthly",
-    ))
-    result["demo_mode"] = True
-    save_cycle(result)
-    return cycle_store_summary(append_demo_warning(result, not farm_id))
+def run_full_pipeline_cb(n):
+    """Demo removida — use seed_test_scenarios.py / fluxo operacional."""
+    return no_update
 
 
 @callback(
     Output("cycle-store", "data", allow_duplicate=True),
     Input("btn-load-demo", "n_clicks", allow_optional=True),
-    State("global-filter-store", "data"),
-    State("filter-options-store", "data"),
     prevent_initial_call=True,
 )
-def load_demo_cb(n, global_filter, filter_options):
-    if not n:
-        return no_update
-    gf = normalize_global_filter(global_filter)
-    farm_id = get_selected_farm(gf)
-    catalog = (filter_options or {}).get("properties") or []
-    demo = mock_full_cycle()
-    if farm_id:
-        demo["property_id"] = farm_id
-        for p in catalog:
-            if p.get("property_id") == farm_id:
-                demo["property_name"] = p.get("name") or demo.get("property_name")
-                break
-    save_cycle(demo)
-    return cycle_store_summary(demo)
+def load_demo_cb(n):
+    """Demo mock removida do runtime."""
+    return no_update
 
 
 @callback(

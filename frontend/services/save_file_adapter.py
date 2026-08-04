@@ -18,6 +18,7 @@ from typing import Any
 from config import SAVE_FILE_ORIGINALS_DIR, SAVE_FILE_SERVICE_DIR, ensure_data_dirs
 from utils.date_helpers import now_iso
 from utils.hash_helpers import sha256_file
+from utils.pipeline_logging import log_call, timed_op, truncate
 
 logger = logging.getLogger("agrotrace.save_file")
 
@@ -124,21 +125,44 @@ def save_raw_file(
 ) -> dict[str, Any]:
     """Preserva o arquivo original via serviço save-file e retorna metadados."""
     ensure_data_dirs()
-    svc = _load_service()
-    if svc is not None:
-        return svc.save_original_file(
-            source_path,
-            property_id=property_id,
-            reporting_period=reporting_period,
-            original_filename=original_filename,
-            dest_dir=SAVE_FILE_ORIGINALS_DIR,
-        )
-    return _fallback_save_file(
-        source_path,
+    name = original_filename or Path(source_path).name
+    log_call(
+        logger,
+        "save_file.start",
         property_id=property_id,
-        reporting_period=reporting_period,
-        original_filename=original_filename,
+        period=reporting_period,
+        file=name,
     )
+    with timed_op() as timer:
+        svc = _load_service()
+        if svc is not None:
+            meta = svc.save_original_file(
+                source_path,
+                property_id=property_id,
+                reporting_period=reporting_period,
+                original_filename=original_filename,
+                dest_dir=SAVE_FILE_ORIGINALS_DIR,
+            )
+            mode = "real"
+        else:
+            meta = _fallback_save_file(
+                source_path,
+                property_id=property_id,
+                reporting_period=reporting_period,
+                original_filename=original_filename,
+            )
+            mode = "fallback"
+        log_call(
+            logger,
+            "save_file.done",
+            mode=mode,
+            property_id=property_id,
+            period=reporting_period,
+            file=name,
+            sha256=truncate(meta.get("sha256")),
+            duration_ms=timer.duration_ms,
+        )
+    return meta
 
 
 def save_uploaded_content(
@@ -150,18 +174,40 @@ def save_uploaded_content(
 ) -> dict[str, Any]:
     """Preserva conteúdo enviado (bytes/str) via serviço save-file."""
     ensure_data_dirs()
-    svc = _load_service()
-    if svc is not None:
-        return svc.save_original_content(
-            content,
-            property_id=property_id,
-            reporting_period=reporting_period,
-            original_filename=original_filename,
-            dest_dir=SAVE_FILE_ORIGINALS_DIR,
-        )
-    return _fallback_save_content(
-        content,
+    log_call(
+        logger,
+        "save_content.start",
         property_id=property_id,
-        reporting_period=reporting_period,
-        original_filename=original_filename,
+        period=reporting_period,
+        file=original_filename,
     )
+    with timed_op() as timer:
+        svc = _load_service()
+        if svc is not None:
+            meta = svc.save_original_content(
+                content,
+                property_id=property_id,
+                reporting_period=reporting_period,
+                original_filename=original_filename,
+                dest_dir=SAVE_FILE_ORIGINALS_DIR,
+            )
+            mode = "real"
+        else:
+            meta = _fallback_save_content(
+                content,
+                property_id=property_id,
+                reporting_period=reporting_period,
+                original_filename=original_filename,
+            )
+            mode = "fallback"
+        log_call(
+            logger,
+            "save_content.done",
+            mode=mode,
+            property_id=property_id,
+            period=reporting_period,
+            file=original_filename,
+            sha256=truncate(meta.get("sha256")),
+            duration_ms=timer.duration_ms,
+        )
+    return meta

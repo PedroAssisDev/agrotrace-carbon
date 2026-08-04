@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-07-31T15:31:17.947874+00:00",
+  "status": "PASSOU",
+  "campo alterado": "campo_teste_validacao_sepolia",
+  "valor original resumido": "(ausente)",
+  "valor adulterado": "VALOR_ADULTERADO",
+  "Payload original preservado": true,
+  "Hash original": "0x5eaf17bac404289f9ae7a7416c5c29dd981a283a0247b314f5184a1da759787e",
+  "Hash adulterado": "0x3d26cda9263b7a64914e1f67adab1f3070ae89b63f36eecad483fe69e3276904",
+  "Hash on-chain": "0x5eaf17bac404289f9ae7a7416c5c29dd981a283a0247b314f5184a1da759787e",
+  "Original corresponde ao on-chain": true,
+  "Adulterado corresponde ao on-chain": false,
+  "Integridade original": true,
+  "Integridade adulterada": false,
+  "original_match": true,
+  "tampered_match": false,
+  "tampered_integrity": false,
+  "canonical_adulterado_len": 797
+}

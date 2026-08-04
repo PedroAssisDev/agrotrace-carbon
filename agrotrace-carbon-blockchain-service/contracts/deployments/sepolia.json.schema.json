@@ -1,0 +1,14 @@
+{
+  "network_code": "ethereum_sepolia",
+  "chain_id": 11155111,
+  "contract_name": "CarbonEvidenceRegistry",
+  "contract_address": "",
+  "deployment_transaction_hash": "",
+  "deployment_block_number": 0,
+  "deployer_address": "",
+  "deployed_at": "",
+  "contract_version": "1.0.0",
+  "abi_file": "app/infrastructure/anchoring/contracts/CarbonEvidenceRegistry.abi.json",
+  "status": "not_deployed",
+  "notes": "Fill after a real Sepolia deploy. Do not invent values."
+}

@@ -44,6 +44,7 @@ UNITS: list[dict[str, str]] = [
     {"name": "kg_dm_per_day", "display": "Kilogram DM per day"},
     {"name": "mj_per_kg_dm", "display": "MJ per kg DM"},
     {"name": "kg_ch4_per_head_month", "display": "kg CH4 per head per month"},
+    {"name": "kg_ch4_per_head_year", "display": "kg CH4 per head per year"},
     {"name": "currency", "display": "Currency"},
     {"name": "dimensionless", "display": "Dimensionless"},
     {"name": "text", "display": "Text"},
@@ -179,16 +180,76 @@ SOFTWARE_COMPONENTS: list[dict[str, str]] = [
 ]
 
 GWP_PARAMETER_SET_EXAMPLE = {
-    "name": "gwp_set_example_2026",
-    "description": "Example injectable GWP parameter set — not a fixed scientific standard.",
-    "gwp_ch4": None,
-    "gwp_n2o": None,
+    "name": "gwp_ipcc_ar4_default",
+    "description": (
+        "GWP IPCC AR4 (caixa de ferramentas EcoFarm) — valores injetáveis no cálculo; "
+        "fonte alinhada a emissions.defaults.gwp_ipcc_ar4."
+    ),
+    "gwp_ch4": 25.0,
+    "gwp_n2o": 298.0,
     "gwp_co2": 1.0,
+}
+
+# Espelhos numéricos de emissions.defaults (fonte de documentação semântica na ontologia).
+# Mantidos aqui para o ontology-manager não depender do calculation-service no import.
+_DEFAULT_ENTERIC_YEARLY = {
+    "Lactating_Cows": 100.0,
+    "Dry_Cows": 50.0,
+    "Heifers": 30.0,
+    "Calves": 20.0,
+    "Bulls": 10.0,
+}
+_DEFAULT_MANURE_MD = {
+    "Lactating_Cows": 0.08,
+    "Dry_Cows": 0.07,
+    "Heifers": 0.06,
+    "Calves": 0.05,
+    "Bulls": 0.09,
+}
+# Espelho de emissions.defaults.default_manure_ch4_kg_per_kg_manure (recalibrado).
+_DEFAULT_MANURE_EF = {
+    "Lactating_Cows": 0.001,
+    "Dry_Cows": 0.0008,
+    "Heifers": 0.0007,
+    "Calves": 0.0006,
+    "Bulls": 0.0012,
+}
+_DEFAULT_ENERGY = {
+    "Diesel": 2.68,
+    "Gasoline": 2.31,
+    "Electricity_Grid": 0.233,
+    "Photovoltaic_Energy": 0.0,
+}
+_DEFAULT_FERTILIZER = {
+    "direct_n2o_emission_factor": 0.01,
+    "indirect_n2o_emission_factor": 0.005,
+    "fraction_n_volatilized": 0.1,
 }
 
 
 def _get_class(onto: object, class_name: str) -> type:
     return getattr(onto, class_name)
+
+
+def _add_emission_factor(
+    onto: object,
+    *,
+    group: str,
+    key: str,
+    value: float,
+    unit_name: str | None,
+    unit_individuals: dict[str, object],
+) -> object:
+    ind = _get_class(onto, "EmissionFactor")(
+        iri_mod.individual_name("ef", f"{group}_{key}")
+    )
+    ind.label = [f"{group}:{key}"]
+    ind.hasParameterName = [f"{group}:{key}"]
+    ind.hasParameterValue = [float(value)]
+    ind.hasParameterLifecycleStatus = ["pending"]
+    if unit_name and unit_name in unit_individuals:
+        ind.hasUnit = [unit_individuals[unit_name]]
+    return ind
 
 
 def populate_catalogs(onto: object) -> None:
@@ -241,13 +302,75 @@ def populate_catalogs(onto: object) -> None:
             ind.hasModulePath = [sw["module_path"]]
             sw_individuals[sw["name"]] = ind
 
-        # GWP example (injectable, no fixed CH4/N2O values)
+        # GWP IPCC AR4 (valores canônicos alinhados ao calculation-service)
         gwp = _get_class(onto, "GWPParameterSet")(
             iri_mod.individual_name("gwp", GWP_PARAMETER_SET_EXAMPLE["name"])
         )
         gwp.label = [GWP_PARAMETER_SET_EXAMPLE["name"]]
         gwp.hasMethodDescription = [GWP_PARAMETER_SET_EXAMPLE["description"]]
+        gwp.hasGWP_CH4 = [GWP_PARAMETER_SET_EXAMPLE["gwp_ch4"]]
+        gwp.hasGWP_N2O = [GWP_PARAMETER_SET_EXAMPLE["gwp_n2o"]]
         gwp.hasGWP_CO2 = [GWP_PARAMETER_SET_EXAMPLE["gwp_co2"]]
+        gwp.hasParameterLifecycleStatus = ["pending"]
+        gwp.hasParameterName = ["gwp_set"]
+
+        # EmissionFactor individuals (defaults Tier-1 / EcoFarm)
+        ef_individuals: list[object] = []
+        for key, value in _DEFAULT_ENTERIC_YEARLY.items():
+            ef_individuals.append(
+                _add_emission_factor(
+                    onto,
+                    group="enteric",
+                    key=key,
+                    value=value,
+                    unit_name="kg_ch4_per_head_year",
+                    unit_individuals=unit_individuals,
+                )
+            )
+        for key, value in _DEFAULT_MANURE_MD.items():
+            ef_individuals.append(
+                _add_emission_factor(
+                    onto,
+                    group="manure_md",
+                    key=key,
+                    value=value,
+                    unit_name=None,
+                    unit_individuals=unit_individuals,
+                )
+            )
+        for key, value in _DEFAULT_MANURE_EF.items():
+            ef_individuals.append(
+                _add_emission_factor(
+                    onto,
+                    group="manure_ef",
+                    key=key,
+                    value=value,
+                    unit_name=None,
+                    unit_individuals=unit_individuals,
+                )
+            )
+        for key, value in _DEFAULT_ENERGY.items():
+            ef_individuals.append(
+                _add_emission_factor(
+                    onto,
+                    group="energy",
+                    key=key,
+                    value=value,
+                    unit_name=None,
+                    unit_individuals=unit_individuals,
+                )
+            )
+        for key, value in _DEFAULT_FERTILIZER.items():
+            ef_individuals.append(
+                _add_emission_factor(
+                    onto,
+                    group="fertilizer",
+                    key=key,
+                    value=value,
+                    unit_name=None,
+                    unit_individuals=unit_individuals,
+                )
+            )
 
         # Calculation methods
         for m in CALCULATION_METHODS:
@@ -288,6 +411,7 @@ def populate_catalogs(onto: object) -> None:
         "gases": gas_individuals,
         "sources": source_individuals,
         "software": sw_individuals,
+        "emission_factors_count": len(ef_individuals),
     }
 
 

@@ -1,0 +1,59 @@
+{
+  "paths": {
+    "processed_data_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\data\\processed",
+    "artifacts_dir": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\artifacts"
+  },
+  "validation": {
+    "approved_values": [
+      "approved",
+      "aprovado"
+    ],
+    "published_values": [
+      "published",
+      "publicado"
+    ],
+    "duplicate_policy": "reject",
+    "monthly_gap_policy": "reject"
+  },
+  "selection": {
+    "metric": "mae",
+    "minimum_improvement_over_baseline": 0.0
+  },
+  "regression": {
+    "enabled": true,
+    "granularities": [
+      "monthly",
+      "annual"
+    ],
+    "targets": [
+      "milk_production_liters",
+      "total_ghg_emissions_tco2e"
+    ],
+    "feature": "lactating_cows",
+    "scope": "global",
+    "min_records": 8,
+    "random_state": 42,
+    "max_cv_splits": 5,
+    "candidate_profile": "core"
+  },
+  "time_series": {
+    "enabled": true,
+    "granularity": "monthly",
+    "targets": [
+      "milk_production_liters",
+      "total_ghg_emissions_tco2e"
+    ],
+    "min_records": 12,
+    "forecast_horizon": 3,
+    "max_validation_folds": 3,
+    "minimum_train_size": 8,
+    "seasonal_period": 12,
+    "enable_seasonal_models_from": 24,
+    "enable_lstm": false,
+    "lstm_min_records": 36
+  },
+  "_meta": {
+    "config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\training.yaml",
+    "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8"
+  }
+}

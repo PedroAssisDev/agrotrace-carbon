@@ -11,6 +11,7 @@ _STATUS_LABELS = {
     "DEFAULT_ASSUMED": "Default",
     "MISSING_ZERO": "Ausente (zero)",
     "fallback_defaults": "Fallback",
+    "empty_inputs": "Sem entradas",
     "normalized_data": "Dado real",
     "mock": "Simulado",
     "real": "Real",

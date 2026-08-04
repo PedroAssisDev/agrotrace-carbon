@@ -1,0 +1,30 @@
+{
+  "config_path": "C:\\Users\\PedroAssis\\Documents\\agrotrace-carbon\\agrotrace-carbon-model-training-service\\configs\\training.yaml",
+  "config_sha256": "1d1462632a030ed2fa9481dc8ccb1609f88a5581b570a14aa29843134fd121b8",
+  "random_state": 42,
+  "selection": {
+    "metric": "mae",
+    "minimum_improvement_over_baseline": 0.0,
+    "regression_baseline": "mean_per_cow_baseline",
+    "time_series_baseline": "naive"
+  },
+  "validation": {
+    "monthly_gap_policy": "reject",
+    "duplicate_policy": "reject"
+  },
+  "python_version": "3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)]",
+  "package_versions": {
+    "pandas": "2.3.3",
+    "numpy": "2.4.4",
+    "scikit-learn": "1.9.0",
+    "statsmodels": "0.14.6",
+    "joblib": "1.5.3"
+  },
+  "git_commit": null,
+  "git_working_tree_clean": null,
+  "time_series": {
+    "forecast_horizon": 3,
+    "enable_lstm": false,
+    "lstm_min_records": 36
+  }
+}

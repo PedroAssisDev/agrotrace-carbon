@@ -94,6 +94,7 @@ class BlockchainTransaction:
     response_payload_json: str | None
     created_at: datetime
     updated_at: datetime
+    idempotency_key: str | None = None
 
 
 @dataclass(slots=True)

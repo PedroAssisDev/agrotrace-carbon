@@ -38,12 +38,20 @@ from services.pipeline_guards import (
 from services.provenance_event_catalog import emit_pipeline_event
 from utils.date_helpers import now_iso
 from utils.file_helpers import save_cycle
+from utils.pipeline_logging import (
+    ids_from_cycle,
+    log_decision,
+    log_fail,
+    log_pipe,
+    timed_op,
+    truncate,
+)
 
 logger = logging.getLogger("agrotrace.orchestrator")
 
 # Cache em memória do objeto de ontologia (owlready2), que não é serializável em
 # JSON e portanto não sobrevive ao roundtrip do dcc.Store entre callbacks.
-_ONTOLOGY_CACHE: dict[str, Any] = {}
+from services import ontology_runtime_cache as _onto_cache
 
 
 def _mode_of(result: dict | None) -> str:
@@ -56,14 +64,34 @@ def _step_status(cycle: dict, step_id: str) -> str:
     return (cycle.get("steps") or {}).get(step_id, {}).get("status", "?")
 
 
-def _log_step(cycle: dict, step_id: str, phase: str = "done") -> None:
-    logger.info(
-        "[PIPE] step.%s cycle=%s step=%s status=%s milestone=%s",
-        phase,
-        cycle.get("cycle_id"),
-        step_id,
-        _step_status(cycle, step_id),
-        cycle.get("current_status"),
+def _log_step(
+    cycle: dict,
+    step_id: str,
+    phase: str = "done",
+    *,
+    duration_ms: float | None = None,
+    **extra: Any,
+) -> None:
+    fields = {
+        **ids_from_cycle(cycle),
+        "step": step_id,
+        "status": _step_status(cycle, step_id),
+        "milestone": cycle.get("current_status"),
+        "duration_ms": duration_ms,
+        **extra,
+    }
+    level = logging.WARNING if phase == "failed" else logging.INFO
+    log_pipe(logger, f"step.{phase}", level=level, **fields)
+
+
+def _log_gate_denied(cycle: dict, step_id: str, reason: str) -> None:
+    log_decision(
+        logger,
+        "gate_denied",
+        level=logging.WARNING,
+        **ids_from_cycle(cycle),
+        step=step_id,
+        reason=reason,
     )
 
 
@@ -96,18 +124,20 @@ def register_raw_upload(cycle: dict, raw_meta: dict | None = None, **_: Any) -> 
         add_error(cycle, "raw_data", "Nenhum arquivo bruto informado.")
         set_step(cycle, "raw_data", status="ERROR")
         set_milestone(cycle, "FAILED")
+        _log_step(cycle, "raw_data", "failed", error="Nenhum arquivo bruto informado.")
         return cycle
 
     set_pipeline_progress(cycle, "raw", "Salvando arquivo original")
     set_milestone(cycle, "RAW_DATA_RECEIVED")
     set_step(cycle, "raw_data", status="RUNNING")
     cycle["raw_file"] = raw_meta
-    logger.info(
-        "[PIPE] register_raw_upload.start cycle=%s property=%s period=%s file=%s",
-        cycle.get("cycle_id"),
-        cycle.get("property_id"),
-        cycle.get("reporting_period"),
-        raw_meta.get("original_filename"),
+    timer = timed_op()
+    timer.__enter__()
+    _log_step(
+        cycle,
+        "raw_data",
+        "start",
+        file=raw_meta.get("original_filename"),
     )
 
     year, month = _parse_period(cycle["reporting_period"])
@@ -142,7 +172,15 @@ def register_raw_upload(cycle: dict, raw_meta: dict | None = None, **_: Any) -> 
         summary=f"Arquivo {raw_meta.get('original_filename')} registrado (SHA-256 {str(raw_meta.get('sha256',''))[:12]}…).",
     )
     save_cycle(cycle)
-    _log_step(cycle, "raw_data")
+    timer.__exit__(None, None, None)
+    _log_step(
+        cycle,
+        "raw_data",
+        duration_ms=timer.duration_ms,
+        mode=_mode_of(run_rec),
+        sha256=truncate(raw_meta.get("sha256")),
+        file=raw_meta.get("original_filename"),
+    )
     return cycle
 
 
@@ -150,43 +188,57 @@ def register_raw_upload(cycle: dict, raw_meta: dict | None = None, **_: Any) -> 
 def run_wrapper_step(cycle: dict, layout_name: str = "monthly", **_: Any) -> dict[str, Any]:
     ok, msg = can_run_wrapper(cycle)
     if not ok:
+        _log_gate_denied(cycle, "wrapper", msg)
         add_error(cycle, "wrapper", msg)
         set_step(cycle, "wrapper", status="ERROR")
         set_milestone(cycle, "FAILED")
+        _log_step(cycle, "wrapper", "failed", error=msg)
         return cycle
 
     set_pipeline_progress(cycle, "wrapper", "Executando wrapper")
     set_step(cycle, "wrapper", status="RUNNING")
+    _log_step(cycle, "wrapper", "start", layout=layout_name)
     _emit_canonical(cycle, "WRAPPER_EXECUTION_STARTED", {"layout": layout_name}, include_legacy=False)
 
-    raw_path = cycle["raw_file"]["stored_path"]
-    wrapper_result = wrapper_adapter.run_wrapper(raw_path, layout_name, cycle["reporting_period"])
-    cycle["wrapper"] = wrapper_result
-    cycle["normalized_data"] = wrapper_result.get("normalized_payload", [])
-    mode = _mode_of(wrapper_result)
+    with timed_op() as timer:
+        raw_path = cycle["raw_file"]["stored_path"]
+        wrapper_result = wrapper_adapter.run_wrapper(raw_path, layout_name, cycle["reporting_period"])
+        cycle["wrapper"] = wrapper_result
+        cycle["normalized_data"] = wrapper_result.get("normalized_payload", [])
+        mode = _mode_of(wrapper_result)
 
-    prov = provenance_adapter.record_wrapper_flow(
-        cycle["pipeline_run_id"], cycle["raw_file"], wrapper_result,
-        source_artifact_id=cycle.get("source_artifact_id"),
+        prov = provenance_adapter.record_wrapper_flow(
+            cycle["pipeline_run_id"], cycle["raw_file"], wrapper_result,
+            source_artifact_id=cycle.get("source_artifact_id"),
+        )
+        cycle["normalized_batch_id"] = prov.get("normalized_batch_id")
+        cycle["wrapper_execution_id"] = prov.get("wrapper_execution_id")
+
+        set_pipeline_progress(cycle, "normalized", "Gerando lote normalizado")
+        _emit_canonical(cycle, "WRAPPER_EXECUTED", {"layout": wrapper_result.get("layout_id")}, include_legacy=False)
+        _emit(cycle, "NORMALIZED_BATCH_CREATED", {"rows": wrapper_result.get("rows_valid")})
+        _emit_canonical(cycle, "NORMALIZED_DATA_DERIVED_FROM_RAW_DATA", {
+            "source_hash": cycle["raw_file"].get("sha256"),
+            "batch_hash": wrapper_result.get("content_hash"),
+        }, include_legacy=False)
+        set_milestone(cycle, "WRAPPER_EXECUTED")
+        set_milestone(cycle, "NORMALIZED_BATCH_CREATED")
+
+        set_step(cycle, "wrapper", status="DONE", mode=mode,
+                 summary=f"Layout {wrapper_result.get('layout_id')} • {wrapper_result.get('rows_valid')} linhas válidas.")
+        set_step(cycle, "normalization", status="DONE", mode=mode,
+                 summary=f"{wrapper_result.get('rows_valid')} registros normalizados, {wrapper_result.get('rows_rejected')} rejeitados.")
+        save_cycle(cycle)
+
+    _log_step(
+        cycle,
+        "wrapper",
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        layout=wrapper_result.get("layout_id"),
+        rows_valid=wrapper_result.get("rows_valid"),
+        rows_rejected=wrapper_result.get("rows_rejected"),
     )
-    cycle["normalized_batch_id"] = prov.get("normalized_batch_id")
-    cycle["wrapper_execution_id"] = prov.get("wrapper_execution_id")
-
-    set_pipeline_progress(cycle, "normalized", "Gerando lote normalizado")
-    _emit_canonical(cycle, "WRAPPER_EXECUTED", {"layout": wrapper_result.get("layout_id")}, include_legacy=False)
-    _emit(cycle, "NORMALIZED_BATCH_CREATED", {"rows": wrapper_result.get("rows_valid")})
-    _emit_canonical(cycle, "NORMALIZED_DATA_DERIVED_FROM_RAW_DATA", {
-        "source_hash": cycle["raw_file"].get("sha256"),
-        "batch_hash": wrapper_result.get("content_hash"),
-    }, include_legacy=False)
-    set_milestone(cycle, "WRAPPER_EXECUTED")
-    set_milestone(cycle, "NORMALIZED_BATCH_CREATED")
-
-    set_step(cycle, "wrapper", status="DONE", mode=mode,
-             summary=f"Layout {wrapper_result.get('layout_id')} • {wrapper_result.get('rows_valid')} linhas válidas.")
-    set_step(cycle, "normalization", status="DONE", mode=mode,
-             summary=f"{wrapper_result.get('rows_valid')} registros normalizados, {wrapper_result.get('rows_rejected')} rejeitados.")
-    save_cycle(cycle)
     return cycle
 
 
@@ -194,39 +246,73 @@ def run_wrapper_step(cycle: dict, layout_name: str = "monthly", **_: Any) -> dic
 def run_ontology_step(cycle: dict, **_: Any) -> dict[str, Any]:
     ok, msg = can_run_ontology(cycle)
     if not ok:
+        _log_gate_denied(cycle, "ontology", msg)
         add_error(cycle, "ontology", msg)
         set_step(cycle, "ontology", status="ERROR")
         set_milestone(cycle, "FAILED")
+        _log_step(cycle, "ontology", "failed", error=msg)
         return cycle
 
     set_pipeline_progress(cycle, "ontology", "Populando ontologia / modelo canônico")
     set_step(cycle, "ontology", status="RUNNING")
+    _log_step(cycle, "ontology", "start")
     _emit_canonical(cycle, "CANONICAL_MODEL_POPULATION_STARTED", {}, include_legacy=False)
 
-    ontology_result = ontology_adapter.publish_to_canonical_model({
-        **(cycle.get("wrapper") or {}),
-        "normalized_payload": cycle.get("normalized_data") or (cycle.get("wrapper") or {}).get("normalized_payload") or [],
-    })
-    cycle["ontology"] = {k: v for k, v in ontology_result.items() if k != "_ontology"}
-    if ontology_result.get("_ontology") is not None:
-        _ONTOLOGY_CACHE[cycle["cycle_id"]] = ontology_result["_ontology"]
-    mode = _mode_of(ontology_result)
+    with timed_op() as timer:
+        ontology_result = ontology_adapter.publish_to_canonical_model({
+            **(cycle.get("wrapper") or {}),
+            "normalized_payload": cycle.get("normalized_data") or (cycle.get("wrapper") or {}).get("normalized_payload") or [],
+            "cycle_id": cycle.get("cycle_id"),
+        })
+        cycle["ontology"] = {k: v for k, v in ontology_result.items() if k != "_ontology"}
+        if ontology_result.get("_ontology") is not None:
+            _onto_cache.set_ontology(cycle["cycle_id"], ontology_result["_ontology"])
+        mode = _mode_of(ontology_result)
 
-    if cycle.get("normalized_batch_id"):
-        prov = provenance_adapter.record_semantic_and_canonical(
-            cycle["pipeline_run_id"], cycle["normalized_batch_id"], ontology_result
-        )
-        cycle["canonical_snapshot_id"] = prov.get("canonical_snapshot_id")
-        cycle["semantic_integration_id"] = prov.get("semantic_integration_id")
+        # Persiste Property/EmissionCycle + observações de atividade na OWL
+        try:
+            from services.ontology_result_service import persist_activity_observations
 
-    _emit_canonical(cycle, "CANONICAL_MODEL_POPULATED", {"version": ontology_result.get("ontology_version")})
-    _emit(cycle, "SEMANTIC_MAPPING_COMPLETED", {"entities": ontology_result.get("entities_created")})
-    _emit(cycle, "CANONICAL_PUBLISHED", {"version": ontology_result.get("ontology_version")})
-    set_milestone(cycle, "CANONICAL_MODEL_POPULATED")
+            persist_activity_observations(cycle)
+        except Exception as exc:
+            add_error(cycle, "ontology", f"Falha ao persistir observações na ontologia: {exc}")
+            set_step(cycle, "ontology", status="ERROR", mode=mode)
+            set_milestone(cycle, "FAILED")
+            save_cycle(cycle)
+            log_fail(
+                logger,
+                "step.failed",
+                **ids_from_cycle(cycle),
+                step="ontology",
+                error=str(exc),
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
 
-    set_step(cycle, "ontology", status="DONE", mode=mode,
-             summary=f"{ontology_result.get('entities_created')} entidades • {ontology_result.get('relationships_created')} relações.")
-    save_cycle(cycle)
+        if cycle.get("normalized_batch_id"):
+            prov = provenance_adapter.record_semantic_and_canonical(
+                cycle["pipeline_run_id"], cycle["normalized_batch_id"], ontology_result
+            )
+            cycle["canonical_snapshot_id"] = prov.get("canonical_snapshot_id")
+            cycle["semantic_integration_id"] = prov.get("semantic_integration_id")
+
+        _emit_canonical(cycle, "CANONICAL_MODEL_POPULATED", {"version": ontology_result.get("ontology_version")})
+        _emit(cycle, "SEMANTIC_MAPPING_COMPLETED", {"entities": ontology_result.get("entities_created")})
+        _emit(cycle, "CANONICAL_PUBLISHED", {"version": ontology_result.get("ontology_version")})
+        set_milestone(cycle, "CANONICAL_MODEL_POPULATED")
+
+        set_step(cycle, "ontology", status="DONE", mode=mode,
+                 summary=f"{ontology_result.get('entities_created')} entidades • {ontology_result.get('relationships_created')} relações.")
+        save_cycle(cycle)
+
+    _log_step(
+        cycle,
+        "ontology",
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        entities=ontology_result.get("entities_created"),
+        version=ontology_result.get("ontology_version"),
+    )
     return cycle
 
 
@@ -234,42 +320,57 @@ def run_ontology_step(cycle: dict, **_: Any) -> dict[str, Any]:
 def run_semantic_step(cycle: dict, **_: Any) -> dict[str, Any]:
     ok, msg = can_run_semantic_validation(cycle)
     if not ok:
+        _log_gate_denied(cycle, "semantic", msg)
         add_error(cycle, "semantic", msg)
         set_step(cycle, "semantic", status="ERROR")
         set_milestone(cycle, "FAILED")
+        _log_step(cycle, "semantic", "failed", error=msg)
         return cycle
 
     set_pipeline_progress(cycle, "semantic", "Validando semanticamente")
     set_step(cycle, "semantic", status="RUNNING")
+    _log_step(cycle, "semantic", "start")
     _emit_canonical(cycle, "SEMANTIC_VALIDATION_STARTED", {}, include_legacy=False)
 
-    dataset = dict(cycle.get("ontology", {}))
-    onto_obj = _ONTOLOGY_CACHE.get(cycle["cycle_id"])
-    if onto_obj is not None:
-        dataset["_ontology"] = onto_obj
-    validation = ontology_adapter.run_semantic_validation(dataset)
-    cycle["semantic_validation"] = validation
-    mode = _mode_of(validation)
-    critical = validation.get("critical_errors", 0)
-    warns = validation.get("warnings", 0)
+    with timed_op() as timer:
+        dataset = dict(cycle.get("ontology", {}))
+        onto_obj = _onto_cache.get_ontology(cycle["cycle_id"])
+        if onto_obj is not None:
+            dataset["_ontology"] = onto_obj
+        validation = ontology_adapter.run_semantic_validation(dataset)
+        cycle["semantic_validation"] = validation
+        mode = _mode_of(validation)
+        critical = validation.get("critical_errors", 0)
+        warns = validation.get("warnings", 0)
 
-    _emit_canonical(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical}, include_legacy=False)
-    _emit(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical})
+        _emit_canonical(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical}, include_legacy=False)
+        _emit(cycle, "SEMANTIC_VALIDATION_COMPLETED", {"warnings": warns, "critical": critical})
 
-    if critical:
-        add_error(cycle, "semantic", f"{critical} erro(s) crítico(s) de validação.")
-        set_step(cycle, "semantic", status="ERROR", mode=mode,
-                 summary=f"{critical} erro(s) crítico(s).")
-        set_milestone(cycle, "FAILED")
-    elif warns:
-        add_warning(cycle, "semantic", f"{warns} alerta(s) de validação.")
-        set_step(cycle, "semantic", status="DONE_WARNINGS", mode=mode,
-                 summary=f"Aprovado com {warns} alerta(s).")
-        set_milestone(cycle, "SEMANTIC_VALIDATION_COMPLETED")
-    else:
-        set_step(cycle, "semantic", status="DONE", mode=mode, summary="Validação aprovada sem alertas.")
-        set_milestone(cycle, "SEMANTIC_VALIDATION_COMPLETED")
-    save_cycle(cycle)
+        if critical:
+            add_error(cycle, "semantic", f"{critical} erro(s) crítico(s) de validação.")
+            set_step(cycle, "semantic", status="ERROR", mode=mode,
+                     summary=f"{critical} erro(s) crítico(s).")
+            set_milestone(cycle, "FAILED")
+        elif warns:
+            add_warning(cycle, "semantic", f"{warns} alerta(s) de validação.")
+            set_step(cycle, "semantic", status="DONE_WARNINGS", mode=mode,
+                     summary=f"Aprovado com {warns} alerta(s).")
+            set_milestone(cycle, "SEMANTIC_VALIDATION_COMPLETED")
+        else:
+            set_step(cycle, "semantic", status="DONE", mode=mode, summary="Validação aprovada sem alertas.")
+            set_milestone(cycle, "SEMANTIC_VALIDATION_COMPLETED")
+        save_cycle(cycle)
+
+    phase = "failed" if critical else "done"
+    _log_step(
+        cycle,
+        "semantic",
+        phase,
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        critical=critical,
+        warnings=warns,
+    )
     return cycle
 
 
@@ -277,19 +378,35 @@ def run_semantic_step(cycle: dict, **_: Any) -> dict[str, Any]:
 def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> dict[str, Any]:
     ok, msg = can_run_calculation(cycle)
     if not ok:
+        _log_gate_denied(cycle, "calculation", msg)
         add_error(cycle, "calculation", msg)
         set_step(cycle, "calculation", status="ERROR")
         set_milestone(cycle, "FAILED")
+        _log_step(cycle, "calculation", "failed", error=msg)
         return cycle
 
     set_pipeline_progress(cycle, "calculation", "Executando cálculo de emissões")
     set_step(cycle, "calculation", status="RUNNING")
     stored_params = cycle.get("calculation_params") or {}
     params = {**stored_params, **(params or {})}
+    if "temporal_scope" not in params:
+        freq = cycle.get("frequency") or cycle.get("granularity")
+        if freq:
+            params["temporal_scope"] = freq
+    if "reporting_period" not in params and cycle.get("reporting_period"):
+        params["reporting_period"] = cycle["reporting_period"]
     if "gwp" not in params:
-        params["gwp"] = config.DEFAULT_GWP
+        from services import direct_imports as di
+        if di.gwp_ipcc_ar4 is None:
+            add_error(cycle, "calculation", "GWP indisponível (emissions.defaults.gwp_ipcc_ar4).")
+            set_step(cycle, "calculation", status="ERROR")
+            set_milestone(cycle, "FAILED")
+            _log_step(cycle, "calculation", "failed", error="GWP indisponível")
+            return cycle
+        params["gwp"] = di.gwp_ipcc_ar4()
     cycle["calculation_params"] = params
 
+    _log_step(cycle, "calculation", "start")
     _emit_canonical(cycle, "CALCULATION_EXECUTION_STARTED", {"gwp": params.get("gwp")}, include_legacy=False)
 
     calc_input = {
@@ -297,33 +414,75 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
         "normalized_data": cycle.get("normalized_data") or [],
         "normalized_payload": cycle.get("normalized_data") or [],
         "reporting_period": cycle.get("reporting_period"),
+        "frequency": cycle.get("frequency") or cycle.get("granularity"),
         "wrapper": cycle.get("wrapper") or {},
         "calculation_params": params,
+        "factor_catalog": (cycle.get("ontology") or {}).get("factor_catalog"),
+        "ontology": cycle.get("ontology") or {},
     }
-    calculation = calculation_adapter.run_emission_calculation(calc_input, params)
-    cycle["calculation"] = calculation
-    mode = _mode_of(calculation)
+    with timed_op() as timer:
+        try:
+            calculation = calculation_adapter.run_emission_calculation(calc_input, params)
+        except Exception as exc:
+            add_error(cycle, "calculation", str(exc))
+            set_step(cycle, "calculation", status="ERROR")
+            set_milestone(cycle, "FAILED")
+            _emit(cycle, "PIPELINE_STEP_FAILED", {"step": "calculation", "error": str(exc)})
+            save_cycle(cycle)
+            _log_step(cycle, "calculation", "failed", duration_ms=timer.duration_ms, error=str(exc))
+            return cycle
 
-    if cycle.get("canonical_snapshot_id") and cycle.get("reporting_period_id"):
-        prov = provenance_adapter.record_calculation_flow(
-            cycle["pipeline_run_id"], cycle["canonical_snapshot_id"],
-            cycle["reporting_period_id"], calculation,
-        )
-        cycle["calculation_execution_id"] = prov.get("calculation_execution_id")
-        cycle["calculation_result_set_id"] = prov.get("calculation_result_set_id")
+        # Persistência oficial na ontologia + releitura (fonte de verdade)
+        result_status = "recalculated" if cycle.get("ontology_results") else "preliminary"
+        try:
+            from services.ontology_result_service import persist_calculation_results
+            from services.ontology_query_adapter import get_emission_summary_for_cycle
 
-    _emit_canonical(cycle, "CALCULATION_EXECUTED", {"co2e_total_kg": calculation.get("co2e_total_kg")}, include_legacy=False)
-    _emit_canonical(cycle, "PRELIMINARY_RESULT_CREATED", {
-        "co2e_total_kg": calculation.get("co2e_total_kg"),
-        "preliminary_hash": calculation.get("preliminary_hash"),
-    })
-    _emit(cycle, "CALCULATION_PRELIMINARY_RESULT_CREATED", {"co2e_total_kg": calculation.get("co2e_total_kg")})
-    set_milestone(cycle, "CALCULATION_EXECUTED")
+            persist_calculation_results(cycle, calculation, status=result_status)
+            summary = get_emission_summary_for_cycle(cycle)
+            calculation["ontology_summary"] = summary
+            calculation["domain_source"] = "ontology"
+            # Espelho deprecated no JSON apenas para orquestração/compat — UI deve usar query
+            calculation["_deprecated_mirror"] = True
+        except Exception as exc:
+            add_error(cycle, "calculation", f"Falha ao persistir/releitura de resultados na ontologia: {exc}")
+            set_step(cycle, "calculation", status="ERROR")
+            set_milestone(cycle, "FAILED")
+            save_cycle(cycle)
+            _log_step(cycle, "calculation", "failed", duration_ms=timer.duration_ms, error=str(exc))
+            return cycle
 
-    co2e = calculation.get("co2e_total_kg", 0)
-    set_step(cycle, "calculation", status="DONE", mode=mode,
-             summary=f"{co2e:,.1f} kg CO₂e • intensidade {calculation.get('co2e_intensity_per_milk_liter', 0):.3f} kg CO₂e/L.")
-    save_cycle(cycle)
+        cycle["calculation"] = calculation
+        mode = _mode_of(calculation)
+
+        if cycle.get("canonical_snapshot_id") and cycle.get("reporting_period_id"):
+            prov = provenance_adapter.record_calculation_flow(
+                cycle["pipeline_run_id"], cycle["canonical_snapshot_id"],
+                cycle["reporting_period_id"], calculation,
+            )
+            cycle["calculation_execution_id"] = prov.get("calculation_execution_id")
+            cycle["calculation_result_set_id"] = prov.get("calculation_result_set_id")
+
+        _emit_canonical(cycle, "CALCULATION_EXECUTED", {"co2e_total_kg": calculation.get("co2e_total_kg")}, include_legacy=False)
+        _emit_canonical(cycle, "PRELIMINARY_RESULT_CREATED", {
+            "co2e_total_kg": calculation.get("co2e_total_kg"),
+            "preliminary_hash": calculation.get("preliminary_hash"),
+        })
+        _emit(cycle, "CALCULATION_PRELIMINARY_RESULT_CREATED", {"co2e_total_kg": calculation.get("co2e_total_kg")})
+        set_milestone(cycle, "CALCULATION_EXECUTED")
+
+        co2e = calculation.get("co2e_total_kg", 0)
+        set_step(cycle, "calculation", status="DONE", mode=mode,
+                 summary=f"{co2e:,.1f} kg CO₂e • intensidade {calculation.get('co2e_intensity_per_milk_liter', 0):.3f} kg CO₂e/L.")
+        save_cycle(cycle)
+
+    _log_step(
+        cycle,
+        "calculation",
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        co2e_total_kg=calculation.get("co2e_total_kg"),
+    )
     return cycle
 
 
@@ -332,6 +491,7 @@ def run_approval_step(cycle: dict, approval: dict | None = None, **_: Any) -> di
     if not cycle.get("calculation"):
         add_error(cycle, "approval", "Execute o cálculo primeiro.")
         set_step(cycle, "approval", status="ERROR")
+        _log_step(cycle, "approval", "failed", error="Execute o cálculo primeiro.")
         return cycle
 
     approval = approval or {"decision": "APPROVED", "approver": "Dr. Ana Souza",
@@ -339,32 +499,51 @@ def run_approval_step(cycle: dict, approval: dict | None = None, **_: Any) -> di
     approval["approved_at"] = now_iso()
     cycle["approval"] = approval
     decision = approval.get("decision", "APPROVED")
+    _log_step(cycle, "approval", "start", decision=decision, approver=approval.get("approver"))
 
-    prov = {}
-    if cycle.get("calculation_result_set_id") and cycle.get("reporting_period_id"):
-        prov = provenance_adapter.record_approval(
-            cycle["pipeline_run_id"], cycle["calculation_result_set_id"],
-            cycle["reporting_period_id"], approval,
-        )
+    with timed_op() as timer:
+        prov = {}
+        if cycle.get("calculation_result_set_id") and cycle.get("reporting_period_id"):
+            prov = provenance_adapter.record_approval(
+                cycle["pipeline_run_id"], cycle["calculation_result_set_id"],
+                cycle["reporting_period_id"], approval,
+            )
 
-    if decision == "APPROVED":
-        _emit_canonical(cycle, "CALCULATION_APPROVED", {"decision": decision}, include_legacy=False)
-        _emit(cycle, "CALCULATION_APPROVED", {"decision": decision})
-        set_step(cycle, "approval", status="APPROVED", mode=_mode_of(prov),
-                 summary=f"Aprovado por {approval.get('approver')}.")
-        set_milestone(cycle, "CALCULATION_APPROVED")
-    elif decision == "REJECTED":
-        _emit(cycle, "CALCULATION_REJECTED", {"decision": decision})
-        set_step(cycle, "approval", status="ERROR", mode=_mode_of(prov),
-                 summary=f"Reprovado por {approval.get('approver')}.")
-        set_milestone(cycle, "REJECTED")
-    else:
-        _emit(cycle, "CALCULATION_CORRECTION_REQUESTED", {"decision": decision})
-        set_step(cycle, "approval", status="DONE_WARNINGS", mode=_mode_of(prov),
-                 summary=f"Decisão: {decision}.")
-        set_milestone(cycle, "CORRECTION_REQUESTED")
+        if decision == "APPROVED":
+            _emit_canonical(cycle, "CALCULATION_APPROVED", {"decision": decision}, include_legacy=False)
+            _emit(cycle, "CALCULATION_APPROVED", {"decision": decision})
+            set_step(cycle, "approval", status="APPROVED", mode=_mode_of(prov),
+                     summary=f"Aprovado por {approval.get('approver')}.")
+            set_milestone(cycle, "CALCULATION_APPROVED")
+        elif decision == "REJECTED":
+            _emit(cycle, "CALCULATION_REJECTED", {"decision": decision})
+            set_step(cycle, "approval", status="ERROR", mode=_mode_of(prov),
+                     summary=f"Reprovado por {approval.get('approver')}.")
+            set_milestone(cycle, "REJECTED")
+        else:
+            _emit(cycle, "CALCULATION_CORRECTION_REQUESTED", {"decision": decision})
+            set_step(cycle, "approval", status="DONE_WARNINGS", mode=_mode_of(prov),
+                     summary=f"Decisão: {decision}.")
+            set_milestone(cycle, "CORRECTION_REQUESTED")
 
-    save_cycle(cycle)
+        save_cycle(cycle)
+
+    log_decision(
+        logger,
+        "approval",
+        **ids_from_cycle(cycle),
+        decision=decision,
+        approver=approval.get("approver"),
+        status=_step_status(cycle, "approval"),
+        duration_ms=timer.duration_ms,
+    )
+    _log_step(
+        cycle,
+        "approval",
+        duration_ms=timer.duration_ms,
+        decision=decision,
+        mode=_mode_of(prov) if prov else None,
+    )
     return cycle
 
 
@@ -372,35 +551,66 @@ def run_approval_step(cycle: dict, approval: dict | None = None, **_: Any) -> di
 def run_publication_step(cycle: dict, **_: Any) -> dict[str, Any]:
     ok, msg = can_publish_final_ontology(cycle)
     if not ok:
+        _log_gate_denied(cycle, "publication", msg)
         add_error(cycle, "publication", msg)
         set_step(cycle, "publication", status="ERROR")
+        _log_step(cycle, "publication", "failed", error=msg)
         return cycle
 
     set_step(cycle, "publication", status="RUNNING")
-    _emit_canonical(cycle, "FINAL_ONTOLOGY_PUBLICATION_STARTED", {}, include_legacy=False)
+    _log_step(cycle, "publication", "start")
 
-    publication = {
-        "ontology_version": f"final_ontology_{cycle['reporting_period']}_001",
-        "published_at": now_iso(),
-        "ontology_hash": (cycle.get("ontology") or {}).get("ontology_hash", ""),
-        "methodology": (cycle.get("calculation") or {}).get("methodology", "IPCC/IDF-compatible"),
-        "status": "PUBLISHED",
-    }
-    cycle["publication"] = publication
-    prov = {}
-    if cycle.get("calculation_result_set_id"):
-        prov = provenance_adapter.record_publication(
-            cycle["pipeline_run_id"], cycle["calculation_result_set_id"], publication
+    with timed_op() as timer:
+        try:
+            from services.publication_service import publish_approved_cycle
+
+            publication = publish_approved_cycle(cycle)
+        except Exception as exc:
+            add_error(cycle, "publication", str(exc))
+            set_step(cycle, "publication", status="ERROR")
+            _emit(cycle, "PIPELINE_STEP_FAILED", {"step": "publication", "error": str(exc)})
+            save_cycle(cycle)
+            _log_step(cycle, "publication", "failed", duration_ms=timer.duration_ms, error=str(exc))
+            return cycle
+
+        cycle["publication"] = publication
+        prov = {}
+        if cycle.get("calculation_result_set_id"):
+            prov = provenance_adapter.record_publication(
+                cycle["pipeline_run_id"], cycle["calculation_result_set_id"], publication
+            )
+
+        _emit(cycle, "APPROVED_RESULT_PUBLISHED", {
+            "publication_id": publication.get("publication_id"),
+            "publication_hash": publication.get("publication_hash"),
+            "version": publication.get("ontology_version"),
+        })
+        # Compatibilidade de leitura com ciclos/UI que ainda checam o marco legado
+        set_milestone(cycle, "APPROVED_RESULT_PUBLISHED")
+        set_milestone(cycle, "FINAL_ONTOLOGY_PUBLISHED")
+        set_milestone(cycle, "BLOCKCHAIN_UNLOCKED")
+
+        set_step(
+            cycle,
+            "publication",
+            status="DONE",
+            mode=_mode_of(prov) if prov else "real",
+            summary=(
+                f"Publicação {str(publication.get('publication_id', ''))[:12]}… "
+                f"hash {str(publication.get('publication_hash', ''))[:12]}…"
+            ),
         )
+        save_cycle(cycle)
 
-    _emit_canonical(cycle, "FINAL_ONTOLOGY_PUBLISHED", {"version": publication["ontology_version"]}, include_legacy=False)
-    _emit(cycle, "FINAL_ONTOLOGY_PUBLISHED", {"version": publication["ontology_version"]})
-    set_milestone(cycle, "FINAL_ONTOLOGY_PUBLISHED")
-    set_milestone(cycle, "BLOCKCHAIN_UNLOCKED")
-
-    set_step(cycle, "publication", status="DONE", mode=_mode_of(prov),
-             summary=f"Ontologia {publication['ontology_version']} publicada.")
-    save_cycle(cycle)
+    _log_step(
+        cycle,
+        "publication",
+        duration_ms=timer.duration_ms,
+        mode=_mode_of(prov) if prov else "real",
+        publication_id=truncate(publication.get("publication_id")),
+        publication_hash=truncate(publication.get("publication_hash")),
+        version=publication.get("ontology_version"),
+    )
     return cycle
 
 
@@ -408,34 +618,50 @@ def run_publication_step(cycle: dict, **_: Any) -> dict[str, Any]:
 def run_evidence_step(cycle: dict, **_: Any) -> dict[str, Any]:
     ok, msg = can_unlock_blockchain(cycle)
     if not ok:
+        _log_gate_denied(cycle, "evidence", msg)
         add_error(cycle, "evidence", f"Blockchain bloqueado: {msg}")
         set_step(cycle, "evidence", status="ERROR")
+        _log_step(cycle, "evidence", "failed", error=msg)
         return cycle
 
     set_step(cycle, "evidence", status="RUNNING")
-    cycle["hashes"] = blockchain_adapter.compute_local_hashes(cycle)
-    _emit_canonical(cycle, "ARTIFACT_HASHES_CREATED", {"hashes": list(cycle["hashes"].keys())}, include_legacy=False)
+    _log_step(cycle, "evidence", "start")
 
-    try:
-        evidence = blockchain_adapter.create_evidence_package(cycle)
-    except Exception as exc:
-        add_error(cycle, "evidence", f"Falha ao construir pacote: {exc}")
-        set_step(cycle, "evidence", status="ERROR")
+    with timed_op() as timer:
+        cycle["hashes"] = blockchain_adapter.compute_local_hashes(cycle)
+        _emit_canonical(cycle, "ARTIFACT_HASHES_CREATED", {"hashes": list(cycle["hashes"].keys())}, include_legacy=False)
+
+        try:
+            evidence = blockchain_adapter.create_evidence_package(cycle)
+        except Exception as exc:
+            add_error(cycle, "evidence", f"Falha ao construir pacote: {exc}")
+            set_step(cycle, "evidence", status="ERROR")
+            save_cycle(cycle)
+            _log_step(cycle, "evidence", "failed", duration_ms=timer.duration_ms, error=str(exc))
+            return cycle
+
+        cycle["evidence_package"] = evidence
+        mode = _mode_of(evidence)
+        _emit_canonical(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")}, include_legacy=False)
+        _emit(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")})
+        _emit_canonical(cycle, "MERKLE_ROOT_CREATED", {"merkle_root": evidence.get("merkle_root")})
+        _emit(cycle, "LOCAL_HASH_CREATED", {"merkle_root": evidence.get("merkle_root")})
+        set_milestone(cycle, "EVIDENCE_PACKAGE_CREATED")
+        set_milestone(cycle, "MERKLE_ROOT_CREATED")
+
+        set_step(cycle, "evidence", status="DONE", mode=mode,
+                 summary=f"Pacote {str(evidence.get('evidence_package_id'))[:12]}… • Merkle {str(evidence.get('merkle_root',''))[:12]}…")
         save_cycle(cycle)
-        return cycle
 
-    cycle["evidence_package"] = evidence
-    mode = _mode_of(evidence)
-    _emit_canonical(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")}, include_legacy=False)
-    _emit(cycle, "EVIDENCE_PACKAGE_CREATED", {"package_id": evidence.get("evidence_package_id")})
-    _emit_canonical(cycle, "MERKLE_ROOT_CREATED", {"merkle_root": evidence.get("merkle_root")})
-    _emit(cycle, "LOCAL_HASH_CREATED", {"merkle_root": evidence.get("merkle_root")})
-    set_milestone(cycle, "EVIDENCE_PACKAGE_CREATED")
-    set_milestone(cycle, "MERKLE_ROOT_CREATED")
-
-    set_step(cycle, "evidence", status="DONE", mode=mode,
-             summary=f"Pacote {str(evidence.get('evidence_package_id'))[:12]}… • Merkle {str(evidence.get('merkle_root',''))[:12]}…")
-    save_cycle(cycle)
+    _log_step(
+        cycle,
+        "evidence",
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        package_id=truncate(evidence.get("evidence_package_id")),
+        merkle_root=truncate(evidence.get("merkle_root")),
+        hash_count=len(cycle.get("hashes") or {}),
+    )
     return cycle
 
 
@@ -443,39 +669,69 @@ def run_evidence_step(cycle: dict, **_: Any) -> dict[str, Any]:
 def run_anchoring_step(cycle: dict, **_: Any) -> dict[str, Any]:
     ok, msg = can_unlock_blockchain(cycle)
     if not ok:
+        _log_gate_denied(cycle, "blockchain", msg)
         add_error(cycle, "blockchain", f"Blockchain bloqueado: {msg}")
         set_step(cycle, "blockchain", status="ERROR")
+        _log_step(cycle, "blockchain", "failed", error=msg)
         return cycle
     if not cycle.get("evidence_package"):
         add_error(cycle, "blockchain", "Construa o pacote de evidências primeiro.")
         set_step(cycle, "blockchain", status="ERROR")
+        _log_step(cycle, "blockchain", "failed", error="Pacote de evidências ausente")
         return cycle
 
     set_step(cycle, "blockchain", status="RUNNING")
     pkg_id = cycle["evidence_package"].get("evidence_package_id", "")
+    _log_step(cycle, "blockchain", "start", package_id=truncate(pkg_id))
     _emit_canonical(cycle, "ANCHOR_REQUEST_CREATED", {"package_id": pkg_id}, include_legacy=False)
 
-    try:
-        anchor = blockchain_adapter.simulate_anchoring(pkg_id)
-    except Exception as exc:
-        add_error(cycle, "blockchain", f"Falha na ancoragem: {exc}")
-        set_step(cycle, "blockchain", status="ERROR")
+    with timed_op() as timer:
+        try:
+            import config as app_config
+
+            network = getattr(app_config, "BLOCKCHAIN_DEFAULT_NETWORK_CODE", "local_simulated")
+            anchor = blockchain_adapter.simulate_anchoring(pkg_id, network_code=network)
+        except Exception as exc:
+            add_error(cycle, "blockchain", f"Falha na ancoragem: {exc}")
+            set_step(cycle, "blockchain", status="ERROR")
+            save_cycle(cycle)
+            _log_step(cycle, "blockchain", "failed", duration_ms=timer.duration_ms, error=str(exc))
+            return cycle
+
+        cycle["anchoring"] = anchor
+        cycle["evidence_package"]["anchoring_status"] = anchor.get("anchoring_status", "ANCHORING_SIMULATED")
+        cycle["evidence_package"]["transaction_id"] = anchor.get("transaction_id")
+        cycle["evidence_package"]["block_number"] = anchor.get("block_number")
+        cycle["evidence_package"]["network"] = anchor.get("network")
+        cycle["evidence_package"]["package_hash"] = (
+            cycle["evidence_package"].get("package_hash") or anchor.get("package_hash")
+        )
+        cycle["evidence_package"]["merkle_root"] = (
+            cycle["evidence_package"].get("merkle_root") or anchor.get("merkle_root")
+        )
+        mode = _mode_of(anchor)
+        kind = anchor.get("anchoring_kind", "SIMULADA")
+        is_simulated = kind == "SIMULADA" or anchor.get("network") == "local_simulated"
+
+        event_name = "ANCHORING_SIMULATED" if is_simulated else "BLOCKCHAIN_ANCHOR_CREATED"
+        _emit_canonical(cycle, event_name, {"tx": anchor.get("transaction_id"), "network": anchor.get("network")}, include_legacy=False)
+        _emit(cycle, event_name, {"tx": anchor.get("transaction_id")})
+        set_milestone(cycle, event_name)
+
+        summary_label = "simulado" if is_simulated else f"EVM {anchor.get('network')}"
+        set_step(cycle, "blockchain", status="ANCHORED", mode=mode,
+                 summary=f"Ancorado ({summary_label}) • tx {str(anchor.get('transaction_id',''))[:14]}…")
         save_cycle(cycle)
-        return cycle
 
-    cycle["anchoring"] = anchor
-    cycle["evidence_package"]["anchoring_status"] = "ANCHORING_SIMULATED"
-    cycle["evidence_package"]["transaction_id"] = anchor.get("transaction_id")
-    cycle["evidence_package"]["block_number"] = anchor.get("block_number")
-    mode = _mode_of(anchor)
-
-    _emit_canonical(cycle, "ANCHORING_SIMULATED", {"tx": anchor.get("transaction_id")}, include_legacy=False)
-    _emit(cycle, "ANCHORING_SIMULATED", {"tx": anchor.get("transaction_id")})
-    set_milestone(cycle, "ANCHORING_SIMULATED")
-
-    set_step(cycle, "blockchain", status="ANCHORED", mode=mode,
-             summary=f"Ancorado (simulado) • tx {str(anchor.get('transaction_id',''))[:14]}…")
-    save_cycle(cycle)
+    _log_step(
+        cycle,
+        "blockchain",
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        network=anchor.get("network"),
+        tx=truncate(anchor.get("transaction_id"), 14),
+        simulated=is_simulated,
+    )
     return cycle
 
 
@@ -483,31 +739,46 @@ def run_anchoring_step(cycle: dict, **_: Any) -> dict[str, Any]:
 def run_verification_step(cycle: dict, tamper: bool = False, **_: Any) -> dict[str, Any]:
     ok, msg = can_unlock_blockchain(cycle)
     if not ok:
+        _log_gate_denied(cycle, "verification", msg)
         add_error(cycle, "verification", f"Blockchain bloqueado: {msg}")
         set_step(cycle, "verification", status="ERROR")
+        _log_step(cycle, "verification", "failed", error=msg)
         return cycle
     if not cycle.get("evidence_package"):
         add_error(cycle, "verification", "Construa e ancore o pacote primeiro.")
         set_step(cycle, "verification", status="ERROR")
+        _log_step(cycle, "verification", "failed", error="Pacote de evidências ausente")
         return cycle
 
     set_step(cycle, "verification", status="RUNNING")
-    integrity = blockchain_adapter.verify_integrity(cycle.get("evidence_package", {}), {"tamper": tamper})
-    cycle["integrity"] = integrity
-    mode = _mode_of(integrity)
+    _log_step(cycle, "verification", "start", tamper=tamper)
 
-    _emit_canonical(cycle, "INTEGRITY_VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")}, include_legacy=False)
-    _emit(cycle, "VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")})
-    set_milestone(cycle, "INTEGRITY_VERIFICATION_EXECUTED")
+    with timed_op() as timer:
+        integrity = blockchain_adapter.verify_integrity(cycle.get("evidence_package", {}), {"tamper": tamper})
+        cycle["integrity"] = integrity
+        mode = _mode_of(integrity)
 
-    if integrity.get("is_valid"):
-        _emit_canonical(cycle, "PROVENANCE_CHAIN_VERIFIED", {"cycle_id": cycle.get("cycle_id")}, include_legacy=False)
-        set_milestone(cycle, "PROVENANCE_CHAIN_VERIFIED")
-        set_milestone(cycle, "VERIFIED")
-        set_step(cycle, "verification", status="VERIFIED", mode=mode, summary="Pacote íntegro.")
-    else:
-        set_step(cycle, "verification", status="DIVERGENT", mode=mode, summary="Divergência detectada.")
-    save_cycle(cycle)
+        _emit_canonical(cycle, "INTEGRITY_VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")}, include_legacy=False)
+        _emit(cycle, "VERIFICATION_EXECUTED", {"is_valid": integrity.get("is_valid")})
+        set_milestone(cycle, "INTEGRITY_VERIFICATION_EXECUTED")
+
+        if integrity.get("is_valid"):
+            _emit_canonical(cycle, "PROVENANCE_CHAIN_VERIFIED", {"cycle_id": cycle.get("cycle_id")}, include_legacy=False)
+            set_milestone(cycle, "PROVENANCE_CHAIN_VERIFIED")
+            set_milestone(cycle, "VERIFIED")
+            set_step(cycle, "verification", status="VERIFIED", mode=mode, summary="Pacote íntegro.")
+        else:
+            set_step(cycle, "verification", status="DIVERGENT", mode=mode, summary="Divergência detectada.")
+        save_cycle(cycle)
+
+    _log_step(
+        cycle,
+        "verification",
+        duration_ms=timer.duration_ms,
+        mode=mode,
+        is_valid=integrity.get("is_valid"),
+        status=_step_status(cycle, "verification"),
+    )
     return cycle
 
 
@@ -529,99 +800,244 @@ def run_auto_pipeline_after_ingestion(
     """Executa automaticamente ingestão → cálculo preliminar → pendência de aprovação."""
     from services.cycle_status_service import mark_pending_approval
 
-    logger.info(
-        "[PIPE] auto_pipeline.start property=%s period=%s layout=%s frequency=%s",
-        property_id,
-        reporting_period,
-        layout_name,
-        frequency,
-    )
+    with timed_op() as timer:
+        log_pipe(
+            logger,
+            "auto_pipeline.start",
+            property_id=property_id,
+            period=reporting_period,
+            layout=layout_name,
+            frequency=frequency,
+            cycle_id=cycle_id,
+        )
 
-    cycle = new_cycle(
-        property_id,
-        property_name,
-        reporting_period,
-        frequency=frequency,
-        layout_id=layout_id,
-        uploaded_by=uploaded_by,
-        calculation_params=calculation_params,
-    )
-    if cycle_id:
-        cycle["cycle_id"] = cycle_id
-    cycle["raw_file"] = raw_meta
+        cycle = new_cycle(
+            property_id,
+            property_name,
+            reporting_period,
+            frequency=frequency,
+            layout_id=layout_id,
+            uploaded_by=uploaded_by,
+            calculation_params=calculation_params,
+        )
+        if cycle_id:
+            cycle["cycle_id"] = cycle_id
+        cycle["raw_file"] = raw_meta
 
-    cycle = register_raw_upload(cycle, raw_meta)
-    if cycle.get("steps", {}).get("raw_data", {}).get("status") == "ERROR":
-        logger.warning("[PIPE] auto_pipeline.failed step=raw_data cycle=%s", cycle.get("cycle_id"))
-        return cycle
+        cycle = register_raw_upload(cycle, raw_meta)
+        if cycle.get("steps", {}).get("raw_data", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "auto_pipeline.failed",
+                **ids_from_cycle(cycle),
+                step="raw_data",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
 
-    cycle = run_wrapper_step(cycle, layout_name)
-    _log_step(cycle, "wrapper")
-    if cycle.get("steps", {}).get("wrapper", {}).get("status") == "ERROR":
-        logger.warning("[PIPE] auto_pipeline.failed step=wrapper cycle=%s", cycle.get("cycle_id"))
-        return cycle
+        cycle = run_wrapper_step(cycle, layout_name)
+        if cycle.get("steps", {}).get("wrapper", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "auto_pipeline.failed",
+                **ids_from_cycle(cycle),
+                step="wrapper",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
 
-    cycle = run_ontology_step(cycle)
-    _log_step(cycle, "ontology")
-    if cycle.get("steps", {}).get("ontology", {}).get("status") == "ERROR":
-        logger.warning("[PIPE] auto_pipeline.failed step=ontology cycle=%s", cycle.get("cycle_id"))
-        return cycle
+        cycle = run_ontology_step(cycle)
+        if cycle.get("steps", {}).get("ontology", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "auto_pipeline.failed",
+                **ids_from_cycle(cycle),
+                step="ontology",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
 
-    cycle = run_semantic_step(cycle)
-    _log_step(cycle, "semantic")
-    if cycle.get("steps", {}).get("semantic", {}).get("status") == "ERROR":
-        logger.warning("[PIPE] auto_pipeline.failed step=semantic cycle=%s", cycle.get("cycle_id"))
-        return cycle
+        cycle = run_semantic_step(cycle)
+        if cycle.get("steps", {}).get("semantic", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "auto_pipeline.failed",
+                **ids_from_cycle(cycle),
+                step="semantic",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
 
-    cycle = run_calculation_step(cycle, calculation_params)
-    _log_step(cycle, "calculation")
-    if cycle.get("steps", {}).get("calculation", {}).get("status") == "ERROR":
-        logger.warning("[PIPE] auto_pipeline.failed step=calculation cycle=%s", cycle.get("cycle_id"))
-        return cycle
+        cycle = run_calculation_step(cycle, calculation_params)
+        if cycle.get("steps", {}).get("calculation", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "auto_pipeline.failed",
+                **ids_from_cycle(cycle),
+                step="calculation",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
 
-    if mark_pending:
-        cycle = mark_pending_approval(cycle)
-        set_pipeline_progress(cycle, "pending", "Aguardando aprovação humana")
-    save_cycle(cycle)
-    logger.info(
-        "[PIPE] auto_pipeline.done cycle=%s status=%s period=%s errors=%d",
-        cycle.get("cycle_id"),
-        cycle.get("current_status"),
-        cycle.get("reporting_period"),
-        len(cycle.get("errors") or []),
-    )
+        if mark_pending:
+            cycle = mark_pending_approval(cycle)
+            set_pipeline_progress(cycle, "pending", "Aguardando aprovação humana")
+        save_cycle(cycle)
+        log_pipe(
+            logger,
+            "auto_pipeline.done",
+            **ids_from_cycle(cycle),
+            status=cycle.get("current_status"),
+            errors=len(cycle.get("errors") or []),
+            duration_ms=timer.duration_ms,
+        )
     return cycle
 
 
 def run_auto_pipeline_after_approval(cycle: dict, approval: dict) -> dict[str, Any]:
-    """Continua automaticamente após decisão humana."""
+    """Continua automaticamente após decisão humana.
+
+    Exige revisão por item aprovada (ou aprova itens obrigatórios quando o caller
+    já passou ``approval.decision=APPROVED`` e os itens ainda estão pendentes
+    apenas em scripts legados — preferir ``finalize_file_approval``).
+    """
     decision = approval.get("decision", "APPROVED")
-    cycle = run_approval_step(cycle, approval)
 
-    if decision != "APPROVED":
-        cycle.pop("publication", None)
-        cycle.pop("evidence_package", None)
-        cycle.pop("anchoring", None)
-        cycle.pop("integrity", None)
-        cycle["hashes"] = {}
-        save_cycle(cycle)
-        return cycle
+    with timed_op() as timer:
+        log_pipe(
+            logger,
+            "post_approval.start",
+            **ids_from_cycle(cycle),
+            decision=decision,
+            approver=approval.get("approver"),
+        )
 
-    cycle = run_publication_step(cycle)
-    if cycle.get("steps", {}).get("publication", {}).get("status") == "ERROR":
-        return cycle
+        if decision == "APPROVED":
+            from services.calculation_approval_service import APPROVED_STATUSES, can_finalize
+            from services.calculation_review_service import build_calculation_review
 
-    cycle = run_evidence_step(cycle)
-    if cycle.get("steps", {}).get("evidence", {}).get("status") == "ERROR":
-        return cycle
+            if not cycle.get("calculation_review"):
+                cycle["calculation_review"] = build_calculation_review(cycle)
+            ok, msg = can_finalize(cycle)
+            if not ok:
+                # Auto-aprova itens pendentes somente se o caller já decidiu APPROVED
+                # no nível do arquivo (caminho de script/smoke); UI deve usar finalize_file_approval.
+                from services.calculation_approval_service import approve_item
 
-    cycle = run_anchoring_step(cycle)
-    if cycle.get("steps", {}).get("blockchain", {}).get("status") == "ERROR":
-        return cycle
+                review = cycle["calculation_review"]
+                pending_ids = []
+                for it in review.get("items") or []:
+                    st = it.get("status", "AWAITING_REVIEW")
+                    if st in APPROVED_STATUSES or st in {"NOT_APPLICABLE", "REJECTED"}:
+                        continue
+                    if st == "REJECTED":
+                        add_error(cycle, "publication", msg)
+                        set_step(cycle, "publication", status="ERROR")
+                        save_cycle(cycle)
+                        log_fail(
+                            logger,
+                            "post_approval.failed",
+                            **ids_from_cycle(cycle),
+                            step="publication",
+                            error=msg,
+                            duration_ms=timer.duration_ms,
+                        )
+                        return cycle
+                    pending_ids.append(it["calculation_item_id"])
+                if pending_ids:
+                    log_decision(
+                        logger,
+                        "auto_approve_items",
+                        **ids_from_cycle(cycle),
+                        count=len(pending_ids),
+                    )
+                for item_id in pending_ids:
+                    cycle = approve_item(
+                        cycle,
+                        item_id,
+                        reviewer=approval.get("approver") or "Sistema",
+                        justification=approval.get("justification") or "Aprovado no fluxo pós-decisão.",
+                    )
+                review = cycle["calculation_review"]
+                review["status"] = "APPROVED"
+                cycle["calculation_review"] = review
+                ok, msg = can_finalize(cycle)
+                if not ok:
+                    add_error(cycle, "publication", msg)
+                    set_step(cycle, "publication", status="ERROR")
+                    save_cycle(cycle)
+                    log_fail(
+                        logger,
+                        "post_approval.failed",
+                        **ids_from_cycle(cycle),
+                        step="publication",
+                        error=msg,
+                        duration_ms=timer.duration_ms,
+                    )
+                    return cycle
 
-    cycle = run_verification_step(cycle)
+        cycle = run_approval_step(cycle, approval)
+
+        if decision != "APPROVED":
+            cycle.pop("publication", None)
+            cycle.pop("evidence_package", None)
+            cycle.pop("anchoring", None)
+            cycle.pop("integrity", None)
+            cycle["hashes"] = {}
+            save_cycle(cycle)
+            log_pipe(
+                logger,
+                "post_approval.stopped",
+                **ids_from_cycle(cycle),
+                decision=decision,
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
+
+        cycle = run_publication_step(cycle)
+        if cycle.get("steps", {}).get("publication", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "post_approval.failed",
+                **ids_from_cycle(cycle),
+                step="publication",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
+
+        cycle = run_evidence_step(cycle)
+        if cycle.get("steps", {}).get("evidence", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "post_approval.failed",
+                **ids_from_cycle(cycle),
+                step="evidence",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
+
+        cycle = run_anchoring_step(cycle)
+        if cycle.get("steps", {}).get("blockchain", {}).get("status") == "ERROR":
+            log_fail(
+                logger,
+                "post_approval.failed",
+                **ids_from_cycle(cycle),
+                step="blockchain",
+                duration_ms=timer.duration_ms,
+            )
+            return cycle
+
+        cycle = run_verification_step(cycle)
+        log_pipe(
+            logger,
+            "post_approval.done",
+            **ids_from_cycle(cycle),
+            status=cycle.get("current_status"),
+            verification=_step_status(cycle, "verification"),
+            errors=len(cycle.get("errors") or []),
+            duration_ms=timer.duration_ms,
+        )
     return cycle
-
 
 # ── Pipeline multi-entrada ──────────────────────────────────────────────────
 def run_pipeline_group_until_pending(
