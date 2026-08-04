@@ -1,37 +1,16 @@
-﻿# 08-final-status.md
+﻿# 08 — Status final — wrappers-service
 
-Status: **PROJETO PRONTO COM LIMITAÇÕES**
+**Classificação:** `PROJETO INDEPENDENTE PRONTO`
 
-## Resumo
+## Critérios
 
-O `agrotrace-carbon-wrappers-service` está instalável de forma standalone via `pip install -e .` (fonte canônica: `pyproject.toml`).
+| Critério | Status |
+|----------|--------|
+| pyproject / `.gitignore` / versão 1.0.0 | OK |
+| API canônica | `process_file` + `detect_layout_id` |
+| `process_file_auto` | Removido |
+| Testes | 41 passed, 3 skipped |
 
-## Entregas desta fase
+## Limitações
 
-| Item | Estado |
-|------|--------|
-| `.gitignore` | Criado (venv, caches, build artifacts, `.env`) |
-| `pyproject.toml` v1.0.0 | Criado — deps runtime: PyYAML, pandas; extra `test`: pytest |
-| `__version__ = "1.0.0"` | Adicionado em `__init__.py` |
-| `requirements.txt` | Mantido, alinhado ao pyproject com nota de fonte canônica |
-| Testes (`pytest -q`) | Ver `results.json` |
-
-## Limitações conhecidas (fase legado posterior)
-
-- **`process_file_auto`** permanece na API pública até a fase de remoção de legado; produção deve preferir `process_file(uri, layout_id)`.
-- Pacote PyPI interno exposto como import **`wrappers`** (alias histórico do monorepo).
-
-## Instalação standalone
-
-```bash
-cd agrotrace-carbon-wrappers-service
-python -m venv .venv-test
-.venv-test\Scripts\activate   # Windows
-pip install -e ".[test]"
-pip check
-pytest -q
-```
-
-## Validação registrada
-
-Consulte `results.json` para timestamp, contagem de testes e resultado de `pip check`.
+Nenhuma bloqueante para submissão.
