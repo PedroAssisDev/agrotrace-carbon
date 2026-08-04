@@ -1,1 +1,11 @@
-﻿{}
+﻿{
+  "project": "agrotrace-carbon-save-file",
+  "version": "1.0.0",
+  "classification": "PROJETO INDEPENDENTE PRONTO",
+  "pyproject": true,
+  "gitignore": true,
+  "isolated_install": true,
+  "pip_check": true,
+  "tests": "unittest discover PASS",
+  "limitations": ["retrieve_by_sha256_compat"]
+}

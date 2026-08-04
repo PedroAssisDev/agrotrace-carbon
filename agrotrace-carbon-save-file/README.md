@@ -55,11 +55,32 @@ fallback explicito. A UI nao deve exibir caminhos absolutos.
 - `data/emulated_uploads/`: staging regenerável (`emulated_*.csv` + `manifest.json`).
 - `data/originals/`: arquivos originais preservados após upload/import.
 
+## Requisitos e instalação isolada
+
+- Python >= 3.10
+- Sem dependências runtime externas (stdlib)
+
+```bash
+cd agrotrace-carbon-save-file
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+pip install -e ".[test]"
+pip check
+python -c "from save_file import __version__, save_original_content; print(__version__)"
+```
+
+Fonte canônica de dependências: `pyproject.toml`.
+
+## Versão
+
+`1.0.0` (`save_file.__version__`)
+
 ## Testes
 
 ```bash
 cd agrotrace-carbon-save-file
-python -m unittest tests.test_retrieve_original tests.test_emulated_generation
+python -m unittest discover -s tests -q
+# ou: pytest -q
 ```
 
 
