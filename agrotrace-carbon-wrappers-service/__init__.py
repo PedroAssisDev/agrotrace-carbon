@@ -13,6 +13,8 @@ APIs secundárias
 
 from __future__ import annotations
 
+__version__ = "1.0.0"
+
 import sys
 
 # Pytest importa este ficheiro como ``__init__`` quando ``testing/`` está dentro do pacote.

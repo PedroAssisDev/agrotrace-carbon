@@ -1,8 +1,9 @@
 # Dependências da camada de wrappers — EcoFarm OS
+# Fonte canônica: pyproject.toml (pip install -e ".[test]" ou pip install -e .)
 # Python 3.10+
 
 PyYAML>=6.0
+pandas>=2.0
 
-# Testes
-pytest>=7.0.0
-Pandas>=2.0.0
+# Testes (optional extra: pip install -e ".[test]")
+pytest>=7.0
