@@ -14,7 +14,7 @@ from typing import Any
 import re
 
 import config
-from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR
+from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR, SAVE_FILE_ORIGINALS_DIR
 from utils.file_helpers import list_cycles
 from utils.property_filter import get_all_property_ids
 
@@ -94,17 +94,18 @@ def _derive_from_cycles() -> dict[str, dict[str, Any]]:
 
 
 def _derive_from_raw_originals() -> dict[str, dict[str, Any]]:
-    """Extrai property_id dos nomes de arquivo em raw_originals (ex.: FARM-REAL_2026-03_*.csv)."""
+    """Extrai property_id dos nomes de arquivo dos originais (save-file + legado)."""
     found: dict[str, dict[str, Any]] = {}
-    if not RAW_ORIGINALS_DIR.exists():
-        return found
     pattern = re.compile(r"^([A-Za-z0-9_-]+)_\d{4}-\d{2}_")
-    for path in RAW_ORIGINALS_DIR.glob("*"):
-        if path.suffix.lower() not in (".csv", ".json", ".meta.json"):
+    for originals_dir in (SAVE_FILE_ORIGINALS_DIR, RAW_ORIGINALS_DIR):
+        if not originals_dir.exists():
             continue
-        match = pattern.match(path.name)
-        if match:
-            _add_found(found, match.group(1))
+        for path in originals_dir.glob("*"):
+            if path.suffix.lower() not in (".csv", ".json", ".meta.json"):
+                continue
+            match = pattern.match(path.name)
+            if match:
+                _add_found(found, match.group(1))
     return found
 
 
@@ -127,11 +128,25 @@ def _derive_from_evidence() -> dict[str, dict[str, Any]]:
     return found
 
 
+def _load_persisted_properties() -> dict[str, dict[str, Any]]:
+    """Fazendas cadastradas explicitamente (prioridade sobre derivadas)."""
+    try:
+        from services.farm_registry_service import list_persisted_properties
+
+        return {p["property_id"]: dict(p) for p in list_persisted_properties()}
+    except Exception as exc:
+        logger.warning("Falha ao carregar propriedades persistidas: %s", exc)
+        return {}
+
+
 def load_property_catalog() -> list[dict[str, Any]]:
-    """Catálogo: dados persistidos; fixtures demo só com USE_MOCK_DATA."""
-    catalog: dict[str, dict[str, Any]] = {}
+    """Catálogo: cadastro persistido + mock (se demo) + derivadas de dados locais."""
+    catalog: dict[str, dict[str, Any]] = _load_persisted_properties()
+
     if config.USE_MOCK_DATA:
-        catalog = {p["property_id"]: dict(p) for p in MOCK_PROPERTIES}
+        for p in MOCK_PROPERTIES:
+            if p["property_id"] not in catalog:
+                catalog[p["property_id"]] = dict(p)
 
     for source in (_derive_from_cycles(), _derive_from_evidence(), _derive_from_raw_originals()):
         for pid, entry in source.items():

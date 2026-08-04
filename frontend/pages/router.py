@@ -50,6 +50,8 @@ def render_page(
     global_filter: dict | None = None,
     filter_options: dict | None = None,
     context_cycle_id: str | None = None,
+    upload_feedback: dict | None = None,
+    active_audit_tab: str | None = None,
 ) -> html.Div:
     cycle = cycle or {}
     path = pathname or "/"
@@ -61,6 +63,20 @@ def render_page(
                 dcc.Location(id="legacy-redirect", pathname=target, refresh=True),
                 html.P(f"Redirecionando para {target}…", className="text-muted p-4"),
             ])
+
+    if path == "/data-entry":
+        return data_entry.layout(
+            cycle, global_filter or {}, filter_options or {}, context_cycle_id, upload_feedback,
+        )
+
+    if path == "/technical-audit":
+        return technical_audit.layout(
+            cycle,
+            global_filter or {},
+            filter_options or {},
+            context_cycle_id,
+            active_tab=active_audit_tab or "ta-summary",
+        )
 
     fn = ROUTES.get(path, dashboard.layout)
     return fn(cycle, global_filter or {}, filter_options or {}, context_cycle_id)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 
@@ -27,20 +27,43 @@ class WidgetSpec:
     priority: Priority = "P1"
     screens: tuple[str, ...] = ("/",)
     chart_key: str | None = None
+    subtitle: str = ""
+    value_format: str = ""
 
 
 _EXECUTIVE_KPIS: list[WidgetSpec] = [
-    WidgetSpec("co2e_total", "Emissões totais (kg CO₂e)", "kpi", "summary", "co2e_total_kg",
-               "fas fa-cloud", "danger", ("co2e_total_kg",), status_dependency=("CalculationPreliminary", "Published")),
-    WidgetSpec("intensity", "Intensidade (kg CO₂e/L)", "kpi", "emissions", "intensity_kg_per_liter",
-               "fas fa-tint", "primary", ("milk_production", "co2e_total_kg"),
-               applicable_farm_types=("dairy",), status_dependency=("CalculationPreliminary", "Published")),
-    WidgetSpec("milk_total", "Produção de leite (L)", "kpi", "productivity", "total_milk_liters",
-               "fas fa-cheese", "success", ("milk_production",)),
-    WidgetSpec("main_source", "Principal fonte emissora", "kpi", "emissions", "main_source",
-               "fas fa-fire", "danger", ("co2e_total_kg",), status_dependency=("CalculationPreliminary", "Published")),
-    WidgetSpec("cycles_pending", "Aguardando aprovação", "kpi", "pipeline", "awaiting_approval",
-               "fas fa-user-clock", "warning", status_dependency=("PendingApproval",), screens=("/",)),
+    WidgetSpec(
+        "co2e_total_t", "Emissões totais", "kpi", "summary", "co2e_total_t",
+        "fas fa-cloud", "danger", ("co2e_total_kg",),
+        subtitle="t CO₂e no período selecionado",
+        value_format="co2e_t",
+    ),
+    WidgetSpec(
+        "milk_total", "Produção total", "kpi", "summary", "total_milk_liters",
+        "fas fa-tint", "success", ("milk_production",),
+        subtitle="L de leite no período selecionado",
+        value_format="liters",
+    ),
+    WidgetSpec(
+        "intensity_consolidated", "Intensidade de emissão", "kpi", "summary",
+        "intensity_consolidated_kg_per_l",
+        "fas fa-chart-line", "primary", ("milk_production", "co2e_total_kg"),
+        subtitle="kg CO₂e/L",
+        value_format="intensity",
+    ),
+    WidgetSpec(
+        "period_status", "Status do período", "kpi", "summary", "period_status_label",
+        "fas fa-info-circle", "info",
+        subtitle="situação do período analisado",
+        value_format="status",
+    ),
+    WidgetSpec(
+        "cycles_pending", "Aguardando aprovação", "kpi", "pipeline", "awaiting_approval",
+        "fas fa-user-clock", "warning",
+        status_dependency=("PendingApproval",),
+        screens=("/",),
+        priority="P2",
+    ),
 ]
 
 _INDICATOR_SECTIONS: list[tuple[str, SectionKey, str]] = [

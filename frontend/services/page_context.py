@@ -10,6 +10,7 @@ Ver docs/conceptual_model_mrv.md e docs/filter_architecture_mrv.md.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 
 from services.cycle_status_service import ManagerialStatus, resolve_managerial_status
@@ -29,6 +30,8 @@ from utils.global_filter import (
     resolve_context_cycle,
 )
 from utils.temporal_model import TemporalModel, build_temporal_model, empty_temporal_model
+
+logger = logging.getLogger("agrotrace.context")
 
 
 def _empty_page_context_fields() -> dict:
@@ -180,6 +183,18 @@ def resolve_page_context(
     op_cycle_id = active.get("cycle_id") or cycle_id
     included_ids = [c.get("cycle_id") for c in analysis_cycles if c.get("cycle_id")]
 
+    is_empty = is_empty_context(filtered_analysis if data_mode == "official_only" else analysis_cycles, gf)
+    logger.info(
+        "[CTX] resolve farm=%s analysis=%d filtered=%d active=%s empty=%s no_official=%s ids=%s",
+        farm_id,
+        len(analysis_cycles),
+        len(filtered_analysis),
+        op_cycle_id,
+        is_empty,
+        no_official,
+        included_ids[:8],
+    )
+
     return PageContext(
         global_filter=gf,
         active_cycle=active,
@@ -206,6 +221,6 @@ def resolve_page_context(
         temporal=temporal,
         no_farm_selected=False,
         no_farm_cycles=False,
-        is_empty=is_empty_context(filtered_analysis if data_mode == "official_only" else analysis_cycles, gf),
+        is_empty=is_empty,
         no_official_data=no_official,
     )

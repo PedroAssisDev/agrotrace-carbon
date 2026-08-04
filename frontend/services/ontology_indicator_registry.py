@@ -262,3 +262,78 @@ def direct_var_names(priority: Priority | None = None) -> list[str]:
         if e.get("ontology_var") and (priority is None or e.get("priority") == priority):
             names.append(str(e["ontology_var"]))
     return names
+
+
+# --- Revisão de cálculos: fórmula → variáveis ontológicas ---
+
+FORMULA_ONTOLOGY_REQUIREMENTS: dict[str, list[dict[str, str]]] = {
+    "enteric_fermentation_ch4": [
+        {"ontology_var": "lactating_cows", "expected_unit": "head", "semantic": "headcount"},
+        {"ontology_var": "dry_cows", "expected_unit": "head", "semantic": "headcount"},
+        {"ontology_var": "heifers", "expected_unit": "head", "semantic": "headcount"},
+        {"ontology_var": "calves", "expected_unit": "head", "semantic": "headcount"},
+    ],
+    "manure_management_ch4": [
+        {"ontology_var": "lactating_cows", "expected_unit": "head", "semantic": "headcount"},
+        {"ontology_var": "lactating_cows_weight", "expected_unit": "kg", "semantic": "weight"},
+    ],
+    "fertilizer_n2o": [
+        {"ontology_var": "non_organic_fertilizer", "expected_unit": "kg", "semantic": "nitrogen"},
+    ],
+    "energy_co2": [
+        {"ontology_var": "diesel", "expected_unit": "L", "semantic": "energy"},
+        {"ontology_var": "electricity_grid", "expected_unit": "kWh", "semantic": "energy"},
+    ],
+    "total_ghg_co2e": [],
+    "intensity_co2e_per_liter": [
+        {"ontology_var": "milk_production", "expected_unit": "L", "semantic": "production"},
+    ],
+}
+
+ONTOLOGY_VAR_ALIASES: dict[str, list[str]] = {
+    "milk_production": ["milk", "total_milk_production", "milk_sales"],
+    "lactating_cows": ["number_of_lactating_cows"],
+    "dry_cows": ["number_of_dry_cows"],
+    "non_organic_fertilizer": ["nitrogen_applied", "nitrogen"],
+    "lactating_cows_weight": ["weight", "body_weight"],
+}
+
+# Ponte ontologia → input_overrides do calculation_adapter
+ONTOLOGY_TO_CALC_OVERRIDE: dict[str, dict[str, str]] = {
+    "lactating_cows": {"kind": "headcount", "calc_key": "Lactating_Cows"},
+    "dry_cows": {"kind": "headcount", "calc_key": "Dry_Cows"},
+    "heifers": {"kind": "headcount", "calc_key": "Heifers"},
+    "calves": {"kind": "headcount", "calc_key": "Calves"},
+    "bulls": {"kind": "headcount", "calc_key": "Bulls"},
+    "milk_production": {"kind": "milk_liters"},
+    "milk": {"kind": "milk_liters"},
+    "total_milk_production": {"kind": "milk_liters"},
+    "non_organic_fertilizer": {"kind": "nitrogen_applied_kg"},
+    "diesel": {"kind": "energy", "calc_key": "Diesel"},
+    "electricity_grid": {"kind": "energy", "calc_key": "Electricity_Grid"},
+    "gasoline": {"kind": "energy", "calc_key": "Gasoline"},
+    "lactating_cows_weight": {"kind": "body_weight", "calc_key": "Lactating_Cows"},
+    "weight": {"kind": "body_weight", "calc_key": "Lactating_Cows"},
+}
+
+
+def ontology_class_for(ontology_var: str) -> str:
+    return VARIABLE_CLASS_MAP.get(ontology_var, "AdministrativeVariable")
+
+
+def ontology_var_aliases(ontology_var: str) -> list[str]:
+    aliases = list(ONTOLOGY_VAR_ALIASES.get(ontology_var, []))
+    return [ontology_var] + aliases
+
+
+def get_formula_requirements(formula_id: str) -> list[dict[str, str]]:
+    """Variáveis ontológicas exigidas por fórmula (substitui catálogo legado)."""
+    reqs = []
+    for r in FORMULA_ONTOLOGY_REQUIREMENTS.get(formula_id, []):
+        ov = r["ontology_var"]
+        reqs.append({
+            **r,
+            "variable": ov,
+            "ontology_class": ontology_class_for(ov),
+        })
+    return reqs

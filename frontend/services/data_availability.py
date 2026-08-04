@@ -106,5 +106,12 @@ def resolve_visible_widgets(
             continue
         section = indicators.get(spec.section) or {}
         val = section.get(spec.kpi_key) if spec.kpi_key else None
-        out.append((spec, {"title": spec.title, "value": val, "icon": spec.icon, "color": spec.color}))
+        out.append((spec, {
+            "title": spec.title,
+            "value": val,
+            "icon": spec.icon,
+            "color": spec.color,
+            "subtitle": spec.subtitle,
+            "value_format": spec.value_format,
+        }))
     return out

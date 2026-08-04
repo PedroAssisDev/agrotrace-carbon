@@ -41,12 +41,32 @@ EMPTY_NO_PENDING_APPROVAL = {
 }
 
 EMPTY_NO_INDICATOR_DATA = {
-    "title": "Nenhum dado para este indicador",
+    "title": "Nenhum dado para estes indicadores",
     "message": (
-        "Os indicadores oficiais dependem de um cálculo aprovado e publicado. "
-        "Conclua a revisão humana para liberar os valores desta aba."
+        "Não há dados suficientes para calcular estes indicadores no período selecionado. "
+        "Ajuste os filtros globais ou importe dados na Entrada de Dados."
     ),
     "icon": "fas fa-chart-bar",
+}
+
+EMPTY_NO_OFFICIAL_DATA = {
+    "title": "Nenhum dado oficial no período",
+    "message": (
+        "Não há dados oficiais no período selecionado. "
+        "Existem resultados preliminares que podem ser exibidos alterando o modo de dados."
+    ),
+    "icon": "fas fa-info-circle",
+}
+
+EMPTY_NO_IMPORT = {
+    "title": "Nenhum ciclo encontrado",
+    "message": (
+        "Nenhum ciclo encontrado para a fazenda e período selecionados. "
+        "Importe dados na tela Entrada de Dados para iniciar a análise."
+    ),
+    "icon": "fas fa-file-upload",
+    "action_label": "Ir para Entrada de Dados",
+    "action_href": "/data-entry",
 }
 
 EMPTY_BLOCKCHAIN_LOCKED = {
@@ -85,9 +105,9 @@ def EmptyFilterState(message: str | None = None, *, no_farm: bool = False, no_fa
         action_label = None
         action_href = None
     elif no_farm_cycles:
-        preset = EMPTY_NO_FARM_CYCLES
-        action_label = None
-        action_href = None
+        preset = EMPTY_NO_IMPORT
+        action_label = preset.get("action_label")
+        action_href = preset.get("action_href")
     else:
         preset = EMPTY_NO_CYCLES
         action_label = "Ir para Cálculos"

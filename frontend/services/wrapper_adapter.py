@@ -29,14 +29,19 @@ def _mock(raw_file_path: str, layout_name: str, period: str, reason: str | None 
     return decorate_mock(mock_wrapper_result(raw_file_path, _resolve_layout(layout_name), period), reason)
 
 
-def run_wrapper(raw_file_path: str, layout_name: str, period: str) -> dict[str, Any]:
+def run_wrapper(raw_file_path: str, layout_name: str, period: str, *, year: int | None = None) -> dict[str, Any]:
     """Executa wrapper real se disponível; caso contrário retorna mock."""
     if config.USE_MOCK_DATA or not config.USE_DIRECT_FUNCTION_CALLS or di.process_file is None:
         return _mock(raw_file_path, layout_name, period)
 
     try:
         layout_id = _resolve_layout(layout_name)
-        result = di.process_file(raw_file_path, layout_id)
+        kwargs: dict[str, Any] = {}
+        if year is not None:
+            kwargs["year"] = year
+        elif layout_name == "annual" and period and len(str(period)) == 4 and str(period).isdigit():
+            kwargs["year"] = int(period)
+        result = di.process_file(raw_file_path, layout_id, **kwargs)
         status = getattr(result.processing_status, "value", str(result.processing_status))
         normalized = result.normalized_payload or []
         meta = result.metadata or {}
@@ -45,6 +50,14 @@ def run_wrapper(raw_file_path: str, layout_name: str, period: str) -> dict[str, 
         out_path = NORMALIZED_DIR / f"{Path(raw_file_path).stem}_normalized.json"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(json.dumps(normalized, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+
+        logger.debug(
+            "[PIPE] wrapper real layout=%s rows_valid=%d rows_rejected=%d period=%s",
+            result.layout_id,
+            len(normalized),
+            len(rejected),
+            period,
+        )
 
         return {
             "source": "real",

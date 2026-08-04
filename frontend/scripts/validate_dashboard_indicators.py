@@ -23,6 +23,7 @@ from services.indicator_service import (  # noqa: E402
     build_dashboard_tables,
     generate_dashboard_insights,
 )
+from services.indicator_aggregation_service import filter_range_delta  # noqa: E402
 from services.mock_data import mock_pending_cycle  # noqa: E402
 from utils.formatting import NA as _NA
 from utils.global_filter import DEFAULT_GLOBAL_FILTER  # noqa: E402
@@ -107,6 +108,14 @@ def main() -> int:
     v.check("pipeline awaiting_approval", (ind["pipeline"].get("awaiting_approval") or 0) >= 1)
     v.check("productivity leite", (ind["productivity"].get("total_milk_liters") or 0) >= 25000)
     v.check("emissions by_source", len(ind["emissions"].get("by_source") or {}) >= 1)
+
+    delta_fixture = filter_range_delta([
+        {"milk_liters": 100.0, "co2e_kg": 1000.0, "intensity": 10.0},
+        {"milk_liters": 150.0, "co2e_kg": 1200.0, "intensity": 8.0},
+    ], None, {})
+    v.check("variacao first->last leite", delta_fixture.get("milk_pct") == 50.0, str(delta_fixture.get("milk_pct")))
+    v.check("variacao first->last co2e", delta_fixture.get("co2e_pct") == 20.0, str(delta_fixture.get("co2e_pct")))
+    v.check("variacao first->last intensidade", delta_fixture.get("intensity_pct") == -20.0, str(delta_fixture.get("intensity_pct")))
 
     insights = generate_dashboard_insights(ind)
     v.check("insights não vazio", len(insights) >= 1, str(len(insights)))

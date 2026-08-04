@@ -1,0 +1,7 @@
+# Staging regenerável de uploads emulados (manifest + CSVs)
+data/emulated_uploads/emulated_*.csv
+data/emulated_uploads/manifest.json
+
+# Originais preservados após import/upload local
+data/originals/*.csv
+data/originals/*.meta.json

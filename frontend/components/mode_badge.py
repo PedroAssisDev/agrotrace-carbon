@@ -25,3 +25,19 @@ def DataModeBadge(mode: str | None) -> html.Span:
         "all": "badge-status-dados-reais",
     }.get(key, "badge-status-pendente")
     return html.Span(labels[key], className=f"badge-status {css} me-1")
+
+
+def IntegrationModeBadge(mode: str | None) -> html.Span:
+    """Badge de integração real/mock/mixed (distinto de data_mode de governança)."""
+    labels = {
+        "real": "Dados reais",
+        "mock": "Dados simulados",
+        "mixed": "Dados mistos",
+    }
+    css = {
+        "real": "badge-status-dados-reais",
+        "mock": "badge-status-fallback-mock",
+        "mixed": "badge-status-pendente",
+    }
+    key = mode if mode in labels else "mock"
+    return html.Span(labels[key], className=f"badge-status {css.get(key, 'badge-status-pendente')} me-1")

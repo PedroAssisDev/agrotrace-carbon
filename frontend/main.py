@@ -6,13 +6,16 @@ Entry point: python main.py
 
 from __future__ import annotations
 
-import logging
 import sys
 from pathlib import Path
 
 FRONTEND_DIR = Path(__file__).resolve().parent
 if str(FRONTEND_DIR) not in sys.path:
     sys.path.insert(0, str(FRONTEND_DIR))
+
+from utils.logging_config import get_logger, setup_logging
+
+setup_logging()
 
 import dash
 import dash_bootstrap_components as dbc
@@ -24,8 +27,7 @@ from layout.main_layout import create_main_layout
 from layout.theme import THEME
 from services.bootstrap import bootstrap_all
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("agrotrace.app")
+logger = get_logger("agrotrace.app")
 
 ensure_data_dirs()
 bootstrap_result = bootstrap_all()
@@ -33,6 +35,7 @@ logger.info("Bootstrap: %s", bootstrap_result)
 
 dash_app = dash.Dash(
     __name__,
+    assets_folder=str(FRONTEND_DIR / "assets"),
     external_stylesheets=[THEME, dbc.icons.FONT_AWESOME],
     suppress_callback_exceptions=True,
     title=config.APP_TITLE,

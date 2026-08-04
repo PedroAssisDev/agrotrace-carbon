@@ -52,6 +52,21 @@ def _mode_of(result: dict | None) -> str:
     return result.get("mode") or result.get("source") or "mock"
 
 
+def _step_status(cycle: dict, step_id: str) -> str:
+    return (cycle.get("steps") or {}).get(step_id, {}).get("status", "?")
+
+
+def _log_step(cycle: dict, step_id: str, phase: str = "done") -> None:
+    logger.info(
+        "[PIPE] step.%s cycle=%s step=%s status=%s milestone=%s",
+        phase,
+        cycle.get("cycle_id"),
+        step_id,
+        _step_status(cycle, step_id),
+        cycle.get("current_status"),
+    )
+
+
 def _emit(cycle: dict, event_type: str, payload: dict) -> None:
     payload = dict(payload)
     payload.setdefault("cycle_id", cycle.get("cycle_id"))
@@ -87,6 +102,13 @@ def register_raw_upload(cycle: dict, raw_meta: dict | None = None, **_: Any) -> 
     set_milestone(cycle, "RAW_DATA_RECEIVED")
     set_step(cycle, "raw_data", status="RUNNING")
     cycle["raw_file"] = raw_meta
+    logger.info(
+        "[PIPE] register_raw_upload.start cycle=%s property=%s period=%s file=%s",
+        cycle.get("cycle_id"),
+        cycle.get("property_id"),
+        cycle.get("reporting_period"),
+        raw_meta.get("original_filename"),
+    )
 
     year, month = _parse_period(cycle["reporting_period"])
     period_rec = provenance_adapter.record_reporting_period(year, month, cycle["reporting_period"])
@@ -120,6 +142,7 @@ def register_raw_upload(cycle: dict, raw_meta: dict | None = None, **_: Any) -> 
         summary=f"Arquivo {raw_meta.get('original_filename')} registrado (SHA-256 {str(raw_meta.get('sha256',''))[:12]}…).",
     )
     save_cycle(cycle)
+    _log_step(cycle, "raw_data")
     return cycle
 
 
@@ -180,7 +203,10 @@ def run_ontology_step(cycle: dict, **_: Any) -> dict[str, Any]:
     set_step(cycle, "ontology", status="RUNNING")
     _emit_canonical(cycle, "CANONICAL_MODEL_POPULATION_STARTED", {}, include_legacy=False)
 
-    ontology_result = ontology_adapter.publish_to_canonical_model(cycle.get("wrapper", {}))
+    ontology_result = ontology_adapter.publish_to_canonical_model({
+        **(cycle.get("wrapper") or {}),
+        "normalized_payload": cycle.get("normalized_data") or (cycle.get("wrapper") or {}).get("normalized_payload") or [],
+    })
     cycle["ontology"] = {k: v for k, v in ontology_result.items() if k != "_ontology"}
     if ontology_result.get("_ontology") is not None:
         _ONTOLOGY_CACHE[cycle["cycle_id"]] = ontology_result["_ontology"]
@@ -268,7 +294,9 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
 
     calc_input = {
         **(cycle.get("ontology") or {}),
+        "normalized_data": cycle.get("normalized_data") or [],
         "normalized_payload": cycle.get("normalized_data") or [],
+        "reporting_period": cycle.get("reporting_period"),
         "wrapper": cycle.get("wrapper") or {},
         "calculation_params": params,
     }
@@ -294,7 +322,7 @@ def run_calculation_step(cycle: dict, params: dict | None = None, **_: Any) -> d
 
     co2e = calculation.get("co2e_total_kg", 0)
     set_step(cycle, "calculation", status="DONE", mode=mode,
-             summary=f"{co2e:,.1f} kg CO₂e • intensidade {calculation.get('co2e_intensity_per_milk_liter', 0):.3f} kg/L.")
+             summary=f"{co2e:,.1f} kg CO₂e • intensidade {calculation.get('co2e_intensity_per_milk_liter', 0):.3f} kg CO₂e/L.")
     save_cycle(cycle)
     return cycle
 
@@ -501,6 +529,14 @@ def run_auto_pipeline_after_ingestion(
     """Executa automaticamente ingestão → cálculo preliminar → pendência de aprovação."""
     from services.cycle_status_service import mark_pending_approval
 
+    logger.info(
+        "[PIPE] auto_pipeline.start property=%s period=%s layout=%s frequency=%s",
+        property_id,
+        reporting_period,
+        layout_name,
+        frequency,
+    )
+
     cycle = new_cycle(
         property_id,
         property_name,
@@ -516,28 +552,44 @@ def run_auto_pipeline_after_ingestion(
 
     cycle = register_raw_upload(cycle, raw_meta)
     if cycle.get("steps", {}).get("raw_data", {}).get("status") == "ERROR":
+        logger.warning("[PIPE] auto_pipeline.failed step=raw_data cycle=%s", cycle.get("cycle_id"))
         return cycle
 
     cycle = run_wrapper_step(cycle, layout_name)
+    _log_step(cycle, "wrapper")
     if cycle.get("steps", {}).get("wrapper", {}).get("status") == "ERROR":
+        logger.warning("[PIPE] auto_pipeline.failed step=wrapper cycle=%s", cycle.get("cycle_id"))
         return cycle
 
     cycle = run_ontology_step(cycle)
+    _log_step(cycle, "ontology")
     if cycle.get("steps", {}).get("ontology", {}).get("status") == "ERROR":
+        logger.warning("[PIPE] auto_pipeline.failed step=ontology cycle=%s", cycle.get("cycle_id"))
         return cycle
 
     cycle = run_semantic_step(cycle)
+    _log_step(cycle, "semantic")
     if cycle.get("steps", {}).get("semantic", {}).get("status") == "ERROR":
+        logger.warning("[PIPE] auto_pipeline.failed step=semantic cycle=%s", cycle.get("cycle_id"))
         return cycle
 
     cycle = run_calculation_step(cycle, calculation_params)
+    _log_step(cycle, "calculation")
     if cycle.get("steps", {}).get("calculation", {}).get("status") == "ERROR":
+        logger.warning("[PIPE] auto_pipeline.failed step=calculation cycle=%s", cycle.get("cycle_id"))
         return cycle
 
     if mark_pending:
         cycle = mark_pending_approval(cycle)
         set_pipeline_progress(cycle, "pending", "Aguardando aprovação humana")
     save_cycle(cycle)
+    logger.info(
+        "[PIPE] auto_pipeline.done cycle=%s status=%s period=%s errors=%d",
+        cycle.get("cycle_id"),
+        cycle.get("current_status"),
+        cycle.get("reporting_period"),
+        len(cycle.get("errors") or []),
+    )
     return cycle
 
 

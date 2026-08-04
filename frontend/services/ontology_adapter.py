@@ -12,6 +12,7 @@ import pandas as pd
 from config import ONTOLOGY_DIR
 from services import direct_imports as di
 from services.mock_data import mock_ontology_result, mock_semantic_validation
+from services.ontology_extraction_service import build_canonical_variables_snapshot_from_batch
 from utils.hash_helpers import sha256_dict
 
 logger = logging.getLogger("agrotrace.ontology")
@@ -26,6 +27,11 @@ def _records_to_dataframe(records: list[dict]) -> pd.DataFrame:
 def _mock_publish(normalized_batch: dict, reason: str | None = None) -> dict[str, Any]:
     out = mock_ontology_result(normalized_batch)
     out["mode"] = "mock"
+    rp = None
+    payload = normalized_batch.get("normalized_payload") or []
+    if payload and isinstance(payload[0], dict):
+        rp = payload[0].get("period") or payload[0].get("periodo")
+    out["canonical_variables"] = build_canonical_variables_snapshot_from_batch(normalized_batch, rp)
     if reason:
         out["fallback_reason"] = reason
     return out
@@ -83,6 +89,10 @@ def publish_to_canonical_model(normalized_batch: dict) -> dict[str, Any]:
             "export_paths": {"owl": str(owl_path), "ttl": str(ttl_path)},
             "_ontology": onto,
         }
+        rp = None
+        if records and isinstance(records[0], dict):
+            rp = records[0].get("period") or records[0].get("periodo")
+        result["canonical_variables"] = build_canonical_variables_snapshot_from_batch(normalized_batch, rp)
         return result
     except Exception as exc:
         logger.warning("Ontologia real falhou: %s", exc)

@@ -7,13 +7,22 @@ from dash import html
 
 from components.cards import CompactMetricCard, KpiGrid
 from services.data_availability import resolve_visible_widgets
-from utils.formatting import format_co2e, format_intensity, format_number
+from utils.formatting import format_co2e, format_co2e_t, format_intensity, format_liters, format_number
 
 
 def _format_kpi_value(spec_meta: dict) -> str:
     val = spec_meta.get("value")
     if val is None or val == "—" or val == "N/A":
         return "—"
+    fmt = (spec_meta.get("value_format") or "").lower()
+    if fmt == "co2e_t":
+        return format_co2e_t(val)
+    if fmt == "liters":
+        return format_liters(val)
+    if fmt == "intensity":
+        return format_intensity(val)
+    if fmt == "status":
+        return str(val)
     title = (spec_meta.get("title") or "").lower()
     if "co₂e" in title or "co2e" in title:
         return format_co2e(val)
@@ -45,6 +54,7 @@ def ConditionalKpiGrid(
         metrics.append({
             "title": meta["title"],
             "value": _format_kpi_value(meta),
+            "subtitle": meta.get("subtitle") or "",
             "icon": meta.get("icon", "fas fa-chart-bar"),
             "color": meta.get("color", "success"),
         })

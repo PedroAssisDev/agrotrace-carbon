@@ -127,6 +127,106 @@ def mock_semantic_validation(canonical_dataset: dict) -> dict[str, Any]:
 
 def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dict[str, Any]:
     gwp = (params or {}).get("gwp", {"CH4": 25.0, "N2O": 298.0, "CO2": 1.0})
+    factors_used = (params or {}).get("factors_used") or {
+        "enteric_ch4_kg_per_animal": {
+            "Lactating_Cows": 100.0, "Dry_Cows": 50.0, "Heifers": 30.0,
+            "Calves": 20.0, "Bulls": 10.0,
+        },
+        "manure_kg_per_kg_bw_per_day": {
+            "Lactating_Cows": 0.08, "Dry_Cows": 0.07, "Heifers": 0.06,
+            "Calves": 0.05, "Bulls": 0.09,
+        },
+        "manure_ch4_kg_per_kg_manure": {
+            "Lactating_Cows": 0.17, "Dry_Cows": 0.14, "Heifers": 0.12,
+            "Calves": 0.10, "Bulls": 0.20,
+        },
+        "energy_co2_kg_per_unit": {"Diesel": 2.68, "Electricity_Grid": 0.233},
+        "fertilizer_factors": {
+            "direct_n2o_emission_factor": 0.01,
+            "indirect_n2o_emission_factor": 0.005,
+            "fraction_n_volatilized": 0.1,
+        },
+        "gwp": gwp,
+    }
+    inputs = {
+        "headcounts_by_category": {
+            "Lactating_Cows": 19.0, "Dry_Cows": 5.0, "Heifers": 22.0,
+            "Calves": 5.0, "Bulls": 0.0,
+        },
+        "body_weight_kg_by_category": {k: 450.0 for k in factors_used["enteric_ch4_kg_per_animal"]},
+        "nitrogen_applied_kg": 120.0,
+        "energy_consumption_by_vector": {"Diesel": 500.0, "Electricity_Grid": 1200.0},
+        "milk_liters": 12659.0,
+        "milk_kg_fpcm": None,
+        "days_in_period": 30,
+        "temporal_scope": "MONTHLY",
+    }
+    subcalculations = [
+        {
+            "id": "enteric", "label": "Fermentação entérica",
+            "formula": "Σ(headcount[categoria] × ef_enteric[categoria])",
+            "gas": "CH4", "result_kg": 2987.88, "unit": "kg CH4",
+            "co2e_kg": 74697.0,
+            "inputs": {"headcounts_by_category": inputs["headcounts_by_category"]},
+            "factors": {"enteric_ch4_kg_per_animal": factors_used["enteric_ch4_kg_per_animal"]},
+        },
+        {
+            "id": "manure", "label": "Manejo de dejetos",
+            "formula": "Σ(n × peso × ef_esterco/dia × ef_CH4/esterco × dias)",
+            "gas": "CH4", "result_kg": 412.5, "unit": "kg CH4",
+            "co2e_kg": 10312.5,
+            "inputs": {
+                "headcounts_by_category": inputs["headcounts_by_category"],
+                "body_weight_kg_by_category": inputs["body_weight_kg_by_category"],
+                "days_in_period": 30,
+            },
+            "factors": {
+                "manure_kg_per_kg_bw_per_day": factors_used["manure_kg_per_kg_bw_per_day"],
+                "manure_ch4_kg_per_kg_manure": factors_used["manure_ch4_kg_per_kg_manure"],
+            },
+        },
+        {
+            "id": "fertilizer", "label": "Fertilizantes N",
+            "formula": "N × ef_direto + N × fração_volatilizada × ef_indireto",
+            "gas": "N2O", "result_kg": 18.2, "unit": "kg N2O",
+            "co2e_kg": 5423.6,
+            "inputs": {"nitrogen_applied_kg": 120.0},
+            "factors": {"fertilizer_factors": factors_used["fertilizer_factors"]},
+        },
+        {
+            "id": "energy", "label": "Energia",
+            "formula": "Σ(consumo[vetor] × ef_CO2[vetor])",
+            "gas": "CO2", "result_kg": 2450.0, "unit": "kg CO2",
+            "co2e_kg": 2450.0,
+            "inputs": {"energy_consumption_by_vector": inputs["energy_consumption_by_vector"]},
+            "factors": {"energy_co2_kg_per_unit": factors_used["energy_co2_kg_per_unit"]},
+        },
+        {
+            "id": "total", "label": "Total GEE",
+            "formula": "CH4_total × GWP_CH4 + N2O × GWP_N2O + CO2",
+            "gas": "CO2e", "result_kg": 94521.3, "unit": "kg CO2e",
+            "co2e_kg": 94521.3, "inputs": {}, "factors": {"gwp": gwp},
+        },
+        {
+            "id": "intensity_liter", "label": "Intensidade por litro",
+            "formula": "CO2e_total / litros_leite",
+            "gas": "CO2e", "result_kg": 0.746, "unit": "kg CO2e/L",
+            "co2e_kg": None,
+            "inputs": {"milk_liters": 12659.0, "co2e_total_kg": 94521.3},
+            "factors": {},
+        },
+    ]
+    method = {
+        "code": "ECOFARM-T1-DAIRY",
+        "version": "1.0.0",
+        "implementation_version": "0.3.0",
+        "methodology_label": "IPCC/IDF-compatible",
+    }
+    temporal = {
+        "scope": "MONTHLY",
+        "days_in_period": 30,
+        "auto_prorate_factors": True,
+    }
     results = {
         "ch4_enteric_kg": 2987.88,
         "ch4_manure_kg": 412.5,
@@ -138,6 +238,11 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         "methodology": "IPCC/IDF-compatible",
         "calculation_version": "0.3.0",
         "ontology_version": "agromrv_lite_v2026_01",
+        "method": method,
+        "temporal": temporal,
+        "inputs": inputs,
+        "factors_used": factors_used,
+        "subcalculations": subcalculations,
         "gwp": gwp,
         "by_source": {
             "Fermentação entérica — CH₄": 74697.0,
@@ -148,7 +253,15 @@ def mock_calculation(canonical_dataset: dict, params: dict | None = None) -> dic
         "by_gas": {"CH4": 85009.5, "N2O": 5423.6, "CO2": 2450.0},
     }
     results["source"] = "mock"
-    results["preliminary_hash"] = sha256_dict(results)
+    hash_payload = {
+        "method": method,
+        "temporal": temporal,
+        "inputs": inputs,
+        "factors_used": factors_used,
+        "subcalculations": subcalculations,
+        "co2e_total_kg": 94521.3,
+    }
+    results["preliminary_hash"] = sha256_dict(hash_payload)
     return results
 
 

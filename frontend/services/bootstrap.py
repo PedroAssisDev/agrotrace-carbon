@@ -18,10 +18,14 @@ from config import (
     ONTOLOGY_DIR,
     ONTOLOGY_EXPORTS_DIR,
     ONTOLOGY_SERVICE_DIR,
+    PROPERTIES_DIR,
     PROV_DB_PATH,
     RAW_ORIGINALS_DIR,
     REPORTS_DIR,
     SAMPLE_DATA_DIR,
+    SAVE_FILE_EMULATED_UPLOADS_DIR,
+    SAVE_FILE_ORIGINALS_DIR,
+    SAVE_FILE_SERVICE_DIR,
     TRACEABILITY_SRC_DIR,
     WRAPPERS_SERVICE_DIR,
     ensure_data_dirs,
@@ -75,6 +79,7 @@ def _install_wrappers_alias() -> None:
 def configure_paths() -> None:
     """Adiciona raízes dos serviços ao sys.path."""
     _install_wrappers_alias()
+    _add_to_path(SAVE_FILE_SERVICE_DIR)
     _add_to_path(WRAPPERS_SERVICE_DIR)
     _add_to_path(CALCULATION_SERVICE_DIR)
     _add_to_path(ONTOLOGY_SERVICE_DIR)
@@ -219,6 +224,8 @@ def wipe_all_test_data(*, recreate_dbs: bool = True) -> dict[str, Any]:
     for directory in (
         CYCLES_DIR,
         RAW_ORIGINALS_DIR,
+        SAVE_FILE_ORIGINALS_DIR,
+        SAVE_FILE_EMULATED_UPLOADS_DIR,
         NORMALIZED_DIR,
         ONTOLOGY_DIR,
         ONTOLOGY_EXPORTS_DIR,
@@ -227,6 +234,8 @@ def wipe_all_test_data(*, recreate_dbs: bool = True) -> dict[str, Any]:
         SAMPLE_DATA_DIR / "seed",
     ):
         wiped[str(directory.name)] = _wipe_directory(directory)
+
+    wiped["properties"] = _wipe_directory(PROPERTIES_DIR)
 
     for db_path in (PROV_DB_PATH, BLOCKCHAIN_DB_PATH):
         if db_path.exists():

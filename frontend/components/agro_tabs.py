@@ -9,7 +9,7 @@ def AgroTabs(tabs: list, *, id: str | None = None, active_tab: str | None = None
     """Wrapper de dbc.Tabs com classe agro-tabs."""
     extra = kwargs.pop("className", "")
     className = f"agro-tabs {extra}".strip()
-    props = dict(tabs=tabs, className=className, **kwargs)
+    props = dict(children=tabs, className=className, **kwargs)
     if id:
         props["id"] = id
     if active_tab:

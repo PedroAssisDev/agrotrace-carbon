@@ -285,6 +285,63 @@ def record_semantic_and_canonical(pipeline_run_id: str, normalized_batch_id: str
     }
 
 
+def _parameter_values_from_calculation_result(calculation_result: dict) -> list:
+    """Converte factors_used do resultado em ParameterValueInput para proveniência."""
+    if di.ParameterValueInput is None:
+        return []
+
+    factors = calculation_result.get("factors_used") or {}
+    values: list = []
+
+    gwp = factors.get("gwp") or calculation_result.get("gwp") or {}
+    if gwp.get("CH4") is not None:
+        values.append(di.ParameterValueInput(
+            parameter_name="gwp_ch4", parameter_value_numeric=Decimal(str(gwp["CH4"]))
+        ))
+    if gwp.get("N2O") is not None:
+        values.append(di.ParameterValueInput(
+            parameter_name="gwp_n2o", parameter_value_numeric=Decimal(str(gwp["N2O"]))
+        ))
+
+    for cat, val in (factors.get("enteric_ch4_kg_per_animal") or {}).items():
+        values.append(di.ParameterValueInput(
+            parameter_name=f"enteric_ch4_{cat}",
+            parameter_value_numeric=Decimal(str(val)),
+        ))
+
+    for cat, val in (factors.get("manure_kg_per_kg_bw_per_day") or {}).items():
+        values.append(di.ParameterValueInput(
+            parameter_name=f"manure_kg_bw_day_{cat}",
+            parameter_value_numeric=Decimal(str(val)),
+        ))
+
+    for cat, val in (factors.get("manure_ch4_kg_per_kg_manure") or {}).items():
+        values.append(di.ParameterValueInput(
+            parameter_name=f"manure_ch4_ef_{cat}",
+            parameter_value_numeric=Decimal(str(val)),
+        ))
+
+    for vec, val in (factors.get("energy_co2_kg_per_unit") or {}).items():
+        values.append(di.ParameterValueInput(
+            parameter_name=f"energy_co2_{vec}",
+            parameter_value_numeric=Decimal(str(val)),
+        ))
+
+    fert = factors.get("fertilizer_factors") or {}
+    for key, val in fert.items():
+        values.append(di.ParameterValueInput(
+            parameter_name=f"fertilizer_{key}",
+            parameter_value_numeric=Decimal(str(val)),
+        ))
+
+    if not values:
+        values.append(di.ParameterValueInput(
+            parameter_name="gwp_ch4", parameter_value_numeric=Decimal("25")
+        ))
+
+    return values
+
+
 def record_calculation_flow(
     pipeline_run_id: str,
     canonical_snapshot_id: str,
@@ -306,11 +363,14 @@ def record_calculation_flow(
     )
 
     recorder, uow_factory = _get_recorder()
-    method_code = "agrotrace-ghg-v1"
+    method_info = calculation_result.get("method") or {}
+    method_code = method_info.get("code") or "ECOFARM-T1-DAIRY"
+    version_label = method_info.get("version") or "1.0.0"
+    method_name = f"AgroTrace {method_code}"
 
     with uow_factory() as uow:
         recorder.record_calculation_method(
-            uow, di.RecordCalculationMethodCommand(method_code=method_code, method_name="AgroTrace GHG")
+            uow, di.RecordCalculationMethodCommand(method_code=method_code, method_name=method_name)
         )
         uow.commit()
 
@@ -318,21 +378,22 @@ def record_calculation_flow(
         method = uow.calculation_methods.get_by_code(method_code)
         assert method is not None
         existing_versions = uow.calculation_method_versions.list_by_method(method.calculation_method_id)
-        version = next((v for v in existing_versions if v.version_label == "v1"), None)
+        version = next((v for v in existing_versions if v.version_label == version_label), None)
         if version is None:
             version = recorder.record_calculation_method_version(
                 uow,
                 di.RecordCalculationMethodVersionCommand(
                     calculation_method_id=method.calculation_method_id,
-                    version_label="v1",
+                    version_label=version_label,
                 ),
             )
+        param_values = _parameter_values_from_calculation_result(calculation_result)
         param_set = recorder.record_calculation_parameter_set(
             uow,
             di.RecordCalculationParameterSetCommand(
                 pipeline_run_id=UUID(pipeline_run_id),
                 calculation_method_version_id=version.calculation_method_version_id,
-                values=[di.ParameterValueInput(parameter_name="gwp_ch4", parameter_value_numeric=Decimal("25"))],
+                values=param_values,
             ),
         )
         execution = recorder.record_calculation_execution(

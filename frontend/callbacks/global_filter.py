@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import copy
+import logging
 
 from dash import Input, Output, State, callback, ctx, no_update
 
 from components.global_filters import _aggregated_status_label, _property_options
 from services.filter_service import refresh_filter_options
-from utils.cycle_helpers import strip_private_keys
+from utils.callback_logging import log_callback, log_filter_summary
+from utils.cycle_helpers import cycle_store_summary, strip_private_keys
 from utils.file_helpers import get_cycle, list_cycles
 from utils.global_filter import (
     DEFAULT_GLOBAL_FILTER,
@@ -20,6 +22,39 @@ from utils.global_filter import (
     period_in_analysis_range,
 )
 from utils.temporal_model import CALC_BASE_LABELS
+
+logger = logging.getLogger("agrotrace.filter")
+
+_FILTER_COMPARE_KEYS = (
+    "farm_id",
+    "cycle_id",
+    "analysis_period_start",
+    "analysis_period_end",
+    "view_granularity",
+    "data_mode",
+    "period",
+)
+
+
+def _filter_state_equal(left: dict | None, right: dict | None) -> bool:
+    if not left and not right:
+        return True
+    left = left or {}
+    right = right or {}
+    return all(left.get(key) == right.get(key) for key in _FILTER_COMPARE_KEYS)
+
+
+def _cycle_store_same(left: dict | None, right: dict | None) -> bool:
+    left = left or {}
+    right = right or {}
+    if left.get("cycle_id") != right.get("cycle_id"):
+        return False
+    return (
+        left.get("updated_at") == right.get("updated_at")
+        and left.get("current_status") == right.get("current_status")
+        and left.get("publication_status") == right.get("publication_status")
+        and left.get("approval_decision") == right.get("approval_decision")
+    )
 
 _SYNC_OUTPUTS = (
     Output("global-filter-store", "data"),
@@ -53,7 +88,7 @@ def _load_active_cycle(normalized: dict) -> dict:
     if not cycle_id:
         return {}
     loaded = get_cycle(cycle_id)
-    return strip_private_keys(loaded) if loaded else {}
+    return cycle_store_summary(loaded) if loaded else {}
 
 
 def _analysis_period_ui_state(normalized: dict, options: dict | None) -> tuple:
@@ -136,6 +171,7 @@ def _raw_from_prev(prev: dict) -> dict:
     State("context-cycle-id", "data"),
     prevent_initial_call=True,
 )
+@log_callback("sync_global_filter")
 def sync_global_filter(
     farm_id, analysis_start, analysis_end, view_granularity, data_mode,
     current_gf, context_cycle_id,
@@ -168,6 +204,7 @@ def sync_global_filter(
 
     normalized = normalize_filter_state(raw, all_cycles, context_cycle_id=context_cycle_id)
     options = refresh_filter_options(normalized)
+    log_filter_summary(f"[FILTER] sync trigger={trigger}", normalized)
     return _build_sync_response(normalized, options)
 
 
@@ -176,11 +213,13 @@ def sync_global_filter(
     Input("btn-gf-clear", "n_clicks"),
     prevent_initial_call=True,
 )
+@log_callback("clear_global_filter")
 def clear_global_filter(n):
     if not n:
         return (no_update,) * 18
     cleared = copy.deepcopy(DEFAULT_GLOBAL_FILTER)
     options = refresh_filter_options(cleared)
+    logger.info("[FILTER] clear_global_filter")
     return _build_sync_response(cleared, options)
 
 
@@ -203,10 +242,11 @@ def clear_global_filter(n):
     Output("gf-aggregated-badge", "style", allow_duplicate=True),
     Input("global-filter-store", "data"),
     State("context-cycle-id", "data"),
+    State("cycle-store", "data"),
     State("filter-options-store", "data"),
     prevent_initial_call=True,
 )
-def sync_controls_from_store(global_filter, context_cycle_id, filter_options):
+def sync_controls_from_store(global_filter, context_cycle_id, cycle_data, filter_options):
     """Mantém controles UI alinhados quando o store muda por outro callback."""
     all_cycles = list_cycles()
     normalized = normalize_filter_state(global_filter, all_cycles, context_cycle_id=context_cycle_id)
@@ -215,9 +255,12 @@ def sync_controls_from_store(global_filter, context_cycle_id, filter_options):
         normalized, filter_options,
     )
     badges = _badge_children(normalized)
+    new_ctx = normalized.get("cycle_id")
+    ctx_out = no_update if new_ctx == context_cycle_id else new_ctx
+    cycle_out = no_update if _cycle_store_same(active, cycle_data) else active
     return (
-        normalized.get("cycle_id"),
-        active,
+        ctx_out,
+        cycle_out,
         normalized.get("farm_id"),
         ap_start,
         ap_end,
@@ -245,11 +288,13 @@ def sync_controls_from_store(global_filter, context_cycle_id, filter_options):
     State("context-cycle-id", "data"),
     prevent_initial_call=True,
 )
+@log_callback("resync_after_pipeline")
 def resync_after_pipeline(cycle_data, global_filter, context_cycle_id):
     """Re-normaliza após pipeline — preserva janela analítica quando possível."""
     if not cycle_data or not cycle_data.get("cycle_id"):
         return no_update, no_update, no_update, refresh_filter_options(global_filter)
-    prev = normalize_filter_state(global_filter, list_cycles(), context_cycle_id=context_cycle_id)
+    all_cycles = list_cycles()
+    prev = normalize_filter_state(global_filter, all_cycles, context_cycle_id=context_cycle_id)
     period = cycle_period(cycle_data)
     ap_start = prev.get("analysis_period_start")
     ap_end = prev.get("analysis_period_end")
@@ -270,8 +315,15 @@ def resync_after_pipeline(cycle_data, global_filter, context_cycle_id):
         "view_granularity": prev.get("view_granularity"),
         "data_mode": prev.get("data_mode"),
     }
-    normalized = normalize_filter_state(raw, list_cycles(), context_cycle_id=cycle_data.get("cycle_id"))
-    active = _load_active_cycle(normalized) or strip_private_keys(cycle_data)
+    normalized = normalize_filter_state(raw, all_cycles, context_cycle_id=cycle_data.get("cycle_id"))
+    active = _load_active_cycle(normalized) or cycle_store_summary(cycle_data)
+    log_filter_summary("[FILTER] resync_after_pipeline", normalized)
+    if (
+        _filter_state_equal(normalized, global_filter)
+        and normalized.get("cycle_id") == context_cycle_id
+        and _cycle_store_same(active, cycle_data)
+    ):
+        return no_update, no_update, no_update, no_update
     return normalized, normalized.get("cycle_id"), active, refresh_filter_options(normalized)
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dash import dcc, html
 
 import config
+from components.logo_loading import create_global_loading_overlay
 from layout.navbar import create_navbar
 from layout.sidebar import create_sidebar
 from layout.theme import CONTENT_STYLE
@@ -30,6 +31,9 @@ def create_main_layout() -> html.Div:
             dcc.Store(id="filter-options-store", data=filter_options),
             dcc.Store(id="context-cycle-id", data=None),
             dcc.Store(id="wizard-layout", data="monthly"),
+            dcc.Store(id="upload-feedback-store", data=None),
+            dcc.Store(id="cr-selected-item-store", data=None),
+            dcc.Store(id="ta-active-tab-store", data="ta-summary"),
             create_sidebar(),
             html.Div(
                 id="app-main",
@@ -43,6 +47,7 @@ def create_main_layout() -> html.Div:
                     ),
                 ],
             ),
+            create_global_loading_overlay(),
         ],
         id="app-root",
         className=_app_root_class(),

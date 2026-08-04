@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 from typing import Any
 
-from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR
+from config import EVIDENCE_PACKAGES_DIR, RAW_ORIGINALS_DIR, SAVE_FILE_ORIGINALS_DIR
 from services.property_registry import load_property_catalog
 from utils.file_helpers import list_cycles
 from utils.property_filter import get_all_property_ids, normalize_property_id
+
+logger = logging.getLogger("agrotrace.filter")
 
 _PERIOD_RE = re.compile(r"^(\d{4}-\d{2})$")
 _FILENAME_PERIOD_RE = re.compile(r"^[A-Za-z0-9_-]+_(\d{4}-\d{2})_")
@@ -69,8 +72,10 @@ def get_available_periods(farm_id: str | None = None) -> list[str]:
                 continue
             periods.update(_periods_from_record(data))
 
-    if RAW_ORIGINALS_DIR.exists():
-        for path in RAW_ORIGINALS_DIR.glob("*"):
+    for originals_dir in (SAVE_FILE_ORIGINALS_DIR, RAW_ORIGINALS_DIR):
+        if not originals_dir.exists():
+            continue
+        for path in originals_dir.glob("*"):
             match = _FILENAME_PERIOD_RE.match(path.name)
             if not match:
                 continue
@@ -112,7 +117,10 @@ def cycles_for_farm_service(farm_id: str | None) -> list[dict]:
     return cycles_for_farm(list_cycles(), farm_id)
 
 
-def get_available_filter_options(farm_id: str | None = None) -> dict[str, Any]:
+def get_available_filter_options(
+    farm_id: str | None = None,
+    preferred_cycle_id: str | None = None,
+) -> dict[str, Any]:
     """Retorna propriedades e ciclos disponíveis para os controles de filtro."""
     from utils.global_filter import (
         analysis_period_dropdown_options,
@@ -124,16 +132,23 @@ def get_available_filter_options(farm_id: str | None = None) -> dict[str, Any]:
 
     all_cycles = list_cycles()
     farm_cycles = cycles_for_farm(all_cycles, farm_id) if farm_id else []
-    active = pick_default_cycle(farm_cycles) if farm_cycles else None
+    active = pick_default_cycle(farm_cycles, preferred_cycle_id) if farm_cycles else None
     scenario = (
         analysis_scenario_cycles(all_cycles, {"farm_id": farm_id}, active)
         if farm_id else []
+    )
+    analysis_periods = analysis_period_dropdown_options(scenario)
+    logger.debug(
+        "[FILTER] get_available_filter_options farm=%s cycles=%d analysis_periods=%s",
+        farm_id,
+        len(farm_cycles),
+        [p.get("value") for p in analysis_periods],
     )
     return {
         "properties": get_available_properties(),
         "cycles": cycle_dropdown_options(farm_cycles),
         "periods": get_available_periods(farm_id),
-        "analysis_periods": analysis_period_dropdown_options(scenario),
+        "analysis_periods": analysis_periods,
     }
 
 
@@ -142,4 +157,4 @@ def refresh_filter_options(global_filter: dict[str, Any] | None) -> dict[str, An
     from utils.global_filter import get_farm_id
 
     gf = global_filter or {}
-    return get_available_filter_options(get_farm_id(gf))
+    return get_available_filter_options(get_farm_id(gf), gf.get("cycle_id"))

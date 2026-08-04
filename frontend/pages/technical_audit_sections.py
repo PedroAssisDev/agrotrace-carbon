@@ -1,198 +1,287 @@
-"""Seções embutidas da Auditoria Técnica."""
+"""Seções da Auditoria Técnica — auditoria e rastreabilidade."""
 
 from __future__ import annotations
 
 import dash_bootstrap_components as dbc
 from dash import html
 
-from components.blockchain_anchor_card import BlockchainAnchorCard
-from components.cards import AlertBox
-from components.empty_state import EMPTY_BLOCKCHAIN_LOCKED, EmptyFilterState, EmptyState
-from components.evidence_package_viewer import EvidencePackageViewer
-from components.hash_viewer import HashViewer
-from components.integrity_comparison_table import IntegrityComparisonTable
-from components.key_value_table import KeyValueTable
-from components.merkle_tree import MerkleTreeView
-from components.mode_badge import ModeBadge
-from components.ontology_graph import OntologyGraphViewer
-from components.payload_viewer import PayloadViewer
-from components.provenance_timeline import ProvenanceTimeline
-from components.tables import DataTable
-from services import blockchain_adapter, provenance_adapter
-from services.blockchain_view_service import build_evidence_summary, blockchain_lock_message, is_blockchain_unlocked
-from services.cycle_state import events_for_step
-from services.data_view_service import (
-    build_data_quality_view,
-    build_normalized_table_rows,
-    build_raw_data_view,
-    build_wrapper_view,
+from components.audit import (
+    AuditArtifactTable,
+    AuditBlockchainGate,
+    AuditComplianceMatrix,
+    AuditEventExplorer,
+    AuditIntegrityPanel,
+    AuditLogPanel,
+    AuditPayloadViewer,
+    AuditSummaryCards,
+    AuditTimeline,
+    ProvenanceSqlWorkspace,
+    TechnicalActionsPanel,
 )
-from services.integrity_view_service import build_integrity_summary, integrity_message
+from components.empty_state import EmptyFilterState
+from components.payload_viewer import PayloadViewer
+from services import blockchain_adapter, provenance_adapter
+from services.audit_artifact_service import build_artifact_rows, group_artifacts
+from services.audit_event_service import (
+    most_recent_event,
+    resolve_cycle_events,
+    unique_filter_options,
+)
+from services.audit_payload_service import resolve_payload
+from services.audit_summary_service import build_audit_summary, detect_integration_mode
+from services.audit_timeline_service import build_audit_timeline
+from services.blockchain_view_service import blockchain_lock_message, is_blockchain_unlocked
 from services.page_context import PageContext
-from services.provenance_view_service import build_derivation_graph, enrich_events
+from services.provenance_schema_service import get_audit_schema
+from services.provenance_view_service import build_derivation_graph
 
 
-def build_data_section(ctx: PageContext) -> html.Div:
-    c = ctx.active_cycle
-    if not c.get("cycle_id"):
-        return html.Div(EmptyFilterState(no_farm=ctx.no_farm_selected, no_farm_cycles=ctx.no_farm_cycles))
-    raw = build_raw_data_view(c)
-    wrapper = build_wrapper_view(c)
-    norm_rows = build_normalized_table_rows(c)
-    quality = build_data_quality_view(c)
-    return html.Div(dbc.Tabs([
-        dbc.Tab(label="Dado Bruto", children=html.Div([KeyValueTable(raw), HashViewer({"raw": raw.get("sha256")})], className="mt-3")),
-        dbc.Tab(label="Arquivo Original", children=html.Div(KeyValueTable({"caminho": raw.get("stored_path"), "hash": raw.get("sha256")}), className="mt-3")),
-        dbc.Tab(label="Wrapper", children=html.Div(KeyValueTable(wrapper), className="mt-3")),
-        dbc.Tab(label="Dado Normalizado", children=html.Div(
-            DataTable(norm_rows, columns=["variavel", "valor", "unidade", "periodo", "status"] if norm_rows else []),
-            className="mt-3",
-        )),
-        dbc.Tab(label="Qualidade dos Dados", children=html.Div(KeyValueTable(quality), className="mt-3")),
-    ], className="agro-tabs"))
+def _empty(ctx: PageContext) -> html.Div:
+    return html.Div(EmptyFilterState(no_farm=ctx.no_farm_selected, no_farm_cycles=ctx.no_farm_cycles))
 
 
-def build_ontology_section(ctx: PageContext) -> html.Div:
-    c = ctx.active_cycle
-    if not c.get("cycle_id"):
-        return html.Div(EmptyFilterState(no_farm=ctx.no_farm_selected, no_farm_cycles=ctx.no_farm_cycles))
-    ont = c.get("ontology") or {}
-    sem = c.get("semantic_validation") or {}
-    canonical = {
-        "canonical_dataset_id": ont.get("canonical_dataset_id", "—"),
-        "ontology_version": ont.get("ontology_version"),
-        "entities_created": ont.get("entities_created", 0),
-        "dataset_hash": ont.get("dataset_hash", "—"),
-    }
-    validation = {
-        "rules_executed": sem.get("total_validations", 0),
-        "critical_errors": sem.get("critical_errors", 0),
-        "warnings": sem.get("warnings", 0),
-    }
-    nodes = ont.get("graph_nodes")
-    edges = ont.get("graph_edges")
-    inference_lis = _inference_list_items(sem)
-    return html.Div(dbc.Tabs([
-        dbc.Tab(label="Modelo Canônico", children=html.Div(KeyValueTable(canonical), className="mt-3")),
-        dbc.Tab(label="Entidades e Relações", children=html.Div(OntologyGraphViewer(nodes, edges), className="mt-3")),
-        dbc.Tab(label="Validações Semânticas", children=html.Div(KeyValueTable(validation), className="mt-3")),
-        dbc.Tab(label="Inferências", children=html.Ul(inference_lis, className="mt-3")),
-    ], className="agro-tabs"))
+def _cycle_header(ctx: PageContext) -> list:
+    """Seletor de ciclo fica no shell da página (`technical_audit.layout`)."""
+    return []
 
 
-def _inference_list_items(semantic_validation: dict) -> list:
-    """Normaliza inferências: nos ciclos reais o campo é contagem (int), não lista."""
-    raw = semantic_validation.get("inferences")
-    if isinstance(raw, list):
-        return [html.Li(str(item)) for item in raw] or [html.Li("Nenhuma inferência registrada")]
-    if isinstance(raw, int) and raw > 0:
-        return [html.Li(f"{raw} inferência(s) aplicada(s)")]
-    rules = semantic_validation.get("rules_applied") or []
-    if rules:
-        return [html.Li(str(rule)) for rule in rules]
-    return [html.Li("Nenhuma inferência registrada")]
+def build_summary_section(ctx: PageContext) -> html.Div:
+    if not ctx.active_cycle.get("cycle_id"):
+        return _empty(ctx)
+    summary = build_audit_summary(ctx)
+    return html.Div([
+        *_cycle_header(ctx),
+        AuditSummaryCards(
+            summary["cards"],
+            main_message=summary.get("main_message"),
+            banners=summary.get("banners"),
+        ),
+        html.Hr(className="my-4"),
+        AuditComplianceMatrix((summary.get("compliance") or {}).get("matrix") or []),
+        TechnicalActionsPanel(),
+    ])
 
 
-def build_provenance_section(ctx: PageContext, context_cycle_id: str | None = None) -> html.Div:
+def build_timeline_section(ctx: PageContext) -> html.Div:
+    cycle = ctx.active_cycle
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
+    mode = detect_integration_mode(cycle)
+    return html.Div([
+        *_cycle_header(ctx),
+        AuditTimeline(build_audit_timeline(cycle), integration_mode=mode),
+    ])
+
+
+def _load_provenance_events(ctx: PageContext) -> dict:
     prov_cycle_id = ctx.cycle_id or ctx.active_cycle.get("cycle_id") or ""
-    events = provenance_adapter.list_events_for_context(
-        ctx.global_filter, ctx.all_cycles, ctx.active_cycle,
-        context_cycle_id=prov_cycle_id, prov_cycle_id=prov_cycle_id or None, cycles_in_context=ctx.cycles,
+    all_events = provenance_adapter.list_events_for_context(
+        ctx.global_filter,
+        ctx.all_cycles,
+        ctx.active_cycle,
+        context_cycle_id=prov_cycle_id,
+        prov_cycle_id=prov_cycle_id or None,
+        cycles_in_context=ctx.cycles,
     )
-    enriched = enrich_events(events)
-    if not enriched:
-        return html.Div(EmptyFilterState(no_farm=ctx.no_farm_selected, no_farm_cycles=ctx.no_farm_cycles))
-    table_rows = [{
-        "evento": e.get("event_type"), "fase": e.get("phase"), "servico": e.get("service"),
-        "status": e.get("status", "ok"), "data": e.get("created_at"),
-    } for e in enriched]
-    graph_list = html.Ul(
-        [html.Li(f"{e['from']} → {e['to']}") for e in build_derivation_graph(enriched)],
-        className="derivation-timeline mt-3",
-    )
-    return html.Div(dbc.Tabs([
-        dbc.Tab(label="Timeline", children=html.Div(ProvenanceTimeline(enriched), className="mt-3")),
-        dbc.Tab(label="Tabela", children=html.Div(DataTable(table_rows, columns=["evento", "fase", "servico", "status", "data"]), className="mt-3")),
-        dbc.Tab(label="Payload", children=html.Div(PayloadViewer(enriched[0].get("payload_json"), title="Payload recente"), className="mt-3")),
-        dbc.Tab(label="Derivação", children=html.Div(graph_list, className="mt-3")),
-    ], className="agro-tabs"))
+    return resolve_cycle_events(all_events, ctx.active_cycle, include_global_fallback=False)
+
+
+def build_provenance_section(ctx: PageContext) -> html.Div:
+    cycle = ctx.active_cycle
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
+
+    resolved = _load_provenance_events(ctx)
+    events = resolved["cycle_events"]
+    if not events and not resolved["has_cycle_match"]:
+        cycle_prov = cycle.get("provenance_events") or []
+        if cycle_prov:
+            from services.provenance_view_service import enrich_events
+            events = enrich_events(cycle_prov)
+
+    filter_opts = unique_filter_options(events)
+    recent = most_recent_event(events)
+
+    return html.Div([
+        *_cycle_header(ctx),
+        html.Div(id="ta-event-explorer", children=AuditEventExplorer(
+            events,
+            filter_opts,
+            show_global_warning=not resolved["has_cycle_match"] and not events,
+        )),
+        html.Hr(className="my-3"),
+        html.H6("Derivação", className="section-subtitle"),
+        html.Ul(
+            [html.Li(f"{e['from']} → {e['to']}") for e in build_derivation_graph(events)],
+            className="derivation-timeline mt-2",
+        ) if events else html.P("Sem derivação.", className="text-muted small"),
+        html.Hr(className="my-3"),
+        html.H6("Payload do evento", className="section-subtitle"),
+        html.P(
+            "Evento mais recente por timestamp (selecione na tabela para outro evento).",
+            className="text-aux small mb-2",
+        ),
+        html.Div(id="ta-payload-event-view", children=(
+            PayloadViewer(recent.get("payload_json") or recent.get("payload"), title=recent.get("event_type", "Evento"))
+            if recent else html.P("Nenhum evento disponível.", className="text-muted small")
+        )),
+    ])
+
+
+def build_provenance_queries_section(ctx: PageContext) -> html.Div:
+    cycle = ctx.active_cycle
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
+    schema = get_audit_schema()
+    return html.Div([
+        *_cycle_header(ctx),
+        ProvenanceSqlWorkspace(ctx, schema),
+    ])
+
+
+def build_artifacts_section(ctx: PageContext) -> html.Div:
+    cycle = ctx.active_cycle
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
+    rows = build_artifact_rows(cycle)
+    grouped = group_artifacts(rows)
+    mode = detect_integration_mode(cycle)
+    return html.Div([
+        *_cycle_header(ctx),
+        AuditArtifactTable(grouped, integration_mode=mode),
+    ])
 
 
 def build_blockchain_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
     if not cycle.get("cycle_id"):
-        return html.Div(EmptyFilterState(no_farm=ctx.no_farm_selected, no_farm_cycles=ctx.no_farm_cycles))
-    if not is_blockchain_unlocked(cycle):
-        lock_msg = blockchain_lock_message(cycle) or EMPTY_BLOCKCHAIN_LOCKED["message"]
-        return html.Div(
-            dbc.Card(dbc.CardBody([
-                html.I(className="fas fa-lock gate-icon d-block"),
-                EmptyState(
-                    EMPTY_BLOCKCHAIN_LOCKED["title"],
-                    lock_msg,
-                    icon=EMPTY_BLOCKCHAIN_LOCKED["icon"],
-                    action_label="Ir para Aprovação",
-                    action_href="/approval",
-                ),
-            ]), className="agro-card blockchain-gate-card"),
-        )
-    summary = build_evidence_summary(cycle)
-    evidence = cycle.get("evidence_package") or {}
-    anchoring = cycle.get("anchoring") or {}
-    hashes = summary.get("hashes") or {}
-    events = events_for_step(cycle, "blockchain") + events_for_step(cycle, "evidence")
-    pkg_rows = blockchain_adapter.build_package_summary_rows(ctx.cycles)
+        return _empty(ctx)
+
+    unlocked = is_blockchain_unlocked(cycle)
+    approval = (cycle.get("approval") or {}).get("decision", "Pendente")
+    approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
+    pub_st = (cycle.get("steps") or {}).get("publication", {}).get("status", "PENDING")
+    pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
+    pkg_rows = blockchain_adapter.build_package_summary_rows(ctx.cycles) if unlocked else []
+
     return html.Div([
-        html.Div([ModeBadge(summary.get("mode")), html.Span(f" Pacote: {summary.get('evidence_package_id', '—')}", className="text-muted small ms-2")], className="mb-3"),
-        dbc.Tabs([
-            dbc.Tab(label="Resumo", children=html.Div([
-                DataTable(pkg_rows, columns=["ciclo", "propriedade", "período", "pacote", "status"]) if pkg_rows else EmptyFilterState(),
-                BlockchainAnchorCard(evidence, anchoring),
-            ], className="mt-3")),
-            dbc.Tab(label="Pacote", children=html.Div(EvidencePackageViewer(evidence), className="mt-3")),
-            dbc.Tab(label="Hashes", children=html.Div(HashViewer(hashes), className="mt-3")),
-            dbc.Tab(label="Merkle Root", children=html.Div(MerkleTreeView(evidence, hashes), className="mt-3")),
-            dbc.Tab(label="Eventos", children=html.Ul([html.Li(f"{e.get('event_type')}") for e in events], className="mt-3")),
-        ], className="agro-tabs"),
+        *_cycle_header(ctx),
+        AuditBlockchainGate(
+            cycle,
+            unlocked=unlocked,
+            lock_message=blockchain_lock_message(cycle) or "",
+            approval_status=approval_label,
+            publication_status=pub_label,
+            pkg_rows=pkg_rows,
+        ),
     ])
 
 
 def build_integrity_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
     pkg_options = blockchain_adapter.build_verify_cycle_options(ctx.cycles)
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
     if not pkg_options:
-        return html.Div(EmptyFilterState(no_farm=ctx.no_farm_selected, no_farm_cycles=ctx.no_farm_cycles))
-    integrity = cycle.get("integrity") or {}
-    summary = build_integrity_summary(cycle)
-    message = integrity_message(integrity)
+        return html.Div([
+            *_cycle_header(ctx),
+            html.Div(
+                "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado.",
+                className="empty-state",
+            ),
+        ])
+
     return html.Div([
-        dbc.Row([
-            dbc.Col(dbc.Select(id="verify-cycle-select", options=pkg_options, value=cycle.get("cycle_id", ""), size="sm"), md=5),
-            dbc.Col(dbc.ButtonGroup([
-                dbc.Button("Verificar integridade", id="btn-verify-intact", size="sm", className="btn-agro-approve"),
-                dbc.Button("Simular divergência", id="btn-verify-tamper", size="sm", className="btn-agro-reject"),
-            ]), md=7),
-        ], className="mb-3 g-2"),
-        html.Div([ModeBadge(integrity.get("mode")), html.Span(f" {message}", className="text-aux ms-2")], className="mb-3"),
-        IntegrityComparisonTable({**integrity, "rows": summary.get("rows") or [], "message": message}),
+        *_cycle_header(ctx),
+        html.Div(id="ta-integrity-panel", children=AuditIntegrityPanel(
+            cycle,
+            pkg_options,
+            selected_cycle_id=cycle.get("cycle_id"),
+        )),
     ])
 
 
 def build_logs_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
+
     errors = cycle.get("errors") or []
     warnings = cycle.get("warnings") or []
-    events = provenance_adapter.list_events_for_context(
-        ctx.global_filter, ctx.all_cycles, cycle, cycles_in_context=ctx.cycles,
-    )
-    err_rows = [{"tipo": "erro", "etapa": e.get("step"), "mensagem": e.get("message")} for e in errors if isinstance(e, dict)]
-    warn_rows = [{"tipo": "alerta", "etapa": w.get("step"), "mensagem": w.get("message")} for w in warnings if isinstance(w, dict)]
-    ev_rows = [{"tipo": "evento", "etapa": e.get("event_type"), "mensagem": e.get("created_at")} for e in events[:50]]
-    rows = err_rows + warn_rows + ev_rows
-    table_content = DataTable(rows, columns=["tipo", "etapa", "mensagem"] if rows else [])
-    return html.Div(
-        dbc.Card(dbc.CardBody([
-            html.H6("Erros, alertas e eventos recentes", className="card-title mb-3"),
-            html.Div(table_content, className="table-responsive"),
-        ]), className="agro-card"),
-    )
+    resolved = _load_provenance_events(ctx)
+    events = resolved["cycle_events"][:50]
+
+    def _row(sev, origem, msg, etapa, ts, det=""):
+        return {"severidade": sev, "origem": origem, "mensagem": msg, "etapa": etapa, "timestamp": ts, "detalhe": det}
+
+    err_rows = [_row("Erro", "ciclo", e.get("message", ""), e.get("step", "—"), "—") for e in errors if isinstance(e, dict)]
+    warn_rows = [_row("Alerta", "ciclo", w.get("message", ""), w.get("step", "—"), "—") for w in warnings if isinstance(w, dict)]
+    ev_rows = [_row("Info", "proveniência", e.get("event_type", ""), e.get("phase", "—"), e.get("created_at", "—")) for e in events]
+
+    mock_count = 0
+    for step in (cycle.get("steps") or {}).values():
+        if step.get("mode") == "mock" or step.get("fallback_reason"):
+            mock_count += 1
+    for key in ("evidence_package", "anchoring", "integrity"):
+        if (cycle.get(key) or {}).get("mode") == "mock":
+            mock_count += 1
+
+    filter_rows = []
+    from services.audit_summary_service import build_consistency_banners
+    for b in build_consistency_banners(ctx):
+        filter_rows.append(_row("Atenção", "filtro", b.get("message", ""), b.get("title", "—"), "—"))
+
+    log_data = {
+        "summary": {
+            "errors": len(err_rows),
+            "warnings": len(warn_rows),
+            "mock_fallbacks": mock_count,
+            "no_match": 0 if resolved["has_cycle_match"] else 1,
+            "events": len(ev_rows),
+        },
+        "sections": {
+            "cycle_errors": err_rows,
+            "cycle_warnings": warn_rows,
+            "provenance_events": ev_rows,
+            "filter_inconsistencies": filter_rows,
+        },
+        "rows": err_rows + warn_rows + ev_rows + filter_rows,
+    }
+
+    return html.Div([
+        *_cycle_header(ctx),
+        AuditLogPanel(log_data),
+    ])
+
+
+def build_payload_section(ctx: PageContext) -> html.Div:
+    cycle = ctx.active_cycle
+    if not cycle.get("cycle_id"):
+        return _empty(ctx)
+
+    resolved = _load_provenance_events(ctx)
+    initial = resolve_payload("cycle", cycle, events=resolved["cycle_events"])
+
+    return html.Div([
+        *_cycle_header(ctx),
+        html.Div(id="ta-payload-view", children=AuditPayloadViewer(initial, show_selector=True)),
+    ])
+
+
+_AUDIT_TAB_BUILDERS = {
+    "ta-summary": build_summary_section,
+    "ta-timeline": build_timeline_section,
+    "ta-provenance": build_provenance_section,
+    "ta-prov-queries": build_provenance_queries_section,
+    "ta-artifacts": build_artifacts_section,
+    "ta-blockchain": build_blockchain_section,
+    "ta-integrity": build_integrity_section,
+    "ta-logs": build_logs_section,
+    "ta-payload": build_payload_section,
+}
+
+
+def build_audit_tab(tab_id: str | None, ctx: PageContext) -> html.Div:
+    """Renderiza uma aba da Auditoria Técnica pelo id."""
+    builder = _AUDIT_TAB_BUILDERS.get(tab_id or "ta-summary", build_summary_section)
+    return builder(ctx)

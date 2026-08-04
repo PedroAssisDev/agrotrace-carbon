@@ -57,7 +57,7 @@ def resolve_managerial_status(cycle: dict | None) -> ManagerialStatus:
     if _nested(cycle, "integrity").get("is_valid") is True:
         return _pack("integrity_verified", None, "/technical-audit")
 
-    if cycle.get("evidence_package"):
+    if cycle.get("evidence_package") and is_blockchain_unlocked(cycle):
         return _pack("evidence_generated", "Consultar auditoria técnica.", "/technical-audit")
 
     pub = _step_status(cycle, "publication")
@@ -125,10 +125,11 @@ def cycles_pending_approval(cycles: list[dict]) -> list[dict]:
 def traceability_summary(cycle: dict | None) -> dict[str, bool]:
     cycle = cycle or {}
     events = cycle.get("provenance_events") or []
+    unlocked = is_blockchain_unlocked(cycle)
     return {
         "traceability_available": len(events) > 0,
-        "evidence_generated": bool(cycle.get("evidence_package")),
-        "integrity_verified": _nested(cycle, "integrity").get("is_valid") is True,
+        "evidence_generated": bool(cycle.get("evidence_package")) and unlocked,
+        "integrity_verified": _nested(cycle, "integrity").get("is_valid") is True and unlocked,
     }
 
 

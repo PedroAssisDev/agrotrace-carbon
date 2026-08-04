@@ -5,29 +5,22 @@ from __future__ import annotations
 import dash_bootstrap_components as dbc
 from dash import html
 
-from components.cards import AlertBox, DataModeBadge, InsightAlert
+from components.cards import AlertBox, DataModeBadge
+from components.mode_badge import IntegrationModeBadge
 from components.conditional_widgets import ConditionalChartSection, ConditionalKpiGrid
-from components.emission_breakdown_chart import EmissionBreakdownChart
 from components.empty_state import EmptyFilterState
 from components.managerial_status import EvidenceStatusCard
 from components.page_header import PageHeader
-from services.calculation_view_service import build_source_breakdown
 from services.cycle_status_service import count_pending_approval, resolve_managerial_status
 from services.dashboard_service import (
     build_dashboard_chart_components,
     build_dashboard_chart_series,
     build_dashboard_indicators,
-    generate_dashboard_insights,
+    build_executive_temporal_section,
 )
 from services.farm_view_service import build_farm_profile
 from services.page_context import resolve_page_context
 from services import provenance_adapter
-
-
-def _managerial_insights(indicators: dict) -> list:
-    insights = generate_dashboard_insights(indicators)
-    skip_types = {"auditoria"}
-    return [i for i in insights if i.get("type") not in skip_types][:3]
 
 
 def _governance_banners(ctx, indicators: dict) -> list:
@@ -108,10 +101,13 @@ def layout(
     )
     st = resolve_managerial_status(active)
     farm = build_farm_profile(active.get("property_id"), ctx.global_filter)
-    sources = build_source_breakdown(active)
     pending = count_pending_approval(ctx.analysis_cycles)
-    insights = _managerial_insights(indicators)
-    chart_series = build_dashboard_chart_components(build_dashboard_chart_series(indicators, work_cycles))
+    temporal_section = build_executive_temporal_section(indicators)
+    chart_series = build_dashboard_chart_components(
+        build_dashboard_chart_series(indicators, work_cycles),
+        for_executive=True,
+    )
+    emission_charts = chart_series.get("emissions") or []
 
     gov_banners = _governance_banners(ctx, indicators)
     meta = indicators.get("meta") or {}
@@ -139,20 +135,6 @@ def layout(
             ], className="summary-card"),
         ], className="mb-3"))
 
-    charts = []
-    for section in ("productivity", "emissions", "sustainability"):
-        charts.extend(chart_series.get(section) or [])
-    chart = EmissionBreakdownChart(sources) if sources and active.get("calculation") else None
-    if chart:
-        charts.insert(0, chart)
-
-    alerts_block = []
-    if insights:
-        alerts_block.append(html.Div([
-            html.H6("Alertas relevantes", className="section-title mb-2"),
-            html.Div([InsightAlert(i) for i in insights]),
-        ], className="mb-3"))
-
     return html.Div([
         PageHeader(
             "Painel Executivo",
@@ -161,11 +143,15 @@ def layout(
             filter_options,
             cycle=active,
         ),
-        html.Div([DataModeBadge(meta.get("data_mode")), *gov_banners], className="mb-2"),
+        html.Div([
+            DataModeBadge(meta.get("data_mode")),
+            IntegrationModeBadge(meta.get("integration_mode")),
+            *gov_banners,
+        ], className="mb-2"),
         html.Div(pending_banner),
-        ConditionalKpiGrid("/", cycle=active, indicators=indicators, property_profile=farm, max_items=6),
-        ConditionalChartSection(charts),
+        ConditionalKpiGrid("/", cycle=active, indicators=indicators, property_profile=farm, max_items=5),
+        temporal_section,
+        ConditionalChartSection(emission_charts),
         html.Div(next_step_block),
-        html.Div(alerts_block),
         EvidenceStatusCard(active),
     ], className="dashboard-page page-content-inner")

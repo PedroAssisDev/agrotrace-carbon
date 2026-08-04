@@ -12,7 +12,7 @@ MANAGERIAL_NAV = [
     ("/data-entry", "fas fa-file-upload", "Entrada de Dados"),
     ("/calculations", "fas fa-calculator", "Cálculos de Emissão"),
     ("/approval", "fas fa-user-check", "Revisão e Aprovação"),
-    ("/indicators", "fas fa-leaf", "Indicadores e Relatórios"),
+    ("/indicators", "fas fa-chart-bar", "Análise Geral"),
 ]
 
 TECHNICAL_NAV = [

@@ -57,7 +57,7 @@ def build_indicator_tabs(sections: list[tuple[str, str, str | None, list]]) -> d
 
     return dcc.Tabs(
         id="indicators-tabs",
-        value=sections[0][0] if sections else "prod",
+        value=sections[0][0] if sections else "overview",
         className="dashboard-tabs",
         parent_className="dashboard-tabs-bar dashboard-tabs-bar--wrap",
         content_className="dashboard-tab-content",

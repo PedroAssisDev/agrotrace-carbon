@@ -14,6 +14,7 @@ Arquitetura de filtros: docs/filter_architecture_mrv.md
 from __future__ import annotations
 
 import copy
+import logging
 import re
 from typing import Any
 
@@ -25,6 +26,8 @@ from utils.property_filter import (
     normalize_property_id,
     resolve_active_cycle,
 )
+
+logger = logging.getLogger("agrotrace.filter")
 
 _PERIOD_RE = re.compile(r"^(\d{4})-(\d{2})$")
 _YEAR_RE = re.compile(r"^(\d{4})$")
@@ -217,6 +220,22 @@ def cycles_for_analysis(
     return filter_cycles_by_analysis_period(candidates, start, end)
 
 
+def _cycle_scenario_compatible(cycle: dict, ref: dict, ref_kind: str | None) -> bool:
+    """Ciclo entra no mesmo cenário analítico que a referência."""
+    if not ref_kind:
+        return True
+    c_kind = (cycle.get("temporal_coverage") or {}).get("kind")
+    if c_kind == ref_kind:
+        return True
+    if not c_kind:
+        from utils.temporal_model import infer_input_granularity, resolve_calculation_base_granularity
+
+        ref_base = resolve_calculation_base_granularity(infer_input_granularity(ref))
+        c_base = resolve_calculation_base_granularity(infer_input_granularity(cycle))
+        return ref_base == c_base
+    return False
+
+
 def analysis_scenario_cycles(
     all_cycles: list[dict],
     filters: dict[str, Any],
@@ -241,12 +260,31 @@ def analysis_scenario_cycles(
     if ref_kind:
         matched = [
             c for c in farm
-            if (c.get("temporal_coverage") or {}).get("kind") == ref_kind
+            if _cycle_scenario_compatible(c, ref, ref_kind)
         ]
         if len(matched) > 1:
+            excluded = [c.get("cycle_id") for c in farm if c not in matched]
+            logger.debug(
+                "[FILTER] analysis_scenario_cycles farm=%s ref=%s ref_kind=%s in=%d out=%d excluded=%s",
+                farm_id,
+                ref.get("cycle_id"),
+                ref_kind,
+                len(farm),
+                len(matched),
+                excluded,
+            )
             return sorted(matched, key=lambda c: c.get("reporting_period") or "")
 
-    return sorted(farm, key=lambda c: c.get("reporting_period") or "")
+    result = sorted(farm, key=lambda c: c.get("reporting_period") or "")
+    logger.debug(
+        "[FILTER] analysis_scenario_cycles farm=%s ref=%s ref_kind=%s all=%d cycles=%s",
+        farm_id,
+        ref.get("cycle_id"),
+        ref_kind,
+        len(result),
+        [cycle_period(c) for c in result],
+    )
+    return result
 
 
 def period_sort_key(period: str | None) -> str:
@@ -315,6 +353,14 @@ def resolve_analysis_period_bounds(
     end = raw_end if isinstance(raw_end, str) and raw_end in valid else periods[-1]
     if period_sort_key(start) > period_sort_key(end):
         start, end = end, start
+    logger.debug(
+        "[FILTER] resolve_analysis_period_bounds raw_start=%s raw_end=%s valid=%s -> start=%s end=%s",
+        raw_start,
+        raw_end,
+        sorted(valid, key=period_sort_key),
+        start,
+        end,
+    )
     return start, end
 
 
@@ -529,6 +575,17 @@ def normalize_filter_state(
     )
     if not active:
         active = scenario_ref
+
+    logger.debug(
+        "[FILTER] normalize_filter_state farm=%s preferred=%s candidates=%d analysis=%d active=%s periods=%s..%s",
+        farm_id,
+        preferred,
+        len(candidates),
+        len(analysis_cycles),
+        active.get("cycle_id"),
+        period_start,
+        period_end,
+    )
 
     status_fields = derive_status_fields(active)
     temporal_fields = _derive_temporal_fields(

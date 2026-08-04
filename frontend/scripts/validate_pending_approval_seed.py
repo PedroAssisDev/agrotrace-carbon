@@ -24,7 +24,7 @@ from scripts._pending_seed_assertions import (  # noqa: E402
 )
 from services.cycle_status_service import count_pending_approval, cycles_pending_approval  # noqa: E402
 from services.dashboard_service import build_dashboard_indicators, generate_dashboard_insights  # noqa: E402
-from services.indicator_service import _pipeline_counts  # noqa: E402
+from services.indicator_governance_service import pipeline_counts  # noqa: E402
 from utils.file_helpers import list_cycles  # noqa: E402
 from utils.global_filter import DEFAULT_GLOBAL_FILTER  # noqa: E402
 
@@ -106,7 +106,7 @@ def main() -> int:
         (pipeline.get("awaiting_approval") or 0) >= EXPECTED_APPROVAL_COUNT,
         str(pipeline),
     )
-    counts = _pipeline_counts(cycles)
+    counts = pipeline_counts(cycles)
     v.check(
         "indicator_service awaiting_approval",
         counts.get("awaiting_approval", 0) >= EXPECTED_APPROVAL_COUNT,
@@ -116,7 +116,7 @@ def main() -> int:
     insights = generate_dashboard_insights(indicators)
     v.check(
         "insight de aprovação pendente",
-        any(i.get("title") == "Aprovação pendente" for i in insights),
+        any(i.get("title") in ("Aprovação pendente", "Pendência de aprovação") for i in insights),
         str([i.get("title") for i in insights]),
     )
 

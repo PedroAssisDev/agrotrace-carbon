@@ -16,12 +16,16 @@ ONTOLOGY_EXPORTS_DIR = DATA_DIR / "ontology_exports"
 EVIDENCE_PACKAGES_DIR = DATA_DIR / "evidence_packages"
 REPORTS_DIR = DATA_DIR / "reports"
 CYCLES_DIR = DATA_DIR / "cycles"
+PROPERTIES_DIR = DATA_DIR / "properties"
 DB_DIR = DATA_DIR / "db"
 
 PROV_DB_PATH = DB_DIR / "provenance.db"
 BLOCKCHAIN_DB_PATH = DB_DIR / "blockchain_service.db"
 
 # Serviços existentes (somente leitura/import)
+SAVE_FILE_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-save-file"
+SAVE_FILE_ORIGINALS_DIR = SAVE_FILE_SERVICE_DIR / "data" / "originals"
+SAVE_FILE_EMULATED_UPLOADS_DIR = SAVE_FILE_SERVICE_DIR / "data" / "emulated_uploads"
 WRAPPERS_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-wrappers-service"
 CALCULATION_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-calculation-service"
 ONTOLOGY_SERVICE_DIR = WORKSPACE_ROOT / "agrotrace-carbon-ontology-manager"
@@ -137,17 +141,22 @@ DASH_HOST = "127.0.0.1"
 DASH_PORT = 8050
 DEBUG = True
 
+# Logging: AGROTRACE_LOG_LEVEL (default DEBUG), AGROTRACE_LOG_FILE → utils/logging_config.py
+
 
 def ensure_data_dirs() -> None:
     """Cria pastas de dados do protótipo se não existirem."""
     for d in (
         RAW_ORIGINALS_DIR,
+        SAVE_FILE_ORIGINALS_DIR,
+        SAVE_FILE_EMULATED_UPLOADS_DIR,
         NORMALIZED_DIR,
         ONTOLOGY_DIR,
         ONTOLOGY_EXPORTS_DIR,
         EVIDENCE_PACKAGES_DIR,
         REPORTS_DIR,
         CYCLES_DIR,
+        PROPERTIES_DIR,
         DB_DIR,
     ):
         d.mkdir(parents=True, exist_ok=True)

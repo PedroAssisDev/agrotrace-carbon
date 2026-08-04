@@ -58,7 +58,7 @@ FORBIDDEN_POST_APPROVAL_EVENTS = {
     "INTEGRITY_VERIFICATION_EXECUTED",
 }
 
-MANIFEST_PATH = config.SAMPLE_DATA_DIR / "seed" / "manifest.json"
+MANIFEST_PATH = config.SAVE_FILE_EMULATED_UPLOADS_DIR / "manifest.json"
 
 
 def _event_types(cycle: dict) -> list[str]:

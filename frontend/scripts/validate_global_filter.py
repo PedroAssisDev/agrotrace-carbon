@@ -16,6 +16,7 @@ if str(FRONTEND_ROOT) not in sys.path:
 from services.filter_service import get_available_filter_options, get_available_periods  # noqa: E402
 from utils.global_filter import (  # noqa: E402
     DEFAULT_GLOBAL_FILTER,
+    analysis_scenario_cycles,
     filter_cycles_by_context,
     filter_events_by_context,
     format_filter_badge,
@@ -24,6 +25,7 @@ from utils.global_filter import (  # noqa: E402
     normalize_filter_state,
     normalize_global_filter,
     period_in_context,
+    resolve_analysis_period_bounds,
 )
 from utils.property_filter import filter_by_selected_properties  # noqa: E402
 
@@ -116,6 +118,36 @@ def main() -> int:
     gf_view = normalize_filter_state({"farm_id": "FARM-001", "view_granularity": "monthly", "data_mode": "all"}, cycles)
     v.check("view_granularity preservado", gf_view.get("view_granularity") == "monthly")
     v.check("data_mode preservado", gf_view.get("data_mode") == "all")
+
+    annual_farm_cycles = [
+        {
+            "cycle_id": "SEED-2021",
+            "property_id": "FARM-ANNUAL-001",
+            "reporting_period": "2021",
+            "temporal_coverage": {"kind": "annual_santa_clara"},
+        },
+        {
+            "cycle_id": "UPLOAD-2026",
+            "property_id": "FARM-ANNUAL-001",
+            "reporting_period": "2026",
+            "layout_id": "annual:v1",
+            "frequency": "annual",
+        },
+    ]
+    seed_ref = annual_farm_cycles[0]
+    scenario = analysis_scenario_cycles(
+        annual_farm_cycles,
+        {"farm_id": "FARM-ANNUAL-001"},
+        seed_ref,
+    )
+    scenario_ids = {c.get("cycle_id") for c in scenario}
+    v.check(
+        "upload anual incluído no cenário",
+        scenario_ids == {"SEED-2021", "UPLOAD-2026"},
+        str(scenario_ids),
+    )
+    start, end = resolve_analysis_period_bounds(scenario, "2021", "2026")
+    v.check("bounds aceita end=2026", end == "2026", str(end))
 
     print()
     if v.errors:
