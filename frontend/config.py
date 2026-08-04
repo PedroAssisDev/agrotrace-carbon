@@ -11,6 +11,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+__version__ = "1.0.0"
+
 # ── Diretórios fixos do workspace ────────────────────────────────────────────
 FRONTEND_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = FRONTEND_DIR.parent
