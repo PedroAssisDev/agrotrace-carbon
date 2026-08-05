@@ -39,13 +39,13 @@ AUTH_BACKGROUNDS_DIR = WORKSPACE_ROOT / "auth_backgrounds"
 LOGO_DIR = WORKSPACE_ROOT / "logo"
 LOGO_PATH = LOGO_DIR / "Logo.png"
 
-# CSV de exemplo no workspace (inputs, não artefato operacional)
-SAMPLE_DATA_DIR = WORKSPACE_ROOT / "data"
-
 # Embrapa datasets (leitura; permanecem no serviço save-file)
 SAVE_FILE_EMBRAPA_DIR = SAVE_FILE_SERVICE_DIR / "data" / "embrapa"
 SAVE_FILE_EMBRAPA_MONTHLY_DIR = SAVE_FILE_EMBRAPA_DIR / "monthly"
 SAVE_FILE_EMBRAPA_ANNUAL_DIR = SAVE_FILE_EMBRAPA_DIR / "annual"
+
+# CSVs-fonte Embrapa para samples/UI/scripts (não é AGROTRACE_DATA_ROOT)
+SAMPLE_DATA_DIR = SAVE_FILE_EMBRAPA_DIR
 
 _DATA_ROOT_ENV = "AGROTRACE_DATA_ROOT"
 _DEFAULT_DATA_DIR = FRONTEND_DIR / "data"

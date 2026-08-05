@@ -21,7 +21,8 @@ if str(SAVE_FILE_ROOT) not in sys.path:
 from save_file.emulated.planner import expected_approval_count, expected_entry_count  # noqa: E402
 from save_file.emulated.writer import generate_emulated_uploads  # noqa: E402
 
-SEED_DIR = config.SAMPLE_DATA_DIR / "seed"
+# Manifesto deprecated fica junto dos uploads emulados (destino real da geração)
+SEED_DIR = config.SAVE_FILE_EMULATED_UPLOADS_DIR
 MANIFEST_PATH = SEED_DIR / "manifest.json"
 
 

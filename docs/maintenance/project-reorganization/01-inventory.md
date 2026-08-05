@@ -203,8 +203,7 @@ Grupos: raiz (2), `docs/` (41), blockchain (~21), wrappers (~25), traceability (
 
 | Path | Tipo |
 |------|------|
-| `data/` (raiz) | sample/processed wrappers (`SAMPLE_DATA_DIR`) |
-| `agrotrace-carbon-save-file/data/embrapa/` | datasets referência |
+| `agrotrace-carbon-save-file/data/embrapa/` | CSVs-fonte Embrapa (`SAMPLE_DATA_DIR`: annual/monthly_report.csv) |
 | `agrotrace-carbon-save-file/data/emulated_uploads/` | fixtures |
 | `blockchain-service/data/examples/` | payloads exemplo |
 | `model-training-service/examples/` | CSV exemplo |

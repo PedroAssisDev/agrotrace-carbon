@@ -1,0 +1,1227 @@
+[
+  {
+    "path": ".cursor\\commands\\fix-visual.md",
+    "lines": 23,
+    "category": "module docs"
+  },
+  {
+    "path": ".cursor\\commands\\review-change.md",
+    "lines": 20,
+    "category": "module docs"
+  },
+  {
+    "path": ".cursor\\commands\\validate-frontend.md",
+    "lines": 62,
+    "category": "module docs"
+  },
+  {
+    "path": ".cursor\\skills\\create-validation-tests\\SKILL.md",
+    "lines": 79,
+    "category": "execution guide"
+  },
+  {
+    "path": ".cursor\\skills\\fix-pipeline-integration\\SKILL.md",
+    "lines": 82,
+    "category": "execution guide"
+  },
+  {
+    "path": ".cursor\\skills\\implement-frontend-feature\\SKILL.md",
+    "lines": 84,
+    "category": "execution guide"
+  },
+  {
+    "path": ".cursor\\skills\\refactor-safely\\SKILL.md",
+    "lines": 76,
+    "category": "execution guide"
+  },
+  {
+    "path": ".cursor\\skills\\review-changes\\SKILL.md",
+    "lines": 80,
+    "category": "execution guide"
+  },
+  {
+    "path": ".cursor\\skills\\ux-polish-dashboard\\SKILL.md",
+    "lines": 81,
+    "category": "execution guide"
+  },
+  {
+    "path": "README.md",
+    "lines": 148,
+    "category": "main README"
+  },
+  {
+    "path": "academic-evidence\\README.md",
+    "lines": 14,
+    "category": "module docs"
+  },
+  {
+    "path": "academic-evidence\\blockchain-historical.md",
+    "lines": 5,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\GUIA_COMPLETO_ETHEREUM_SEPOLIA.md",
+    "lines": 842,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\README.md",
+    "lines": 72,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\contracts\\README.md",
+    "lines": 34,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\anchor_payload.md",
+    "lines": 30,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\anchor_payload_model.md",
+    "lines": 85,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\anvil_local_validation.md",
+    "lines": 41,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\architecture.md",
+    "lines": 38,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\ethereum_integration.md",
+    "lines": 53,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\event_observer_flow.md",
+    "lines": 13,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\evidence_package_model.md",
+    "lines": 25,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\hash_strategy.md",
+    "lines": 46,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\merkle_strategy.md",
+    "lines": 3,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\merkle_tree.md",
+    "lines": 27,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\monthly_annual_consolidation.md",
+    "lines": 22,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\provenance_integration.md",
+    "lines": 37,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\security_and_secrets.md",
+    "lines": 20,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\sepolia_deployment.md",
+    "lines": 45,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\sqlite_schema.md",
+    "lines": 24,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\testing_guide.md",
+    "lines": 26,
+    "category": "testing"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\docs\\validacao_interativa_sepolia.md",
+    "lines": 141,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\evidence\\sepolia\\interactive_validation_20260731_153031\\VALIDACAO_EXECUTADA.md",
+    "lines": 42,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-blockchain-service\\schemas\\canonical\\canonicalization_rules.md",
+    "lines": 64,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-calculation-service\\README.md",
+    "lines": 7,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-calculation-service\\REVISAO_TECNICA_CALCULOS.md",
+    "lines": 1013,
+    "category": "historical record"
+  },
+  {
+    "path": "agrotrace-carbon-model-training-service\\ANALYSIS_REPORT.md",
+    "lines": 94,
+    "category": "historical record"
+  },
+  {
+    "path": "agrotrace-carbon-model-training-service\\PROJECT_SPEC.md",
+    "lines": 79,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-model-training-service\\README.md",
+    "lines": 152,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-model-training-service\\VALIDATION_REPORT.md",
+    "lines": 25,
+    "category": "historical record"
+  },
+  {
+    "path": "agrotrace-carbon-ontology-manager\\README.md",
+    "lines": 53,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-ontology-manager\\docs\\ontology_agromrv_lite.md",
+    "lines": 179,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-save-file\\README.md",
+    "lines": 130,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\API_EXAMPLES.md",
+    "lines": 376,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\ARCHITECTURE.md",
+    "lines": 216,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\README.md",
+    "lines": 17,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\RUNBOOK.md",
+    "lines": 70,
+    "category": "execution guide"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\docs\\blockchain_observability_preparation.md",
+    "lines": 165,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\docs\\provenance_service_complete_explanation.md",
+    "lines": 1429,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-traceability-service\\scripts\\demo_repository_full_population\\README.md",
+    "lines": 114,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\README.md",
+    "lines": 90,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\README.md",
+    "lines": 76,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\api-guide.md",
+    "lines": 37,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\architecture.md",
+    "lines": 55,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\canonical-mapping.md",
+    "lines": 44,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\contracts.md",
+    "lines": 104,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\core-components.md",
+    "lines": 122,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\examples.md",
+    "lines": 77,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\export.md",
+    "lines": 84,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\extension-guide.md",
+    "lines": 58,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\faq.md",
+    "lines": 47,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\harmonization.md",
+    "lines": 55,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\layouts.md",
+    "lines": 32,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\layouts\\annual-v1.md",
+    "lines": 79,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\layouts\\intraday-v1.md",
+    "lines": 55,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\layouts\\monthly-v1.md",
+    "lines": 54,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\normalization.md",
+    "lines": 45,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\ontology\\units-and-iris.md",
+    "lines": 40,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\processing-flow.md",
+    "lines": 36,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\production-usage.md",
+    "lines": 80,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\project-structure.md",
+    "lines": 124,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\registry-and-versioning.md",
+    "lines": 53,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\testing.md",
+    "lines": 92,
+    "category": "testing"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\troubleshooting.md",
+    "lines": 83,
+    "category": "module docs"
+  },
+  {
+    "path": "agrotrace-carbon-wrappers-service\\docs\\validation.md",
+    "lines": 69,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\README.md",
+    "lines": 63,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\academic\\dissertation-alignment.md",
+    "lines": 38,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\academic\\evaluation-scenarios.md",
+    "lines": 23,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\academic\\evidence-guide.md",
+    "lines": 30,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\academic\\requirements-traceability.md",
+    "lines": 52,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\academic\\requirements.md",
+    "lines": 57,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\append-only-tables.md",
+    "lines": 117,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\component-responsibilities.md",
+    "lines": 35,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\data-lifecycle.md",
+    "lines": 56,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\decisions\\ADR-001-frontend-as-interface-and-orchestrator.md",
+    "lines": 19,
+    "category": "architecture"
+  },
+  {
+    "path": "docs\\architecture\\decisions\\ADR-002-in-process-modular-integration.md",
+    "lines": 20,
+    "category": "architecture"
+  },
+  {
+    "path": "docs\\architecture\\decisions\\ADR-003-approval-publication-and-blockchain-gate.md",
+    "lines": 21,
+    "category": "architecture"
+  },
+  {
+    "path": "docs\\architecture\\decisions\\README.md",
+    "lines": 11,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\overview.md",
+    "lines": 59,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\result-state-model.md",
+    "lines": 36,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\security-and-integrity.md",
+    "lines": 42,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\architecture\\storage-and-artifacts.md",
+    "lines": 33,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\archive\\README.md",
+    "lines": 13,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\archive\\prompts\\README.md",
+    "lines": 11,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\archive\\prompts\\model-training-CURSOR_PROMPT.md",
+    "lines": 31,
+    "category": "draft"
+  },
+  {
+    "path": "docs\\audit\\approval-and-publication.md",
+    "lines": 9,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audit\\evidence-and-blockchain.md",
+    "lines": 14,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audit\\provenance.md",
+    "lines": 7,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\README.md",
+    "lines": 24,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\PROMPT-AUDITORIA-CURSOR.md",
+    "lines": 710,
+    "category": "draft"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\README.md",
+    "lines": 34,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\comandos-e-resultados.md",
+    "lines": 158,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\final\\comandos-e-resultados.md",
+    "lines": 49,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\final\\comparacao-antes-depois.md",
+    "lines": 53,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\final\\matriz-rastreabilidade.md",
+    "lines": 115,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\final\\pendencias.md",
+    "lines": 6,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\final\\relatorio-completo.md",
+    "lines": 28,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\matriz-rastreabilidade.md",
+    "lines": 102,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\pendencias.md",
+    "lines": 155,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\plano-evidencias.md",
+    "lines": 233,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\relatorio-completo.md",
+    "lines": 359,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\archive\\2026-08-03-capitulo-5\\texto-base-capitulo-5.md",
+    "lines": 150,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\00-resumo-executivo.md",
+    "lines": 51,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\01-inventario.md",
+    "lines": 80,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\02-comandos-e-resultados.md",
+    "lines": 80,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\03-matriz-requisitos.md",
+    "lines": 61,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\04-decisoes-arquiteturais.md",
+    "lines": 35,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\05-cenarios-ce1-ce5.md",
+    "lines": 27,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\06-auditoria-correcoes.md",
+    "lines": 18,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\07-pendencias.md",
+    "lines": 57,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\08-plano-evidencias-capitulo-5.md",
+    "lines": 21,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\audits\\current\\10-verificacao-git-e-dados.md",
+    "lines": 48,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\development\\configuration.md",
+    "lines": 24,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\development\\data-directories.md",
+    "lines": 32,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\development\\reset-and-seed.md",
+    "lines": 12,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\development\\setup.md",
+    "lines": 52,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\development\\testing.md",
+    "lines": 38,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\development\\troubleshooting.md",
+    "lines": 14,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\development\\validation-scripts.md",
+    "lines": 28,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\domain\\calculations.md",
+    "lines": 9,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\domain\\temporal-and-organizational-granularity.md",
+    "lines": 15,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\evidence\\README.md",
+    "lines": 13,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\evidence\\blockchain\\IMPLEMENTACAO_ETHEREUM_SEPOLIA.md",
+    "lines": 176,
+    "category": "execution guide"
+  },
+  {
+    "path": "docs\\evidence\\blockchain\\README.md",
+    "lines": 18,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\00-baseline.md",
+    "lines": 69,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\00-dependency-graph.md",
+    "lines": 22,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\01-contract-matrix.md",
+    "lines": 11,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\02-version-compatibility.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\03-clean-installation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\04-ce1-ce5.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\05-legacy-verification.md",
+    "lines": 23,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\06-release-package.md",
+    "lines": 23,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\07-final-regression.md",
+    "lines": 17,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\integration\\08-final-report.md",
+    "lines": 51,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\blockchain-service\\08-final-status.md",
+    "lines": 16,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\calculation-service\\08-final-status.md",
+    "lines": 15,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\frontend\\08-final-status.md",
+    "lines": 17,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\model-training-service\\08-final-status.md",
+    "lines": 74,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\ontology-manager\\08-final-status.md",
+    "lines": 37,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\save-file\\08-final-status.md",
+    "lines": 20,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\traceability-service\\08-final-status.md",
+    "lines": 74,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\00-baseline.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\01-project-structure.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\02-dependencies.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\03-gitignore.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\04-documentation.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\05-configuration-contracts-quality.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\06-legacy-removed.md",
+    "lines": 4,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\07-tests.md",
+    "lines": 4,
+    "category": "testing"
+  },
+  {
+    "path": "docs\\maintenance\\final-software-cleanup\\modules\\wrappers-service\\08-final-status.md",
+    "lines": 16,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\00-executive-summary.md",
+    "lines": 71,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\01-inventory.md",
+    "lines": 233,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\02-file-classification.md",
+    "lines": 155,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\03-markdown-audit.md",
+    "lines": 193,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\04-dead-code-candidates.md",
+    "lines": 129,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\05-legacy-analysis.md",
+    "lines": 113,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\06-target-documentation-structure.md",
+    "lines": 134,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\07-migration-plan.md",
+    "lines": 107,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\08-deletion-plan.md",
+    "lines": 60,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\09-risk-analysis.md",
+    "lines": 67,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\10-validation-plan.md",
+    "lines": 97,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\11-migration-executed.md",
+    "lines": 31,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\12-removed-items.md",
+    "lines": 24,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\13-moved-items.md",
+    "lines": 45,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\14-documentation-created.md",
+    "lines": 41,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\15-links-validation.md",
+    "lines": 31,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\16-tests-and-regression.md",
+    "lines": 68,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\17-before-after-inventory.md",
+    "lines": 40,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\maintenance\\project-reorganization\\18-final-report.md",
+    "lines": 63,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\blockchain-service.md",
+    "lines": 57,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\calculation-service.md",
+    "lines": 44,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\frontend.md",
+    "lines": 62,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\model-training-service.md",
+    "lines": 45,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\ontology-manager.md",
+    "lines": 42,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\save-file.md",
+    "lines": 41,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\traceability-service.md",
+    "lines": 44,
+    "category": "module docs"
+  },
+  {
+    "path": "docs\\modules\\wrappers-service.md",
+    "lines": 44,
+    "category": "module docs"
+  },
+  {
+    "path": "frontend\\README.md",
+    "lines": 46,
+    "category": "module docs"
+  },
+  {
+    "path": "tooling\\README.md",
+    "lines": 120,
+    "category": "module docs"
+  }
+]
