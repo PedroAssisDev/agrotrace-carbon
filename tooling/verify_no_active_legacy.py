@@ -37,6 +37,7 @@ SKIP_DIR_NAMES = {
     "tests",
     "testing",
     "scripts",
+    "tooling",
     "docs",
     "data",
     "cache",

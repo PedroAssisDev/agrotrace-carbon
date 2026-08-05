@@ -21,6 +21,10 @@ Integração por chamadas Python diretas (sem HTTP entre módulos). Ancoragem co
 simulado por padrão (`local_simulated`) e provider EVM opcional (Anvil/Sepolia). A
 blockchain só age após `FINAL_ONTOLOGY_PUBLISHED`.
 
+A pasta [`tooling/`](tooling/README.md) concentra atalhos de manutenção do
+monorepo (instalar, testar, empacotar). Não faz parte do ciclo MRV — seed,
+aprovação e regressão ficam em `frontend/scripts/`. Detalhes: [tooling/README.md](tooling/README.md).
+
 ## Requisitos mínimos
 
 - Python 3.11+
@@ -31,12 +35,8 @@ blockchain só age após `FINAL_ONTOLOGY_PUBLISHED`.
 ```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate
-pip install -e agrotrace-carbon-ontology-manager
-pip install -e "agrotrace-carbon-blockchain-service[dev]"
-pip install -e "agrotrace-carbon-traceability-service[dev]"
-pip install -e "agrotrace-carbon-model-training-service[dev]"
-pip install -e "frontend[dev]"
-cp .env.example .env   # ajuste local; nunca versione .env
+.\tooling\install-workspace.ps1   # Linux/macOS: ./tooling/install-workspace.sh
+cp .env.example .env              # ajuste local; nunca versione .env
 ```
 
 ## Executar o frontend

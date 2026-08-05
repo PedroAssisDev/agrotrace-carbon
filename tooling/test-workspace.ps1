@@ -1,12 +1,12 @@
 # Run per-project tests + legacy verifier + quick regression.
-# Usage: .\scripts\test-workspace.ps1
+# Usage: .\tooling\test-workspace.ps1
 # Does not alter operational frontend/data (uses temp AGROTRACE_DATA_ROOT via regression).
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
 
-python scripts/verify_no_active_legacy.py
+python tooling/verify_no_active_legacy.py
 if ($LASTEXITCODE -ne 0) { Write-Warning "Legacy verifier reported active markers" }
 
 $suites = @(

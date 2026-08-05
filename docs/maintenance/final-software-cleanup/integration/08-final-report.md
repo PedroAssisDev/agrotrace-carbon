@@ -41,7 +41,7 @@ Smoke/full emission cycle omitidos no modo quick (limitação residual).
 | Legado ativo = 0 | Sim |
 | CE1–CE5 / validate_* pós-legado | Parcial — suítes unitárias OK; regressão full pendente de reexecução final |
 | Sem segredos | Sim |
-| software-release independente | Gerável via `scripts/build_software_release.py` |
+| software-release independente | Gerável via `tooling/build_software_release.py` |
 
 ## Commits principais (esta branch)
 

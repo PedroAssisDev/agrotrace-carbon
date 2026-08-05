@@ -18,7 +18,7 @@ INCLUDE = [
     ".gitignore",
     "agrotrace-carbon.code-workspace",
     "docs",
-    "scripts",
+    "tooling",
     "logo",
     "frontend",
     "agrotrace-carbon-save-file",
@@ -89,7 +89,7 @@ def main() -> int:
     (DEST / "RELEASE_NOTES.md").write_text(
         "# AgroTrace Carbon — software-release 1.0.0\n\n"
         "Pacote executável limpo. Não depende de academic-evidence/.\n"
-        "Instalação: `scripts/install-workspace.ps1` ou `.sh`.\n",
+        "Instalação: `tooling/install-workspace.ps1` ou `.sh`.\n",
         encoding="utf-8",
     )
     print(f"software-release written to {DEST}")

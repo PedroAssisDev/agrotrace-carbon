@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-python scripts/verify_no_active_legacy.py || echo "WARN: legacy markers remain"
+python tooling/verify_no_active_legacy.py || echo "WARN: legacy markers remain"
 
 (cd agrotrace-carbon-save-file && python -m unittest discover -s tests -q)
 (cd agrotrace-carbon-wrappers-service && python -m pytest -q --tb=line)

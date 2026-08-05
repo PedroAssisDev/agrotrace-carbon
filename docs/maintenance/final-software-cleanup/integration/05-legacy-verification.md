@@ -1,6 +1,6 @@
 ﻿# 05 — Verificação de legado ativo
 
-**Ferramenta:** `scripts/verify_no_active_legacy.py`  
+**Ferramenta:** `tooling/verify_no_active_legacy.py`  
 **Resultado JSON:** `05-legacy-verification.json`
 
 ```text

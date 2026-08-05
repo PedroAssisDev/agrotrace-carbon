@@ -5,11 +5,11 @@
 Gerado por:
 
 ```bash
-python scripts/build_software_release.py
+python tooling/build_software_release.py
 ```
 
 Diretório local gitignored. Contém os oito projetos, frontend, docs canônicas,
-scripts, manifesto e LICENSE. Não inclui `academic-evidence/`, bancos, caches
+`tooling/`, manifesto e LICENSE. Não inclui `academic-evidence/`, bancos, caches
 nem legado.
 
 ## academic-evidence/

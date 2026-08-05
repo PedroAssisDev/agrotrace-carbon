@@ -14,4 +14,4 @@
 
 ## Legado
 
-- `scripts/verify_no_active_legacy.py` → `legacy_active_count = 0`
+- `tooling/verify_no_active_legacy.py` → `legacy_active_count = 0`

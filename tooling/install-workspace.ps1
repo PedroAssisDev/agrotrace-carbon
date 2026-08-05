@@ -1,6 +1,6 @@
 # Install all AgroTrace Carbon projects into the active Python environment.
 # Usage (from repo root, with venv activated):
-#   .\scripts\install-workspace.ps1
+#   .\tooling\install-workspace.ps1
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
