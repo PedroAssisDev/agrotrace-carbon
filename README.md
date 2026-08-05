@@ -31,8 +31,11 @@ blockchain só age após `FINAL_ONTOLOGY_PUBLISHED`.
 ```bash
 python -m venv .venv
 # Windows: .venv\Scripts\activate
-pip install -r frontend/requirements.txt
-pip install -r agrotrace-carbon-wrappers-service/requirements.txt
+pip install -e agrotrace-carbon-ontology-manager
+pip install -e "agrotrace-carbon-blockchain-service[dev]"
+pip install -e "agrotrace-carbon-traceability-service[dev]"
+pip install -e "agrotrace-carbon-model-training-service[dev]"
+pip install -e "frontend[dev]"
 cp .env.example .env   # ajuste local; nunca versione .env
 ```
 
@@ -42,6 +45,23 @@ cp .env.example .env   # ajuste local; nunca versione .env
 cd frontend
 python main.py
 # UI: http://127.0.0.1:8050
+```
+
+## Regressão completa
+
+Valida o monorepo de ponta a ponta sob um `AGROTRACE_DATA_ROOT` temporário
+(não altera os dados operacionais em `frontend/data/`). Executa testes dos
+serviços, Forge (contratos), testes do frontend, todos os `validate_*.py`,
+smoke, ciclo completo de emissão e varredura de segredos; gera
+`docs/audits/current/regressao.json`.
+
+É a verificação canônica antes de submissão ou após mudanças amplas: confirma
+que packaging, pipeline, gate blockchain e validadores ainda passam juntos.
+
+```bash
+python frontend/scripts/run_full_regression.py
+# Mais rápido (pula smoke/ciclo completo):  ... --quick
+# Sem contratos Solidity:                  ... --skip-forge
 ```
 
 ## Dados de demonstração (simulados + Embrapa)
@@ -109,11 +129,7 @@ python scripts/approve_all_pending_cycles.py --confirm --limit 10
 | `--property-id` | Filtra por propriedade exata |
 | `--limit` | Processa só N ciclos (`0` = todos) |
 
-## Regressão completa
 
-```bash
-python frontend/scripts/run_full_regression.py
-```
 
 ## Dados operacionais
 
