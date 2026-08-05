@@ -42,6 +42,11 @@ frontend/data/**
 # Save-file: datasets, originais, emulados e staging local
 agrotrace-carbon-save-file/data/**
 !agrotrace-carbon-save-file/data/**/.gitkeep
+# Embrapa: CSVs-fonte versionados; annual/ e monthly/ são gerados por split.py
+!agrotrace-carbon-save-file/data/embrapa/
+!agrotrace-carbon-save-file/data/embrapa/annual_report.csv
+!agrotrace-carbon-save-file/data/embrapa/monthly_report.csv
+!agrotrace-carbon-save-file/data/embrapa/split.py
 agrotrace-carbon-save-file/save_file/data/**
 !agrotrace-carbon-save-file/save_file/data/**/.gitkeep
 
