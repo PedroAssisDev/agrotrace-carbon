@@ -14,6 +14,8 @@ Status: `atual` = reflete o código; `gerado` = produzido por script (não edita
 | [architecture/data-lifecycle.md](architecture/data-lifecycle.md) | Ciclo de vida do dado | todos | atual |
 | [architecture/component-responsibilities.md](architecture/component-responsibilities.md) | O que cada componente faz e não faz | todos | atual |
 | [architecture/result-state-model.md](architecture/result-state-model.md) | Estados do resultado e eventos | todos | atual |
+| [limitations.md](limitations.md) | Implementado / simulado / preparado / ausente | todos | atual |
+| [project-evolution.md](project-evolution.md) | Evolução com base em evidências | todos | atual |
 
 ## Desenvolvedor
 
@@ -24,6 +26,7 @@ Status: `atual` = reflete o código; `gerado` = produzido por script (não edita
 | [development/data-directories.md](development/data-directories.md) | Diretórios de dados | atual |
 | [development/testing.md](development/testing.md) | Testes e regressão | atual |
 | [development/validation-scripts.md](development/validation-scripts.md) | Scripts `validate_*` | atual |
+| [development/reset-and-seed.md](development/reset-and-seed.md) | Reset e seed | atual |
 | [development/troubleshooting.md](development/troubleshooting.md) | Problemas comuns | atual |
 | [modules/](modules/) | Documento canônico por módulo (8) | atual |
 
@@ -59,5 +62,7 @@ Status: `atual` = reflete o código; `gerado` = produzido por script (não edita
 | Documento | Finalidade | Status |
 |-----------|-----------|--------|
 | [architecture/decisions/](architecture/decisions/) | ADRs | atual |
-| [maintenance/project-reorganization/](maintenance/project-reorganization/) | Inventário, plano e relatórios da reorganização | atual |
+| [project-evolution.md](project-evolution.md) | Evolução e cleanup consolidado | atual |
+| [maintenance/project-reorganization/](maintenance/project-reorganization/) | Inventário da reorganização | histórico |
 | [archive/README.md](archive/README.md) | Material histórico | histórico |
+| [audits/archive/](audits/archive/) | Auditorias antigas | histórico |

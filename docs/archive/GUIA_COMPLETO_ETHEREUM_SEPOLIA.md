@@ -25,7 +25,7 @@ O script interativo oficial é:
 validar_sepolia_interativo.py
 ```
 
-Documentação curta: [docs/validacao_interativa_sepolia.md](docs/validacao_interativa_sepolia.md).
+Documentação curta: [validacao_interativa_sepolia.md](../../agrotrace-carbon-blockchain-service/docs/validacao_interativa_sepolia.md).
 
 ---
 
@@ -828,7 +828,7 @@ Pode versionar/publicar:
 
 ## Interpretação de PASSOU / FALHOU / AVISO / IGNORADO
 
-Ver [docs/validacao_interativa_sepolia.md](docs/validacao_interativa_sepolia.md).
+Ver [validacao_interativa_sepolia.md](../../agrotrace-carbon-blockchain-service/docs/validacao_interativa_sepolia.md).
 
 ---
 

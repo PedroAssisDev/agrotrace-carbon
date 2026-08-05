@@ -11,4 +11,7 @@ Conteúdo típico:
 - evidências Sepolia / manifests históricos;
 - capturas e logs sanitizados.
 
-Pacote irmão: `software-release/` (export limpo do software final).
+Pacote irmão: `software-release/` (export limpo gerado por `tooling/build_software_release.py`).
+
+Documentação canônica atual: [`../docs/README.md`](../docs/README.md).
+Evolução: [`../docs/project-evolution.md`](../docs/project-evolution.md).

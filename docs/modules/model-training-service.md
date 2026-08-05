@@ -1,45 +1,51 @@
 # Módulo: model-training-service
 
-## Finalidade
+## Visão geral
 
-Produzir estimativas preditivas de emissões/produção (modelos treinados), separadas do
-cálculo oficial.
+Gerar, avaliar, selecionar e versionar modelos preditivos. A **inferência** na UI não
+roda neste pacote — fica em `frontend/services/forecast_inference/`.
+
+**Posição:** fora do ciclo MRV oficial (página `/previsoes`). Predição **não** é
+publicável nem ancorável.
 
 ## Responsabilidades
 
-- Treinar modelos e registrá-los; gerar estimativas preditivas.
-- Manter um registry de modelos.
+- Treinar/avaliar/versionar regressão e séries temporais
+- Manter registry de modelos
 
 ## Não faz
 
-- Não substitui o cálculo oficial. Predição **não** é publicável nem ancorável.
+- Não substitui o cálculo oficial
+- Não publica resultados preditivos no manifesto
 
-## Contratos e execução
+## Contratos
 
-- CLI: `model_training_service.cli`.
-- Integração no frontend via página `/previsoes` e serviços de previsão.
-- Bloqueio de publicação: `publication_service._reject_prediction_input`
-  (`PredictionNotPublishableError`).
+| Papel | Onde |
+|-------|------|
+| Treino | `ModelTrainingFacade` via `model_training_adapter.py` |
+| Inferência UI | `frontend/services/forecast_inference/` |
+| Bloqueio publicação | `publication_service` → `PredictionNotPublishableError` |
 
 ## Entradas / saídas / persistência
 
-- Entrada: séries/exemplos (`examples/`).
-- Saída: modelos e estimativas em `artifacts/` (**gerado**); registry em
-  `artifacts/registry.jsonl` (`MODEL_REGISTRY_PATH`).
+- Config: `configs/training.yaml`
+- Artefatos: `artifacts/` ou `$AGROTRACE_DATA_ROOT/model_training/`
+- Registry: `registry.jsonl`
 
-## Configuração
+## Classificação
 
-- Caminhos em `frontend/config.py`: `MODEL_TRAINING_SERVICE_DIR`,
-  `MODEL_TRAINING_ARTIFACTS_DIR`, `MODEL_REGISTRY_PATH`.
-- Config de treino: `configs/training.yaml`.
+| Recurso | Classe |
+|---------|--------|
+| Regressão / séries | Implementado |
+| Inferência FE | Parcial (depende de artefatos) |
+| LSTM | Desabilitada (`enable_lstm: false`) |
 
-## Testes e comandos
+## Testes
 
-- `pytest` no serviço; `validate_forecast_page`, `validate_prediction_separation`.
+`pytest`; `validate_forecast_page`, `validate_prediction_separation`.
 
 ## Relacionados
 
-- RF011; CE3.
-- Detalhe: `agrotrace-carbon-model-training-service/README.md` (spec/análise arquivados
-  em prompts/relatórios do serviço). Prompt de geração:
-  [../archive/prompts/model-training-CURSOR_PROMPT.md](../archive/prompts/model-training-CURSOR_PROMPT.md).
+- RF011; CE3
+- README: `agrotrace-carbon-model-training-service/README.md`
+- Prompt histórico: [../archive/prompts/model-training-CURSOR_PROMPT.md](../archive/prompts/model-training-CURSOR_PROMPT.md)

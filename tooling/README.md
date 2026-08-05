@@ -39,6 +39,10 @@ venv já ativado.
 No dia a dia do protótipo (carregar dados, aprovar ciclos, abrir a UI, regressão
 completa) use `frontend/scripts/` — não precisa desta pasta.
 
+Seed canônico e aprovação em massa: ver
+[`../docs/development/reset-and-seed.md`](../docs/development/reset-and-seed.md).
+Instalação detalhada: [`../docs/development/setup.md`](../docs/development/setup.md).
+
 ## Pré-requisitos
 
 - Estar na **raiz** do repositório (`agrotrace-carbon/`)

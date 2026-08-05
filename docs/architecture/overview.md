@@ -31,9 +31,19 @@ Usuário → Dash (páginas/callbacks)
 | wrappers-service | Normalização por layouts versionados | [../modules/wrappers-service.md](../modules/wrappers-service.md) |
 | ontology-manager | Ontologia de trabalho e final, validação | [../modules/ontology-manager.md](../modules/ontology-manager.md) |
 | calculation-service | Cálculo de emissões (IPCC/ECOFARM) | [../modules/calculation-service.md](../modules/calculation-service.md) |
-| model-training-service | Estimativa preditiva (modelos) | [../modules/model-training-service.md](../modules/model-training-service.md) |
-| traceability-service | Serviço de proveniência (etapas 1–20) | [../modules/traceability-service.md](../modules/traceability-service.md) |
-| blockchain-service | Evidências, Merkle e ancoragem (etapas 14–19) | [../modules/blockchain-service.md](../modules/blockchain-service.md) |
+| model-training-service | Treinamento de modelos (inferência no frontend) | [../modules/model-training-service.md](../modules/model-training-service.md) |
+| traceability-service | Ledger de proveniência (eventos canônicos 1–20) | [../modules/traceability-service.md](../modules/traceability-service.md) |
+| blockchain-service | Evidências, Merkle e ancoragem (após publicação) | [../modules/blockchain-service.md](../modules/blockchain-service.md) |
+
+## Etapas: orquestrador vs apresentação vs eventos
+
+- **11 etapas** operacionais (`cycle_state.PIPELINE_STEP_DEFS`) — execução real.
+- **18 etapas** no stepper visual (`pipeline_display.DISPLAY_PIPELINE_STEPS`).
+- **19ª** etapa só na timeline de auditoria (`AUDIT_STEP`).
+- **Eventos canônicos 1–20** — vocabulário do ledger de proveniência; o
+  traceability-service observa o ciclo inteiro; o blockchain-service só após o gate.
+
+Detalhe: [data-lifecycle.md](data-lifecycle.md).
 
 ## Boundaries (limites de responsabilidade)
 
@@ -42,8 +52,9 @@ Usuário → Dash (páginas/callbacks)
   ancora nem substitui a blockchain.
 - O blockchain-service atua **apenas após** a publicação final aprovada
   (`FINAL_ONTOLOGY_PUBLISHED`); ver [ADR-003](decisions/ADR-003-approval-publication-and-blockchain-gate.md).
-- A ancoragem tem provider **simulado por padrão** (`local_simulated`) e provider **EVM**
-  (Anvil local / Sepolia); ver [security-and-integrity.md](security-and-integrity.md).
+- A ancoragem tem provider **simulado por padrão** (`local_simulated`) e providers **EVM**
+  preparados (`anvil_local`, `ethereum_sepolia`); ver
+  [security-and-integrity.md](security-and-integrity.md).
 
 ## Contexto acadêmico
 
@@ -51,6 +62,10 @@ O protótipo corresponde ao terceiro ciclo de desenvolvimento da pesquisa (arqui
 proposta para MRV agropecuário). A relação com os requisitos e cenários oficiais da
 dissertação está em [../academic/requirements.md](../academic/requirements.md) e
 [../academic/evaluation-scenarios.md](../academic/evaluation-scenarios.md).
+
+Limitações e classificação implementado/simulado/preparado:
+[../limitations.md](../limitations.md). Evolução do projeto:
+[../project-evolution.md](../project-evolution.md).
 
 ## Ver também
 

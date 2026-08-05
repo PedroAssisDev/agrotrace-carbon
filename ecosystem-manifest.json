@@ -58,13 +58,13 @@
     {"consumer": "frontend", "provider": "agrotrace-carbon-wrappers-service", "contract": "process_file + detect_layout_id"},
     {"consumer": "frontend", "provider": "agrotrace-carbon-ontology-manager", "contract": "ontology populate/validate/publish"},
     {"consumer": "frontend", "provider": "agrotrace-carbon-calculation-service", "contract": "compute_farm_period_emissions"},
-    {"consumer": "frontend", "provider": "agrotrace-carbon-model-training-service", "contract": "ModelTrainingFacade (prediction only)"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-model-training-service", "contract": "ModelTrainingFacade (train/evaluate/registry; inference in frontend forecast_inference)"},
     {"consumer": "frontend", "provider": "agrotrace-carbon-traceability-service", "contract": "ProvenanceRecorder"},
     {"consumer": "frontend", "provider": "agrotrace-carbon-blockchain-service", "contract": "evidence/Merkle/anchor after FINAL_ONTOLOGY_PUBLISHED"}
   ],
   "canonicalization": "SHA-256 + Merkle (blockchain-service)",
   "temporal_values": ["daily", "monthly", "annual"],
   "organizational_values": ["animal", "lot", "property"],
-  "blockchain_providers": ["local_simulated", "evm_anvil", "evm_sepolia_explicit"],
+  "blockchain_providers": ["local_simulated", "anvil_local", "ethereum_sepolia"],
   "notes": "No secrets, RPC credentials, personal paths, or operational DBs included."
 }

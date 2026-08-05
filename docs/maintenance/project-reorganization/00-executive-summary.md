@@ -1,8 +1,11 @@
 # 00 — Resumo executivo (FASE 1)
 
+> **Status documental:** `histórico`. Síntese atual da evolução:
+> [`../../project-evolution.md`](../../project-evolution.md).
+
 **Data:** 2026-08-04  
 **Escopo:** inventário, classificação e plano — sem movimentação nem remoção de arquivos.  
-**Status:** FASE 1 concluída; aguarda revisão humana e autorização explícita da FASE 2.
+**Status (da época):** FASE 1 concluída; aguarda revisão humana e autorização explícita da FASE 2.
 
 ## Veredito
 
