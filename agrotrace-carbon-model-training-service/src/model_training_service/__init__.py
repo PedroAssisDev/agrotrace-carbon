@@ -1,6 +1,6 @@
 """CarbonSECO model training service."""
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 from model_training_service.api import ModelTrainingFacade, TrainModelsRequest, TrainingMode
 

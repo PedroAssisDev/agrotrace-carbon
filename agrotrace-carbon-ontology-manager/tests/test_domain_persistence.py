@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -161,11 +163,13 @@ def test_resolve_published_requires_final() -> None:
         pass
 
 
-def test_yearly_alias_to_annual() -> None:
+def test_yearly_label_rejected() -> None:
     from ontology.cycle_model import normalize_granularity
 
-    assert normalize_granularity("yearly") == "annual"
-    assert normalize_granularity("YEARLY") == "annual"
+    with pytest.raises(ValueError, match="Granularidade inválida"):
+        normalize_granularity("yearly")
+    with pytest.raises(ValueError, match="Granularidade inválida"):
+        normalize_granularity("YEARLY")
     assert normalize_granularity("annual") == "annual"
 
 
@@ -175,5 +179,5 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as d:
         test_property_cycle_observation_result_roundtrip(Path(d))
         test_resolve_published_requires_final()
-        test_yearly_alias_to_annual()
+        test_yearly_label_rejected()
     print("OK ontology domain tests")

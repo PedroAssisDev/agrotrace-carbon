@@ -1,44 +1,45 @@
 # Módulo: wrappers-service
 
-## Finalidade
+## Visão geral
 
-Normalizar arquivos brutos em lotes padronizados, por meio de layouts versionados.
+Normalizar arquivos brutos em lotes padronizados via layouts versionados.
+
+**Posição:** etapas operacionais `wrapper` e `normalization`.
 
 ## Responsabilidades
 
-- Selecionar/aplicar o layout adequado e produzir um lote normalizado.
-- Validar estrutura/consistência antes do cálculo.
+- Aplicar layout e produzir lote normalizado
+- Validar estrutura/consistência antes do cálculo
 
 ## Não faz
 
-- Não calcula emissões nem popula a ontologia.
+- Não calcula emissões nem popula ontologia
 
-## Contratos com o frontend
+## Contratos
 
-- `from wrappers import process_file`.
-- Adapter: `frontend/services/wrappers_adapter` (fallback de import tolerado).
+- `from wrappers import process_file`
+- Adapter: `frontend/services/wrapper_adapter.py`
+- Layouts: `intraday:v1`, `monthly:v1`, `annual:v1` em `layouts/`
 
-## Layouts
-
-Versionados no pacote (ex.: `intraday:v1`, `monthly:v1`, `annual:v1`). Detalhe em
-`agrotrace-carbon-wrappers-service/docs/layouts/`.
+Implementado em: `agrotrace-carbon-wrappers-service/core/pipeline.py`.
 
 ## Entradas / saídas / persistência
 
-- Entrada: original + layout.
-- Saída: lote normalizado em `AGROTRACE_DATA_ROOT/normalized/`.
+- Entrada: original + `layout_id`
+- Saída: `ProcessingResult` (payload + projeção canônica)
+- Persistência FE: `$AGROTRACE_DATA_ROOT/normalized/`
 
-## Compatibilidade legada
+## Compatibilidade
 
-`process_file_auto` está *deprecated*, mas permanece exportado no caminho de fallback —
-remover somente de forma coordenada com os adapters.
+`detect_layout_id + process_file` emite DeprecationWarning; permanece exportado.
 
-## Testes e comandos
+## Testes
 
-- `pytest` no diretório do serviço (incluído na regressão).
+`pytest` no serviço (incluído na regressão).
 
 ## Relacionados
 
-- RF003, RF004; RNF006, RNF008, RNF011.
-- Detalhe: `agrotrace-carbon-wrappers-service/README.md` e `docs/`.
-- Granularidades: [../domain/temporal-and-organizational-granularity.md](../domain/temporal-and-organizational-granularity.md).
+- RF003, RF004; RNF006, RNF008, RNF011
+- README: `agrotrace-carbon-wrappers-service/README.md`
+- Docs locais: `agrotrace-carbon-wrappers-service/docs/`
+- [../domain/temporal-and-organizational-granularity.md](../domain/temporal-and-organizational-granularity.md)

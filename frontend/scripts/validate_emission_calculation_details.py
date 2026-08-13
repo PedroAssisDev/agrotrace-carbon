@@ -107,7 +107,6 @@ def _mock_cycles() -> tuple[list[dict], dict, dict]:
     gf = {
         **DEFAULT_GLOBAL_FILTER,
         "farm_id": farm,
-        "property_ids": [farm],
         "analysis_period_start": "2026-01",
         "analysis_period_end": "2026-02",
         "data_mode": "include_preliminary",
@@ -153,7 +152,6 @@ def _mock_single_cycle_monthly_history() -> tuple[list[dict], dict, dict]:
     gf = {
         **DEFAULT_GLOBAL_FILTER,
         "farm_id": farm,
-        "property_ids": [farm],
         "analysis_period_start": "2026-01",
         "analysis_period_end": "2026-03",
         "data_mode": "include_preliminary",

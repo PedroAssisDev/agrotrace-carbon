@@ -1,8 +1,8 @@
 # AgroMRV-O Lite (Ontology Manager)
 
-Lightweight, self-contained domain ontology for semantic integration of dairy MRV data.
+Ontologia de domínio para integração semântica de dados MRV leiteiros.
 
-> Documento canônico do módulo: [../docs/modules/ontology-manager.md](../docs/modules/ontology-manager.md).
+> Documento canônico do monorepo: [../docs/modules/ontology-manager.md](../docs/modules/ontology-manager.md)
 
 ## Install
 
@@ -10,7 +10,30 @@ Lightweight, self-contained domain ontology for semantic integration of dairy MR
 pip install -e ".[dev]"
 ```
 
-## Quick start
+## Caminho usado pelo Dash (recomendado)
+
+O orquestrador chama `build_full_ontology` (base + catálogos), não apenas
+`build_base_ontology`:
+
+```python
+from ontology import (
+    build_full_ontology,
+    populate_from_dataframe,
+    export_ontology,
+    validate_all,
+)
+import pandas as pd
+
+onto = build_full_ontology()
+df = pd.read_csv("data.csv", sep=";_;", engine="python", dtype=str, keep_default_na=False)
+populate_from_dataframe(onto, df, layout_name="annual_inventory")
+validate_all(onto)
+export_ontology(onto, "artifacts/ontology/agromrv_lite.owl", format="rdfxml")
+```
+
+Adapter: `frontend/services/ontology_adapter.py`.
+
+## Quick start mínimo (base + catálogos manuais)
 
 ```python
 from ontology import build_base_ontology, populate_catalogs, populate_from_dataframe, export_ontology
@@ -18,36 +41,27 @@ import pandas as pd
 
 onto = build_base_ontology()
 populate_catalogs(onto)
-
-df = pd.read_csv("data.csv", sep=";_;", engine="python", dtype=str, keep_default_na=False)
-populate_from_dataframe(onto, df, layout_name="annual_inventory")
-
-export_ontology(onto, "artifacts/ontology/agromrv_lite.owl", format="rdfxml")
-export_ontology(onto, "artifacts/ontology/agromrv_lite.ttl", format="turtle")
+# ... populate / export ...
 ```
 
-Or run the end-to-end example:
+Ou: `python -m ontology.examples`
+
+## Pipeline a partir de CSVs normalizados
 
 ```bash
-python -m ontology.examples
+python pipeline_run.py --data-dir ../data/processed --validate --export-ttl
 ```
 
-## Pipeline (processed data)
-
-Build and populate the ontology from normalized CSVs exported by the wrappers service:
-
-```bash
-python pipeline_run.py --data-dir ../data/processed
-```
-
-The script auto-discovers the latest `*_normalized.delimited.csv` for annual, intraday, and monthly data. Override individual inputs with `--annual-csv`, `--intraday-csv`, or `--monthly-csv`. Use `--validate` to run ontology checks before export, and `--export-ttl` to also write a Turtle file.
-
-## Tests
+## Testes
 
 ```bash
 pytest
 ```
 
-## Documentation
+## Limitações
 
-See [docs/ontology_agromrv_lite.md](docs/ontology_agromrv_lite.md).
+- Classe `Lot` não está modelada na OWL (parcial na auditoria de requisitos).
+
+## Documentação
+
+[docs/ontology_agromrv_lite.md](docs/ontology_agromrv_lite.md)

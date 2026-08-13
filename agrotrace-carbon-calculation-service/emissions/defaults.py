@@ -57,7 +57,7 @@ def _extract_required_float(row: Mapping[str, Any], key: str, *, label: str) -> 
         ) from exc
 
 
-def default_enteric_ch4_kg_per_animal_yearly() -> dict[str, float]:
+def default_enteric_ch4_kg_per_animal_annual() -> dict[str, float]:
     """
     Fatores legados interpretados como kg CH4 por animal **por ano**.
 
@@ -70,10 +70,6 @@ def default_enteric_ch4_kg_per_animal_yearly() -> dict[str, float]:
         "Calves": 20.0,
         "Bulls": 10.0,
     }
-
-
-# Nome canônico (annual); yearly permanece como alias de leitura/legado.
-default_enteric_ch4_kg_per_animal_annual = default_enteric_ch4_kg_per_animal_yearly
 
 
 def default_manure_kg_per_kg_bw_per_day() -> dict[str, float]:
@@ -109,7 +105,7 @@ def default_manure_ch4_kg_per_kg_manure() -> dict[str, float]:
     }
 
 
-def default_energy_co2_kg_per_unit_yearly_basis() -> dict[str, float]:
+def default_energy_co2_kg_per_unit_annual_basis() -> dict[str, float]:
     """
     Fatores legados para CO2 por unidade de consumo.
 
@@ -121,9 +117,6 @@ def default_energy_co2_kg_per_unit_yearly_basis() -> dict[str, float]:
         "Electricity_Grid": 0.233,
         "Photovoltaic_Energy": 0.0,
     }
-
-
-default_energy_co2_kg_per_unit_annual_basis = default_energy_co2_kg_per_unit_yearly_basis
 
 
 def default_fertilizer_factors() -> dict[str, float]:

@@ -1,5 +1,7 @@
 """Public API for AgroMRV-O Lite."""
 
+__version__ = "1.0.0"
+
 from ontology.builder import build_base_ontology, build_full_ontology
 from ontology.catalogs import populate_catalogs
 from ontology.cycle_model import (

@@ -1,4 +1,4 @@
-# Guia da API pública
+﻿# Guia da API pública
 
 ## Entrada principal
 
@@ -14,7 +14,7 @@ Parâmetros úteis: `processing_context`, `export_config`, `encoding`, `year` (a
 
 | API | Quando usar |
 |-----|-------------|
-| `process_file_auto(uri)` | Prototipagem ou pipelines que inferem layout pelo cabeçalho. Prefira layout explícito em produção. |
+| `detect_layout_id+process_file(uri)` | Prototipagem ou pipelines que inferem layout pelo cabeçalho. Prefira layout explícito em produção. |
 | `LayoutPipeline.from_layout_id(...)` | Testes, extensão ou reutilização do orquestrador sem função facade. |
 | `detect_layout_id(path)` | Apenas detecção, sem processar o ficheiro. |
 

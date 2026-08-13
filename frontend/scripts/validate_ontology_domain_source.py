@@ -22,9 +22,14 @@ def main() -> int:
         else:
             print(f"  OK:   {msg}")
 
+    from emissions.exceptions import CalculationError
     from emissions.temporal_scope import TemporalScope, normalize_temporal_label
 
-    check(normalize_temporal_label("yearly") is TemporalScope.ANNUAL, "yearly->ANNUAL na leitura")
+    try:
+        normalize_temporal_label("yearly")
+        check(False, "yearly rejeitado no calculation-service")
+    except CalculationError:
+        check(True, "yearly rejeitado no calculation-service")
     check(TemporalScope.ANNUAL.value == "annual", "ANNUAL.value == annual")
     check(TemporalScope.ANNUAL.value != "yearly", "nao grava yearly")
 
@@ -40,10 +45,14 @@ def main() -> int:
         cycle_id="VAL-1",
         property_id="P-VAL",
         reporting_period="2022",
-        temporal_granularity="yearly",  # alias → annual
+        temporal_granularity="annual",
         status="PendingApproval",
     )
-    check(normalize_granularity("yearly") == "annual", "normalize yearly->annual")
+    try:
+        normalize_granularity("yearly")
+        check(False, "normalize yearly rejeitado na ontologia")
+    except ValueError:
+        check(True, "normalize yearly rejeitado na ontologia")
     upsert_emission_result(
         onto,
         cycle_id="VAL-1",

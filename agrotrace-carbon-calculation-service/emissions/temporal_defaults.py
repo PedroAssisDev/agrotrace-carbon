@@ -9,10 +9,10 @@ def default_days_in_period(temporal_scope: TemporalScope) -> int:
     """
     Comprimento padrão do período alinhado ao escopo temporal.
 
-    - yearly: 365 dias (ano civil típico)
+    - annual: 365 dias (ano civil típico)
     - monthly: 30 dias (mês comercial padrão)
     """
-    return 365 if temporal_scope is TemporalScope.YEARLY else 30
+    return 365 if temporal_scope is TemporalScope.ANNUAL else 30
 
 
 def resolve_days_in_period(

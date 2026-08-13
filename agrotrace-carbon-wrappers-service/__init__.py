@@ -4,14 +4,13 @@ Camada de wrappers — EcoFarm OS.
 API principal
 -------------
 ``process_file(source_uri, layout_id, ...)`` — processamento com layout explícito.
-
-APIs secundárias
-----------------
-``process_file_auto`` — detecção automática de layout (ver ``detect_layout_id``).
+``detect_layout_id`` — inferência de layout pelo cabeçalho (usar com ``process_file``).
 ``LayoutPipeline`` — orquestrador OO para testes e extensão avançada.
 """
 
 from __future__ import annotations
+
+__version__ = "1.0.0"
 
 import sys
 
@@ -33,7 +32,7 @@ from .contracts import (
     ValidationIssue,
     ValidationReport,
 )
-from .core.pipeline import LayoutPipeline, process_file, process_file_auto
+from .core.pipeline import LayoutPipeline, process_file
 from .export import ExportConfiguration, persist_processing_result
 from .registry import (
     LayoutDefinition,
@@ -43,7 +42,6 @@ from .registry import (
     detect_layout_id,
 )
 
-# Compatibilidade — imports legados (não listados em __all__)
 from .export import DelimitedExportStrategy  # noqa: F401
 from .provenance import build_provenance  # noqa: F401
 from .temporal import (  # noqa: F401
@@ -58,7 +56,6 @@ from .temporal import (  # noqa: F401
 
 __all__ = [
     "process_file",
-    "process_file_auto",
     "LayoutPipeline",
     "ProcessingResult",
     "ProcessingContext",

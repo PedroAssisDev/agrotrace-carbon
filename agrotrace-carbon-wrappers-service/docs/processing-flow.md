@@ -1,11 +1,11 @@
-# Fluxo de processamento
+﻿# Fluxo de processamento
 
 Alinhado a `core/pipeline.py` (`LayoutPipeline.process_file`).
 
 ## Sequência end-to-end
 
 1. **Entrada bruta** — ficheiro CSV em `source_uri` (caminho ou `file://`).
-2. **Layout** — `process_file` exige `layout_id`; `process_file_auto` usa `detect_layout_id` na primeira linha não vazia.
+2. **Layout** — `process_file` exige `layout_id`; `detect_layout_id+process_file` usa `detect_layout_id` na primeira linha não vazia.
 3. **Catálogo** — `LayoutRegistry.get(layout_id)` e pasta do layout para ficheiros auxiliares.
 4. **Parsing físico** — `read_csv_rows` com `delimiter` e `encoding` do YAML (encoding pode ser sobrescrito).
 5. **Proveniência** — `build_provenance` com timestamp; checksum opcional.

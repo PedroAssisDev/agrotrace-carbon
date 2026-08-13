@@ -75,7 +75,7 @@ def run_csv_pipeline(
     input_file_path: str,
     output_file_path: str,
     *,
-    temporal_scope: TemporalScope = TemporalScope.YEARLY,
+    temporal_scope: TemporalScope = TemporalScope.ANNUAL,
     days_in_period: int | None = None,
     sep: str = ";",
     **kwargs: object,

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agrotrace-carbon-wrappers-service"
+version = "1.0.0"
+description = "Layout-driven CSV wrappers for AgroTrace Carbon (EcoFarm OS)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "PyYAML>=6.0",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+
+[tool.setuptools]
+package-dir = {"wrappers" = "."}
+packages = [
+    "wrappers",
+    "wrappers.core",
+    "wrappers.registry",
+    "wrappers.normalizers",
+    "wrappers.processors",
+    "wrappers.validators",
+    "wrappers.mappers",
+    "wrappers.export",
+]
+
+[tool.setuptools.package-data]
+wrappers = ["layouts/**/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["testing"]
+pythonpath = ["."]

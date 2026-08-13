@@ -33,7 +33,7 @@ def calculate_manure_management_ch4(
         e fator CH4 por massa de esterco, **explicitamente** multiplicado pelos dias do período.
 
     Parâmetros:
-        temporal_scope: ``monthly`` ou ``yearly``; deve ser consistente com ``days_in_period``.
+        temporal_scope: ``monthly`` ou ``annual``; deve ser consistente com ``days_in_period``.
         headcounts_by_category: número de animais por categoria (>= 0).
         body_weight_kg_by_category: peso médio por animal (kg) na mesma granularidade temporal
             da contagem (ex.: peso representativo do mês ou média anual).

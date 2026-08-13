@@ -5,3 +5,22 @@ data/emulated_uploads/manifest.json
 # Originais preservados após import/upload local
 data/originals/*.csv
 data/originals/*.meta.json
+
+# Ambiente / build / caches
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+.idea/
+.vscode/

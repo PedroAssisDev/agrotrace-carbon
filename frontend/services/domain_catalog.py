@@ -35,7 +35,6 @@ TEMPORAL_ALIASES: Final[dict[str, TemporalGranularity]] = {
     "month": TemporalGranularity.MONTHLY,
     "annual": TemporalGranularity.ANNUAL,
     "anual": TemporalGranularity.ANNUAL,
-    "yearly": TemporalGranularity.ANNUAL,
     "year": TemporalGranularity.ANNUAL,
 }
 
@@ -77,7 +76,7 @@ def normalize_temporal(
     upper = key.upper()
     if upper == "MONTHLY":
         return TemporalGranularity.MONTHLY
-    if upper in {"YEARLY", "ANNUAL"}:
+    if upper == "ANNUAL":
         return TemporalGranularity.ANNUAL
     if upper == "DAILY":
         return TemporalGranularity.DAILY
@@ -96,7 +95,7 @@ def temporal_to_calc_scope(granularity: TemporalGranularity | str) -> str:
 
 
 def calc_scope_to_canonical(scope: str | TemporalGranularity | None) -> TemporalGranularity:
-    """YEARLY/monthly do calculation-service → annual/monthly canônico."""
+    """Escopo do calculation-service → annual/monthly canônico."""
     return normalize_temporal(scope, default=TemporalGranularity.MONTHLY)
 
 

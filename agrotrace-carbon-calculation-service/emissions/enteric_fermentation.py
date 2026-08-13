@@ -28,7 +28,7 @@ def calculate_enteric_fermentation_ch4(
     Parâmetros:
         temporal_scope:
             ``monthly``: use contagens e fatores referentes a um único mês.
-            ``yearly``: use contagens e fatores referentes ao ano completo
+            ``annual``: use contagens e fatores referentes ao ano completo
             (não some implicitamente meses; isso é responsabilidade de quem chama).
         headcounts_by_category:
             Número de animais por categoria (adimensional, >= 0).

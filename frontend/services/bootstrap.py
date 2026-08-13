@@ -238,7 +238,6 @@ def wipe_all_test_data(*, recreate_dbs: bool = True) -> dict[str, Any]:
         config.EVIDENCE_PACKAGES_DIR,
         config.PUBLICATIONS_DIR,
         config.REPORTS_DIR,
-        config.SAMPLE_DATA_DIR / "seed",
     ):
         wiped[str(directory.name)] = _wipe_directory(directory)
 

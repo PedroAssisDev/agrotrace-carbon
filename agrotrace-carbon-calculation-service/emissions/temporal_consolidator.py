@@ -77,7 +77,7 @@ def consolidate_monthly_calculation_results(
         component=CalculationResult(
             value=total_value,
             unit=reference_unit,
-            temporal_scope=TemporalScope.YEARLY,
+            temporal_scope=TemporalScope.ANNUAL,
             description=reference_description,
         ),
         consolidation_type=consolidation_type,
@@ -113,7 +113,7 @@ def consolidate_monthly_ghg_totals(
     return ConsolidatedAnnualGhgResult(
         total=TotalGhgResult(
             co2e_kg=sum(float(t.co2e_kg) for t in monthly_totals),
-            temporal_scope=TemporalScope.YEARLY,
+            temporal_scope=TemporalScope.ANNUAL,
             ch4_co2e_kg=sum(float(t.ch4_co2e_kg) for t in monthly_totals),
             n2o_co2e_kg=sum(float(t.n2o_co2e_kg) for t in monthly_totals),
             co2_kg=sum(float(t.co2_kg) for t in monthly_totals),

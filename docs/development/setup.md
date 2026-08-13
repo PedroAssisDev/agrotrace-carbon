@@ -7,26 +7,27 @@
 
 ## Instalação
 
-Instale as dependências do frontend e dos serviços usados pelo caminho Dash:
+Instale o workspace completo (recomendado — editable install dos 8 projetos):
 
 ```bash
-pip install -r frontend/requirements.txt
-pip install -r agrotrace-carbon-wrappers-service/requirements.txt
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+.\tooling\install-workspace.ps1   # Linux/macOS: ./tooling/install-workspace.sh
 ```
 
-Os pacotes irmãos são adicionados ao `sys.path` pelo bootstrap
-(`frontend/services/bootstrap`), que também inicializa os SQLite sob
-`AGROTRACE_DATA_ROOT/db/`.
+Detalhes: [../../tooling/README.md](../../tooling/README.md).
+
+O bootstrap (`frontend/services/bootstrap.py`) também adiciona os pacotes irmãos ao
+`sys.path` e inicializa os SQLite sob `AGROTRACE_DATA_ROOT/db/`. A instalação via
+tooling cobre dependências de teste/regressão que o `sys.path` sozinho não garante.
 
 ## Configuração inicial
-
-Copie o exemplo de variáveis de ambiente e ajuste localmente (nunca versione `.env`):
 
 ```bash
 cp .env.example .env
 ```
 
-Detalhes das flags e variáveis em [configuration.md](configuration.md) e
+Ajuste localmente; nunca versione `.env`. Detalhes: [configuration.md](configuration.md) e
 [data-directories.md](data-directories.md).
 
 ## Executar o frontend
@@ -36,17 +37,28 @@ cd frontend
 python main.py
 ```
 
-UI em `http://127.0.0.1:8050`.
+UI em `http://127.0.0.1:8050`. Entrypoint canônico: `frontend/main.py` (não use
+`frontend/app.py` — conflita com o pacote `app` do blockchain-service).
 
 ## Rotas canônicas (8)
 
-`/`, `/data-entry`, `/calculations`, `/approval`, `/indicators`, `/previsoes`,
-`/technical-audit`, `/settings`.
+| Rota | Tela |
+|------|------|
+| `/` | Painel Executivo |
+| `/data-entry` | Entrada de Dados |
+| `/calculations` | Cálculos de Emissão |
+| `/approval` | Revisão e Aprovação |
+| `/indicators` | Análise Geral |
+| `/previsoes` | Previsões |
+| `/technical-audit` | Auditoria Técnica |
+| `/settings` | Configurações |
 
-Rotas antigas são redirecionadas por `LEGACY_REDIRECTS` em `frontend/pages/router.py`.
+Paths desconhecidos caem no Painel Executivo. Não há mecanismo de redirect de rotas
+legadas em `router.py`.
 
 ## Próximos passos
 
-- Reset e seed de dados de teste: [reset-and-seed.md](reset-and-seed.md).
-- Testes e regressão: [testing.md](testing.md) e [validation-scripts.md](validation-scripts.md).
+- Reset e seed: [reset-and-seed.md](reset-and-seed.md).
+- Testes: [testing.md](testing.md) e [validation-scripts.md](validation-scripts.md).
+- Limitações: [../limitations.md](../limitations.md).
 - Problemas comuns: [troubleshooting.md](troubleshooting.md).

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agrotrace-carbon-save-file"
+version = "1.0.0"
+description = "Preservação imutável do dado bruto original com SHA-256 (AgroTrace Carbon)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Academic use — see repository LICENSE" }
+authors = [{ name = "AgroTrace Carbon" }]
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7.0"]
+dev = ["pytest>=7.0"]
+
+[project.urls]
+Documentation = "https://github.com/PedroAssisDev/agrotrace-carbon/blob/main/docs/modules/save-file.md"
+
+[tool.setuptools.packages.find]
+include = ["save_file*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

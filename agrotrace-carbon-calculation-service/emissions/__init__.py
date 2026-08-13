@@ -1,5 +1,7 @@
 """Camada de cálculos de emissões: funções puras, entradas explícitas e escopo temporal."""
 
+__version__ = "1.0.0"
+
 from emissions.calculation_bundle import CalculationBundle, ProvenanceMetadata
 from emissions.csv_adapter import farm_period_from_row, required_csv_columns
 from emissions.defaults import (
@@ -8,8 +10,8 @@ from emissions.defaults import (
     MILK_KG_FPCM_COLUMN,
     MILK_LITERS_COLUMN,
     NITROGEN_APPLIED_KG_COLUMN,
-    default_energy_co2_kg_per_unit_yearly_basis,
-    default_enteric_ch4_kg_per_animal_yearly,
+    default_energy_co2_kg_per_unit_annual_basis,
+    default_enteric_ch4_kg_per_animal_annual,
     default_fertilizer_factors,
     default_manure_ch4_kg_per_kg_manure,
     default_manure_kg_per_kg_bw_per_day,
@@ -84,8 +86,8 @@ __all__ = [
     "consolidate_monthly_calculation_results",
     "consolidate_monthly_ghg_totals",
     "default_days_in_period",
-    "default_energy_co2_kg_per_unit_yearly_basis",
-    "default_enteric_ch4_kg_per_animal_yearly",
+    "default_energy_co2_kg_per_unit_annual_basis",
+    "default_enteric_ch4_kg_per_animal_annual",
     "default_fertilizer_factors",
     "default_manure_ch4_kg_per_kg_manure",
     "default_manure_kg_per_kg_bw_per_day",

@@ -10,8 +10,19 @@ import sys
 from pathlib import Path
 
 FRONTEND_DIR = Path(__file__).resolve().parent
+WORKSPACE_ROOT = FRONTEND_DIR.parent
 if str(FRONTEND_DIR) not in sys.path:
     sys.path.insert(0, str(FRONTEND_DIR))
+
+# Carrega .env antes de ``config`` / logging, para o reloader do Dash
+# (processo filho) herdar o mesmo AGROTRACE_DATA_ROOT que o pai.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(WORKSPACE_ROOT / ".env", override=False)
+    load_dotenv(FRONTEND_DIR / ".env", override=False)
+except ImportError:
+    pass
 
 from utils.logging_config import get_logger, setup_logging
 

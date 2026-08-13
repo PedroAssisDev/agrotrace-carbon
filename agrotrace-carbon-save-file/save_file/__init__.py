@@ -7,6 +7,8 @@ Integracao por chamada direta a funcao — sem HTTP.
 
 from __future__ import annotations
 
+__version__ = "1.0.0"
+
 from save_file.errors import (
     ArtifactNotFoundError,
     IntegrityMismatchError,
@@ -43,6 +45,7 @@ __all__ = [
     "SOURCE_SYSTEM",
     "SaveFileError",
     "StoragePathEscapeError",
+    "__version__",
     "default_emulated_dir",
     "default_originals_dir",
     "generate_emulated_uploads",

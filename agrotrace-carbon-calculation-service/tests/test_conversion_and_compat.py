@@ -1,7 +1,7 @@
 import pytest
 
 from emissions.conversion_helpers import sum_monthly_values, uniform_monthly_from_yearly_per_animal
-from emissions.defaults import ANIMAL_CATEGORIES, default_enteric_ch4_kg_per_animal_yearly
+from emissions.defaults import ANIMAL_CATEGORIES, default_enteric_ch4_kg_per_animal_annual
 from emissions.temporal_scope import TemporalScope
 from environmental_calcs import calculate_enteric_fermentation, calculate_total_emissions
 
@@ -24,9 +24,9 @@ def test_legacy_total_emissions_accepts_explicit_gwp_and_factors():
     row["Electricity_Grid"] = 0.0
     row["Photovoltaic_Energy"] = 0.0
     row["Lactating_Cows"] = 1.0
-    yearly = default_enteric_ch4_kg_per_animal_yearly()
-    monthly_factors = {k: uniform_monthly_from_yearly_per_animal(v) for k, v in yearly.items()}
-    y = calculate_enteric_fermentation(row, temporal_scope=TemporalScope.YEARLY)
+    annual = default_enteric_ch4_kg_per_animal_annual()
+    monthly_factors = {k: uniform_monthly_from_yearly_per_animal(v) for k, v in annual.items()}
+    y = calculate_enteric_fermentation(row, temporal_scope=TemporalScope.ANNUAL)
     m = calculate_enteric_fermentation(
         row,
         temporal_scope=TemporalScope.MONTHLY,
@@ -35,7 +35,7 @@ def test_legacy_total_emissions_accepts_explicit_gwp_and_factors():
     assert m == pytest.approx(y / 12.0, rel=1e-9)
     total = calculate_total_emissions(
         row,
-        temporal_scope=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
         days_in_period=365,
         gwp={"CH4": 25.0, "N2O": 298.0},
     )

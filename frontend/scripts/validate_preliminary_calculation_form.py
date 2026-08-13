@@ -21,10 +21,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(REPO / "agrotrace-carbon-calculation-service"))
 sys.path.insert(0, str(REPO / "agrotrace-carbon-ontology-manager"))
 
-from utils.data_root_cli import apply_data_root_from_argv  # noqa: E402
-
-apply_data_root_from_argv()
-
+from scripts._validation_env import isolated_data_root  # noqa: E402
 from services import calculation_adapter  # noqa: E402
 from services import local_orchestrator  # noqa: E402
 from services import ontology_runtime_cache as onto_cache  # noqa: E402
@@ -106,12 +103,13 @@ def _build_prepared_cycle(cycle_id: str, row: dict, period: str) -> dict:
     return cycle
 
 
-def main() -> int:
+def _run_checks() -> list[str]:
     errors: list[str] = []
     print("=== validate_preliminary_calculation_form ===")
 
     # ── Fluxo oficial: ciclo → ontologia → catálogo → cálculo ───────────────
     print("\n[1] preparação semântica + materialização do catálogo")
+    onto_cache.clear()
     cycle = _build_prepared_cycle("VAL-PRELIM-P9-2021-11", EMBRAPA_P9_2021_11, "2021-11")
     catalog = (cycle.get("ontology") or {}).get("factor_catalog") or {}
     _check(catalog_is_complete(catalog), "factor_catalog completo após publish", errors)
@@ -267,6 +265,12 @@ def main() -> int:
     print(f"\n=== Resultado: {len(errors)} falha(s) ===")
     for e in errors:
         print(f"  - {e}")
+    return errors
+
+
+def main() -> int:
+    with isolated_data_root():
+        errors = _run_checks()
     return 1 if errors else 0
 
 

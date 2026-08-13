@@ -166,8 +166,11 @@ def main() -> int:
             _run("frontend_tests", [PY, "-m", "pytest", "tests/", "-q", "--tb=line"], cwd=FRONTEND_ROOT, env=env, timeout=600)
         )
 
-        # 11 all validate_*
-        validate_scripts = sorted((FRONTEND_ROOT / "scripts").glob("validate_*.py"))
+        # 11 all validate_* (unique by resolved path — evita duplicatas no Windows)
+        validate_scripts = sorted(
+            {p.resolve(): p for p in (FRONTEND_ROOT / "scripts").glob("validate_*.py")}.values(),
+            key=lambda p: p.name.lower(),
+        )
         for script in validate_scripts:
             results.append(
                 _run(

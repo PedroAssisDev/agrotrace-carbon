@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from wrappers.core.pipeline import process_file_auto
+from wrappers.core.pipeline import process_file
 from wrappers.export.delimited import DelimitedSerializer
 from wrappers.export.delimited_reader import read_delimited_table
 from wrappers.export.manifest import validate_export_manifest
@@ -53,10 +53,12 @@ def test_detect_layout_annual_min_columns(tmp_path: Path) -> None:
     assert detect_layout_id(p, registry=default_registry()) == "annual:v1"
 
 
-def test_process_file_auto_intraday(tmp_path: Path) -> None:
+def test_detect_then_process_intraday(tmp_path: Path) -> None:
     p = tmp_path / "x.csv"
     p.write_text("Date,Tag,Milk,Weight\n2021-01-01,A1,10.5,500\n", encoding="utf-8")
-    r = process_file_auto(str(p))
+    layout_id = detect_layout_id(p, registry=default_registry())
+    assert layout_id == "intraday:v1"
+    r = process_file(str(p), layout_id)
     assert r.layout_id == "intraday:v1"
     assert len(r.normalized_payload) == 1
 
@@ -67,12 +69,10 @@ def test_detect_layout_raises_ambiguous(tmp_path: Path) -> None:
     assert detect_layout_id(p, registry=default_registry()) is None
 
 
-def test_process_file_auto_raises_layout_detection_error(tmp_path: Path) -> None:
+def test_detect_layout_none_requires_explicit_layout(tmp_path: Path) -> None:
     p = tmp_path / "bad.csv"
     p.write_text("only_one_column\n", encoding="utf-8")
-    with pytest.raises(LayoutDetectionError) as ei:
-        process_file_auto(str(p))
-    assert ei.value.source_path
+    assert detect_layout_id(p, registry=default_registry()) is None
 
 
 def test_validate_export_manifest_ok_minimal() -> None:

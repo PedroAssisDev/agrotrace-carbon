@@ -46,15 +46,15 @@ def _resolve_default_factors(
     dict[str, float],
 ]:
     from emissions.defaults import (
-        default_energy_co2_kg_per_unit_yearly_basis,
-        default_enteric_ch4_kg_per_animal_yearly,
+        default_energy_co2_kg_per_unit_annual_basis,
+        default_enteric_ch4_kg_per_animal_annual,
         default_fertilizer_factors,
         default_manure_ch4_kg_per_kg_manure,
         default_manure_kg_per_kg_bw_per_day,
         gwp_ipcc_ar4,
     )
 
-    raw_enteric = enteric_ch4_kg_per_animal or default_enteric_ch4_kg_per_animal_yearly()
+    raw_enteric = enteric_ch4_kg_per_animal or default_enteric_ch4_kg_per_animal_annual()
     if enteric_ch4_kg_per_animal is not None:
         enteric = {k: float(v) for k, v in raw_enteric.items()}
     else:
@@ -65,7 +65,7 @@ def _resolve_default_factors(
             auto_prorate=auto_prorate_factors,
         )
 
-    raw_energy = energy_co2_kg_per_unit or default_energy_co2_kg_per_unit_yearly_basis()
+    raw_energy = energy_co2_kg_per_unit or default_energy_co2_kg_per_unit_annual_basis()
     if energy_co2_kg_per_unit is not None:
         energy = {k: float(v) for k, v in raw_energy.items()}
     else:

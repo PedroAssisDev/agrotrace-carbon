@@ -1,6 +1,12 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ecofarm-calculations"
-version = "0.3.0"
+version = "1.0.0"
+description = "IPCC-aligned emission calculations for AgroTrace Carbon"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.0",
@@ -8,6 +14,11 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0"]
+test = ["pytest>=7.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["emissions*", "orchestration*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

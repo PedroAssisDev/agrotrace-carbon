@@ -138,4 +138,5 @@ python -m app.interfaces.cli anchor-package `
 
 ## Manual completo
 
-Ver [GUIA_COMPLETO_ETHEREUM_SEPOLIA.md](../GUIA_COMPLETO_ETHEREUM_SEPOLIA.md).
+Ver guia operacional [sepolia_deployment.md](sepolia_deployment.md) e o guia longo arquivado em
+[`../../docs/archive/GUIA_COMPLETO_ETHEREUM_SEPOLIA.md`](../../docs/archive/GUIA_COMPLETO_ETHEREUM_SEPOLIA.md).

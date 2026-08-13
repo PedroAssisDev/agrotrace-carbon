@@ -51,7 +51,6 @@ def normalize_granularity(value: str | None) -> str:
         "mensal": "monthly",
         "annual": "annual",
         "anual": "annual",
-        "yearly": "annual",
         "year": "annual",
     }
     out = aliases.get(raw)

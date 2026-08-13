@@ -1,4 +1,4 @@
-# Documentação dos testes
+﻿# Documentação dos testes
 
 Local: `wrappers/testing/`. Framework: **pytest**. Os ficheiros adicionam o diretório **pai** da pasta `wrappers` a `sys.path` para permitir `import wrappers` sem instalação como pacote.
 
@@ -46,9 +46,9 @@ Fixture `data_dir`: exige pasta `wrappers/data`; senão skip dos testes que depe
 | `test_detect_layout_intraday` | Deteção intradiário | Cabeçalho Date,Tag,... | tmp CSV | intraday:v1 | Prioridade ou schema |
 | `test_detect_layout_monthly` | Deteção mensal | Cabeçalho Property;Period;... | tmp CSV | monthly:v1 | Delimitador |
 | `test_detect_layout_annual_min_columns` | Deteção anual | min_column_count | cabeçalho largo | annual:v1 | Threshold |
-| `test_process_file_auto_intraday` | `process_file_auto` | Pipeline sem layout explícito | tmp CSV | payload 1 linha | Deteção falhou |
+| `test_detect_layout_id+process_file_intraday` | `detect_layout_id+process_file` | Pipeline sem layout explícito | tmp CSV | payload 1 linha | Deteção falhou |
 | `test_detect_layout_raises_ambiguous` | Cabeçalho inválido | Sem match | uma coluna | None | Falso positivo |
-| `test_process_file_auto_raises_layout_detection_error` | Erro explícito | Operador sabe falhar | uma coluna | excepção com source_path | API silenciosa |
+| `test_detect_layout_id+process_file_raises_layout_detection_error` | Erro explícito | Operador sabe falhar | uma coluna | excepção com source_path | API silenciosa |
 | `test_validate_export_manifest_ok_minimal` | Governança mínima | Chaves obrigatórias | dict mínimo | sem erros | MANIFEST_REQUIRED_KEYS |
 | `test_validate_export_manifest_missing_keys` | Falha governança | dict incompleto | erros | validação útil | Falso negativo |
 | `test_persist_manifest_passes_governance` | Manifest real | Fim-a-fim escrita + validate | persist + load | lista vazia de erros | Divergência de campos |
@@ -56,7 +56,7 @@ Fixture `data_dir`: exige pasta `wrappers/data`; senão skip dos testes que depe
 ## Tipos de teste (classificação)
 
 - **Unitários:** serializers, harmonização declarativa, validação de manifest.  
-- **Integração:** `process_file` com tmp, export e `process_file_auto`.  
+- **Integração:** `process_file` com tmp, export e `detect_layout_id+process_file`.  
 - **Regressão / dados reais:** três testes V1 com `data/` (condicionais).  
 - **Compatibilidade:** round-trip `;_;`, deteção entre layouts.
 

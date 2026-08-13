@@ -1,4 +1,4 @@
-# Componentes centrais
+﻿# Componentes centrais
 
 Referência ao código real. Caminhos relativos à pasta `wrappers/`.
 
@@ -114,7 +114,7 @@ Referência ao código real. Caminhos relativos à pasta `wrappers/`.
 ## Funções de entrada do pipeline (`core/pipeline.py`)
 
 - **`process_file(source_uri, layout_id, *, registry=None, processing_context=None, export_config=None, **options)`** — ponto de entrada recomendado com layout explícito.  
-- **`process_file_auto(source_uri, *, ...)`** — infere `layout_id`; pode levantar `LayoutDetectionError`.  
+- **`detect_layout_id+process_file(source_uri, *, ...)`** — infere `layout_id`; pode levantar `LayoutDetectionError`.  
 - **`LayoutPipeline`** — classe com `from_layout_id` e `process_file`.
 
 ---

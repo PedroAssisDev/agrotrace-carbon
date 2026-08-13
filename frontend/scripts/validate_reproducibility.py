@@ -58,8 +58,8 @@ def _fixed_farm_and_factors():
     from emissions.defaults import (
         ANIMAL_CATEGORIES,
         ENERGY_VECTORS,
-        default_energy_co2_kg_per_unit_yearly_basis,
-        default_enteric_ch4_kg_per_animal_yearly,
+        default_energy_co2_kg_per_unit_annual_basis,
+        default_enteric_ch4_kg_per_animal_annual,
         default_fertilizer_factors,
         default_manure_ch4_kg_per_kg_manure,
         default_manure_kg_per_kg_bw_per_day,
@@ -69,7 +69,7 @@ def _fixed_farm_and_factors():
     from emissions.temporal_scope import TemporalScope
 
     farm = FarmPeriodInput(
-        temporal_scope=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
         days_in_period=365,
         headcounts_by_category={c: 10.0 if c == "Lactating_Cows" else 0.0 for c in ANIMAL_CATEGORIES},
         body_weight_kg_by_category={c: 550.0 for c in ANIMAL_CATEGORIES},
@@ -78,10 +78,10 @@ def _fixed_farm_and_factors():
         milk_liters=150000.0,
     )
     factors = dict(
-        enteric_ch4_kg_per_animal=default_enteric_ch4_kg_per_animal_yearly(),
+        enteric_ch4_kg_per_animal=default_enteric_ch4_kg_per_animal_annual(),
         manure_kg_per_kg_bw_per_day=default_manure_kg_per_kg_bw_per_day(),
         manure_ch4_kg_per_kg_manure=default_manure_ch4_kg_per_kg_manure(),
-        energy_co2_kg_per_unit=default_energy_co2_kg_per_unit_yearly_basis(),
+        energy_co2_kg_per_unit=default_energy_co2_kg_per_unit_annual_basis(),
         fertilizer_factors=default_fertilizer_factors(),
         gwp=gwp_ipcc_ar4(),
         auto_prorate_factors=False,
