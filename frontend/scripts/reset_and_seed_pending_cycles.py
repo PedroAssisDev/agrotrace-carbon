@@ -1,7 +1,8 @@
-"""Reset local e importação: simulados (FARM-*) + Embrapa (P-* / BR-*).
+"""Reset local e importação: simulados (FARM-*) + Embrapa (P-* / BR-* / D-*).
 
 Fluxo:
-  wipe → gerar emulados → importar emulados → importar embrapa/monthly → embrapa/annual (year=2022)
+  wipe → gerar emulados → importar emulados
+  → embrapa/monthly + embrapa/annual (year=2022) + embrapa/daily
 
 Uso:
     python scripts/reset_and_seed_pending_cycles.py --confirm
@@ -32,8 +33,8 @@ from utils.file_helpers import list_cycles  # noqa: E402
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Reset e importação: simulados (FARM-*) + Embrapa monthly/annual "
-            "(propriedades distintas P-* e BR-*)."
+            "Reset e importação: simulados (FARM-*) + Embrapa monthly/annual/daily "
+            "(propriedades distintas P-*, BR-* e D-1)."
         )
     )
     parser.add_argument(
@@ -84,7 +85,8 @@ def main() -> int:
     embrapa = None
     if not args.skip_embrapa:
         print(
-            f"2/3 Importando Embrapa monthly (P-*) + annual (BR-*, year={args.embrapa_year})..."
+            f"2/3 Importando Embrapa monthly (P-*) + annual (BR-*, year={args.embrapa_year}) "
+            "+ daily (D-1)..."
         )
         embrapa = import_embrapa_uploads(annual_year=args.embrapa_year)
     else:
@@ -105,7 +107,8 @@ def main() -> int:
     if embrapa is not None:
         print(
             f"Embrapa: {embrapa.monthly_count} mensais (P-*) + "
-            f"{embrapa.annual_count} anuais (BR-*) -> {len(embrapa.cycles_created)} ciclos"
+            f"{embrapa.annual_count} anuais (BR-*) + {embrapa.daily_count} diários (D-1) "
+            f"-> {len(embrapa.cycles_created)} ciclos"
         )
         print(f"Propriedades Embrapa: {len(embrapa.property_ids)}")
     print(f"Total de ciclos no disco: {len(all_cycles)}")

@@ -1,8 +1,9 @@
-"""Importa CSVs Embrapa (pastas monthly/ e annual/) pela pipeline real.
+"""Importa CSVs Embrapa (pastas monthly/, annual/ e daily/) pela pipeline real.
 
 Conjuntos independentes:
 - monthly/: propriedades P-* (1 arquivo = 1 mês)
 - annual/: propriedades BR-* (1 arquivo = 1 ano; year fixo 2022)
+- daily/: propriedade D-1 (1 arquivo = 1 dia; aprovação consolidada por mês)
 """
 
 from __future__ import annotations
@@ -17,6 +18,7 @@ from typing import Any
 from config import (
     LAYOUT_OPTIONS,
     SAVE_FILE_EMBRAPA_ANNUAL_DIR,
+    SAVE_FILE_EMBRAPA_DAILY_DIR,
     SAVE_FILE_EMBRAPA_MONTHLY_DIR,
 )
 from services import local_orchestrator as orch
@@ -26,6 +28,7 @@ from utils.file_helpers import save_cycle
 logger = logging.getLogger("agrotrace.embrapa_import")
 
 ANNUAL_DEFAULT_YEAR = 2022
+DAILY_DEFAULT_PROPERTY_ID = "D-1"
 MONTH_LABELS_PT = (
     "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
     "Jul", "Ago", "Set", "Out", "Nov", "Dez",
@@ -36,6 +39,7 @@ _MONTHLY_NAME_RE = re.compile(
     re.IGNORECASE,
 )
 _ANNUAL_NAME_RE = re.compile(r"^annual_report_(BR)_?(\d+)\.csv$", re.IGNORECASE)
+_DAILY_NAME_RE = re.compile(r"^daily_report_(\d{4}-\d{2}-\d{2})\.csv$", re.IGNORECASE)
 _BR_ID_RE = re.compile(r"BR\s*[–\-]?\s*(\d+)", re.IGNORECASE)
 
 
@@ -44,6 +48,7 @@ class EmbrapaImportResult:
     cycles_created: list[dict] = field(default_factory=list)
     monthly_count: int = 0
     annual_count: int = 0
+    daily_count: int = 0
     property_ids: list[str] = field(default_factory=list)
 
 
@@ -137,6 +142,58 @@ def _discover_annual(directory: Path, *, year: int = ANNUAL_DEFAULT_YEAR) -> lis
     return items
 
 
+def _discover_daily(
+    directory: Path,
+    *,
+    property_id: str = DAILY_DEFAULT_PROPERTY_ID,
+) -> list[dict[str, Any]]:
+    """Agrupa CSVs diários por mês (1 ciclo de aprovação / mês)."""
+    day_files: list[tuple[str, Path]] = []
+    if not directory.is_dir():
+        return []
+    for path in sorted(directory.glob("daily_report_*.csv")):
+        match = _DAILY_NAME_RE.match(path.name)
+        if match:
+            day_iso = match.group(1)
+        else:
+            header, row = _read_csv_header_row(path, delimiter=",")
+            by_col = dict(zip(header, row))
+            day_iso = (by_col.get("Date") or "").strip()
+            if not re.match(r"^\d{4}-\d{2}-\d{2}$", day_iso):
+                logger.warning("Ignorando diário sem Date ISO: %s", path.name)
+                continue
+        day_files.append((day_iso, path))
+
+    by_month: dict[str, list[tuple[str, Path]]] = {}
+    for day_iso, path in day_files:
+        by_month.setdefault(day_iso[:7], []).append((day_iso, path))
+
+    items: list[dict[str, Any]] = []
+    pid = (property_id or DAILY_DEFAULT_PROPERTY_ID).upper()
+    for month_key, days in sorted(by_month.items()):
+        year, month = int(month_key[:4]), int(month_key[5:7])
+        payloads = [{
+            "entry_id": f"EMBRAPA-{pid}-{day_iso}",
+            "path": str(path),
+            "reporting_period": day_iso,
+            "property_id": pid,
+            "original_filename": path.name,
+        } for day_iso, path in days]
+        items.append({
+            "property_id": pid,
+            "property_name": f"Embrapa {pid}",
+            "reporting_period": month_key,
+            "cycle_id": f"EMBRAPA-{pid}-{month_key}",
+            "coverage_label": (
+                f"Embrapa diário ({_month_label(year, month)} — {len(days)} dia(s))"
+            ),
+            "payloads": payloads,
+            "municipality": "",
+            "state": "",
+        })
+    return items
+
+
 def _import_one(
     item: dict[str, Any],
     *,
@@ -152,7 +209,7 @@ def _import_one(
         state=item.get("state", ""),
         production_type="leite",
     )
-    payloads = [{
+    payloads = item.get("payloads") or [{
         "entry_id": item["entry_id"],
         "path": str(item["path"]),
         "reporting_period": item["reporting_period"],
@@ -182,17 +239,21 @@ def import_embrapa_uploads(
     *,
     monthly_dir: Path | None = None,
     annual_dir: Path | None = None,
+    daily_dir: Path | None = None,
     annual_year: int = ANNUAL_DEFAULT_YEAR,
     include_monthly: bool = True,
     include_annual: bool = True,
+    include_daily: bool = True,
 ) -> EmbrapaImportResult:
     """Importa pastas Embrapa até pendência de aprovação (sem wipe)."""
     monthly_dir = monthly_dir or SAVE_FILE_EMBRAPA_MONTHLY_DIR
     annual_dir = annual_dir or SAVE_FILE_EMBRAPA_ANNUAL_DIR
+    daily_dir = daily_dir or SAVE_FILE_EMBRAPA_DAILY_DIR
     created: list[dict] = []
     property_ids: set[str] = set()
     monthly_count = 0
     annual_count = 0
+    daily_count = 0
 
     if include_monthly:
         for item in _discover_monthly(monthly_dir):
@@ -222,9 +283,24 @@ def import_embrapa_uploads(
             annual_count += 1
             logger.info("Embrapa anual %s → %s", item["path"].name, cycle.get("cycle_id"))
 
+    if include_daily:
+        for item in _discover_daily(daily_dir):
+            cycle = _import_one(
+                item,
+                layout_name="intraday",
+                data_granularity="daily",
+                approval_granularity="monthly",
+                scenario_key="embrapa_daily",
+            )
+            created.append(cycle)
+            property_ids.add(item["property_id"])
+            daily_count += 1
+            logger.info("Embrapa diário %s → %s", item["cycle_id"], cycle.get("cycle_id"))
+
     return EmbrapaImportResult(
         cycles_created=created,
         monthly_count=monthly_count,
         annual_count=annual_count,
+        daily_count=daily_count,
         property_ids=sorted(property_ids),
     )

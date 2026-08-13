@@ -71,7 +71,7 @@ Operação **destrutiva**: apaga ciclos/DBs locais e reimporta. Exige `--confirm
 ```bash
 cd frontend
 
-# Fluxo completo: wipe → simulados (FARM-*) → Embrapa monthly (P-*) + annual (BR-*)
+# Fluxo completo: wipe → simulados (FARM-*) → Embrapa monthly (P-*) + annual (BR-*) + daily (D-1)
 python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --profile demo
 
 # Só simulados (não carrega pastas Embrapa)
@@ -79,6 +79,9 @@ python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --skip-embra
 
 # Ano dos inventários anuais Embrapa (default: 2022)
 python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --embrapa-year 2022
+
+# Só diários Embrapa (sem wipe; exige data/embrapa/daily/ via split.py)
+python scripts/import_embrapa.py --only daily
 ```
 
 | Flag | Função |

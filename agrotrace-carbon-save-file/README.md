@@ -105,6 +105,13 @@ Isso gera os arquivos prontos em `data/embrapa/annual/`,
 `data/embrapa/monthly/` e `data/embrapa/daily/` (pastas regeneráveis; não versionadas).
 Requer `pandas` no ambiente.
 
+Para enviar os splits pela pipeline (wrappers `intraday:v1` no diário):
+
+```bash
+cd frontend
+python scripts/import_embrapa.py --only daily
+```
+
 ## Dados emulados
 
 Gerar arquivos (Fase A — sem pipeline):

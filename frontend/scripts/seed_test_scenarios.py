@@ -3,8 +3,7 @@
 
 1. Propriedade com entrada annual direta (annual_report.csv Embrapa)
 2. Propriedade com dados monthly (monthly_report.csv Embrapa)
-3. Propriedade daily/intraday: sem CSV intraday de sample; usa monthly_report.csv
-   e o layout efetivo cai para monthly (fallback já existente)
+3. Propriedade daily/intraday: daily_report.csv Embrapa (layout intraday:v1)
 
 Os dados passam pela pipeline real até pendência de aprovação (sem mock silencioso).
 Samples: agrotrace-carbon-save-file/data/embrapa/ (SAMPLE_DATA_DIR).
@@ -58,9 +57,9 @@ SCENARIOS = [
         "animal_id": "ANIMAL-D-001",
         "organizational_granularity": OrganizationalGranularity.ANIMAL.value,
         "temporal_granularity": TemporalGranularity.DAILY.value,
-        "reporting_period": "2026-01-15",
+        "reporting_period": "2021-01-31",
         "layout_name": "intraday",
-        "sample_candidates": ["monthly_report.csv"],
+        "sample_candidates": ["daily_report.csv"],
     },
 ]
 
@@ -93,7 +92,12 @@ def seed_scenario(scenario: dict) -> dict:
         period = period[:7]
     if layout == "intraday":
         # wrappers intraday esperam período diário ou usam sample monthly como fallback de arquivo
-        layout_effective = "intraday" if "intraday" in sample.name or "diario" in sample.name.lower() else "monthly"
+        name_l = sample.name.lower()
+        layout_effective = (
+            "intraday"
+            if any(token in name_l for token in ("intraday", "diario", "daily"))
+            else "monthly"
+        )
         if layout_effective == "monthly":
             period = period[:7] if len(period) >= 7 else "2026-01"
             layout = "monthly"
