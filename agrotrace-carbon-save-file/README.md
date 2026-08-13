@@ -54,7 +54,7 @@ fallback explicito. A UI nao deve exibir caminhos absolutos.
 - `save_file/emulated/`: geração de CSVs simulados realistas (sem emissões pré-calculadas).
 - `data/emulated_uploads/`: staging regenerável (`emulated_*.csv` + `manifest.json`).
 - `data/originals/`: arquivos originais preservados após upload/import.
-- `data/embrapa/`: CSVs-fonte Embrapa (`annual_report.csv`, `monthly_report.csv`) e `split.py`.
+- `data/embrapa/`: CSVs-fonte Embrapa (`annual_report.csv`, `monthly_report.csv`, `daily_report.csv`) e `split.py`.
 
 ## Requisitos e instalação isolada
 
@@ -91,17 +91,18 @@ Os relatórios-fonte ficam em `data/embrapa/`:
 
 - `annual_report.csv` — relatório anual (agrupado por `Property_Name`)
 - `monthly_report.csv` — relatório mensal (agrupado por `Property` + `Period`)
+- `daily_report.csv` — relatório diário/intraday (agrupado por `Date`; delimitador vírgula)
 
 Antes de carregar/usar os arquivos da Embrapa na pipeline, prepare os CSVs
-por propriedade (e período, no mensal) com `split.py`:
+por propriedade (e período, no mensal) ou por data (no diário) com `split.py`:
 
 ```bash
 cd agrotrace-carbon-save-file
 python data/embrapa/split.py
 ```
 
-Isso gera os arquivos prontos em `data/embrapa/annual/` e
-`data/embrapa/monthly/` (pastas regeneráveis; não versionadas).
+Isso gera os arquivos prontos em `data/embrapa/annual/`,
+`data/embrapa/monthly/` e `data/embrapa/daily/` (pastas regeneráveis; não versionadas).
 Requer `pandas` no ambiente.
 
 ## Dados emulados

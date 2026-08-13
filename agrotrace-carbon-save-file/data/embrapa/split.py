@@ -1,4 +1,4 @@
-"""Split Embrapa annual/monthly CSVs by key columns and save one file per group."""
+"""Split Embrapa annual/monthly/daily CSVs by key columns and save one file per group."""
 
 from __future__ import annotations
 
@@ -14,15 +14,21 @@ SOURCES = (
         "input": BASE_DIR / "annual_report.csv",
         "output_dir": BASE_DIR / "annual",
         "columns": ("Property_Name",),
+        "sep": ";",
     },
     {
         "input": BASE_DIR / "monthly_report.csv",
         "output_dir": BASE_DIR / "monthly",
         "columns": ("Property", "Period"),
+        "sep": ";",
+    },
+    {
+        "input": BASE_DIR / "daily_report.csv",
+        "output_dir": BASE_DIR / "daily",
+        "columns": ("Date",),
+        "sep": ",",
     },
 )
-
-SEP = ";"
 
 
 def _sanitize_for_filename(value: object) -> str:
@@ -38,11 +44,17 @@ def _group_suffix(key: object, columns: tuple[str, ...]) -> str:
     return "_".join(parts)
 
 
-def split_csv(input_path: Path, output_dir: Path, columns: tuple[str, ...]) -> int:
+def split_csv(
+    input_path: Path,
+    output_dir: Path,
+    columns: tuple[str, ...],
+    *,
+    sep: str = ";",
+) -> int:
     if not input_path.is_file():
         raise FileNotFoundError(f"Arquivo nao encontrado: {input_path}")
 
-    df = pd.read_csv(input_path, sep=SEP, dtype=str)
+    df = pd.read_csv(input_path, sep=sep, dtype=str)
     missing = [col for col in columns if col not in df.columns]
     if missing:
         raise KeyError(
@@ -59,7 +71,7 @@ def split_csv(input_path: Path, output_dir: Path, columns: tuple[str, ...]) -> i
     for key, group in df.groupby(list(columns), dropna=False, sort=False):
         suffix = _group_suffix(key, columns)
         out_path = output_dir / f"{stem}_{suffix}.csv"
-        group.to_csv(out_path, sep=SEP, index=False)
+        group.to_csv(out_path, sep=sep, index=False)
         written += 1
         print(f"  {out_path.name} ({len(group)} linhas)")
 
@@ -71,7 +83,12 @@ def main() -> None:
     for source in SOURCES:
         cols = ", ".join(source["columns"])
         print(f"\n{source['input'].name} -> {source['output_dir'].name}/ (por {cols})")
-        total += split_csv(source["input"], source["output_dir"], source["columns"])
+        total += split_csv(
+            source["input"],
+            source["output_dir"],
+            source["columns"],
+            sep=str(source.get("sep", ";")),
+        )
     print(f"\nConcluido: {total} arquivos gerados.")
 
 
