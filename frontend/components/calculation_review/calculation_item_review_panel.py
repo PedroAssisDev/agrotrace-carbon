@@ -118,9 +118,12 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
             alt_names = ", ".join(a.get("ontology_var", a.get("variable", "")) for a in alts[:3]) or "nenhuma"
             alts_lines.append(html.Li(f"{ov} — alternativas: {alt_names}", className="small"))
         sections.append(html.Div([
-            html.H6("Variáveis ausentes", className="small section-label mb-2 text-warning"),
+            html.H6([
+                html.I(className="fas fa-exclamation-triangle me-1", **{"aria-hidden": "true"}),
+                "Variáveis ausentes",
+            ], className="small section-label mb-2"),
             html.Ul(alts_lines, className="mb-0 ps-3"),
-        ], className="cr-detail-section mb-3"))
+        ], className="cr-detail-section cr-detail-section--warning mb-3"))
 
     sections.extend([
         ZeroAssumptionAlert(item),

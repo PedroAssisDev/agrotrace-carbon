@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dash import dash_table, html
 
+from layout.theme import COLORS
 from services.calculation_review_service import build_review_table_rows
 
 _STATUS_LABELS = {
@@ -74,8 +75,9 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
             style_header={
                 "fontWeight": "600",
                 "fontSize": "0.8rem",
-                "backgroundColor": "#EEF3EF",
-                "borderBottom": "1px solid #d8e0d8",
+                "backgroundColor": COLORS.get("table_header", COLORS["surface_muted"]),
+                "color": COLORS["text"],
+                "borderBottom": f"1px solid {COLORS['border']}",
             },
             style_data_conditional=[
                 {
@@ -93,13 +95,15 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                 },
                 {
                     "if": {"filter_query": "{zeros} > 0", "column_id": "zeros"},
-                    "color": "#c62828",
+                    "backgroundColor": COLORS["status_danger_bg"],
+                    "color": COLORS["text"],
                     "fontWeight": "600",
+                    "borderLeft": f"3px solid {COLORS['status_danger_accent']}",
                 },
             ],
             css=[{
                 "selector": ".dash-spreadsheet tr.row-selected td",
-                "rule": "background-color: #E8F5E9 !important;",
+                "rule": f"background-color: {COLORS['status_success_bg']} !important; color: {COLORS['text']} !important;",
             }],
         ),
         className="cr-review-table",

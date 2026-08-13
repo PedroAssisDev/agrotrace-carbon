@@ -239,7 +239,7 @@ def LineChart(title: str, labels: list, values: list, yaxis_title: str = "", col
                 line=dict(color=COLORS["surface"], width=1.5),
             ),
             fill="tozeroy",
-            fillcolor=_hex_with_alpha(line_color, 0.14),
+            fillcolor=_hex_with_alpha(line_color, 0.08),
             hovertemplate="<b>%{x}</b><br><b>%{y:,.2f}</b><extra></extra>",
         )])
         apply_chart_theme(fig, title=title, yaxis_title=yaxis_title or None, hovermode="x unified")
@@ -526,7 +526,7 @@ def ExecutiveTemporalChart(
                 line=dict(color=COLORS["surface"], width=2),
             ),
             fill="tozeroy",
-            fillcolor=_hex_with_alpha(chart_color, 0.16),
+            fillcolor=_hex_with_alpha(chart_color, 0.10),
             hovertemplate=hover_body,
         )
     fig = go.Figure(data=[trace])

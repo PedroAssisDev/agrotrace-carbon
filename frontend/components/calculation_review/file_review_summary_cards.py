@@ -12,12 +12,13 @@ from services.blockchain_view_service import blockchain_lock_message, is_blockch
 from services.calculation_review_service import build_file_summary, build_review_summary_cards
 
 
-def _mini_card(title: str, value: str | int, css: str = "") -> dbc.Col:
+def _mini_card(title: str, value: str | int, tone: str = "") -> dbc.Col:
+    extra = f" cr-summary-card--{tone}" if tone else ""
     return dbc.Col(
         dbc.Card(dbc.CardBody([
             html.H6(title, className="small text-muted mb-1"),
-            html.Div(str(value), className=f"cr-summary-value {css}"),
-        ]), className="agro-card cr-summary-card h-100"),
+            html.Div(str(value), className="cr-summary-value"),
+        ]), className=f"agro-card cr-summary-card h-100{extra}"),
         md=4, lg=2, className="mb-2",
     )
 
@@ -90,10 +91,10 @@ def CalculationReviewSummaryCards(cycle: dict) -> html.Div:
         html.H6("Resumo dos cálculos", className="card-title mb-3"),
         dbc.Row([
             _mini_card("Total", s["total"]),
-            _mini_card("Aprovados", s["approved"], "text-success"),
-            _mini_card("Pendentes", s["pending"], "text-warning"),
+            _mini_card("Aprovados", s["approved"], "success"),
+            _mini_card("Pendentes", s["pending"], "warning"),
             _mini_card("Com zero", s["with_zero"]),
             _mini_card("Ajustes", s["manual_adjustments"]),
-            _mini_card("Rejeitados", s["rejected"], "text-danger"),
+            _mini_card("Rejeitados", s["rejected"], "danger"),
         ], className="g-2"),
     ], className="cr-calc-summary mb-3")

@@ -39,15 +39,15 @@ _TABLE_STYLE = {
 _NUMERIC_COLUMNS = {"co2e_kg", "Valor", "valor", "total", "intensity"}
 
 _SEVERITY_STYLES = [
-    {"if": {"filter_query": "{Severidade} = critical"}, "backgroundColor": COLORS["status_danger_bg"], "color": COLORS["status_danger"]},
-    {"if": {"filter_query": "{Severidade} = warning"}, "backgroundColor": COLORS["status_warning_bg"], "color": COLORS["status_warning"]},
-    {"if": {"filter_query": "{Severidade} = success"}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["status_success"]},
-    {"if": {"filter_query": "{Severidade} = info"}, "backgroundColor": COLORS["status_info_bg"], "color": COLORS["status_info"]},
+    {"if": {"filter_query": "{Severidade} = critical"}, "backgroundColor": COLORS["status_danger_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_danger_accent']}"},
+    {"if": {"filter_query": "{Severidade} = warning"}, "backgroundColor": COLORS["status_warning_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_warning_accent']}"},
+    {"if": {"filter_query": "{Severidade} = success"}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_success_accent']}"},
+    {"if": {"filter_query": "{Severidade} = info"}, "backgroundColor": COLORS["status_info_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_info_accent']}"},
 ]
 
 _INTEGRITY_STYLES = [
-    {"if": {"filter_query": '{status} = "divergente"'}, "backgroundColor": COLORS["status_danger_bg"], "color": COLORS["status_danger"]},
-    {"if": {"filter_query": '{status} = "integro"'}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["status_success"]},
+    {"if": {"filter_query": '{status} = "divergente"'}, "backgroundColor": COLORS["status_danger_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_danger_accent']}"},
+    {"if": {"filter_query": '{status} = "integro"'}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_success_accent']}"},
 ]
 
 
