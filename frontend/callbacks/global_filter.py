@@ -182,7 +182,11 @@ def sync_global_filter(
 
     trigger = ctx.triggered_id
     if trigger == "gf-property-dropdown":
-        raw["farm_id"] = farm_id if isinstance(farm_id, str) and farm_id.strip() else None
+        new_farm = farm_id if isinstance(farm_id, str) and farm_id.strip() else None
+        # Remount/espelho do store: farm igual → não limpar períodos nem reescrever stores.
+        if new_farm == prev.get("farm_id"):
+            return (no_update,) * 18
+        raw["farm_id"] = new_farm
         raw["analysis_period_start"] = None
         raw["analysis_period_end"] = None
     elif trigger == "gf-analysis-start":
@@ -203,6 +207,8 @@ def sync_global_filter(
             raw["data_mode"] = data_mode
 
     normalized = normalize_filter_state(raw, all_cycles, context_cycle_id=context_cycle_id)
+    if _filter_state_equal(normalized, prev) and trigger != "gf-property-dropdown":
+        return (no_update,) * 18
     options = refresh_filter_options(normalized)
     log_filter_summary(f"[FILTER] sync trigger={trigger}", normalized)
     return _build_sync_response(normalized, options)
@@ -244,9 +250,42 @@ def clear_global_filter(n):
     State("context-cycle-id", "data"),
     State("cycle-store", "data"),
     State("filter-options-store", "data"),
+    State("gf-property-dropdown", "value"),
+    State("gf-analysis-start", "value"),
+    State("gf-analysis-end", "value"),
+    State("gf-view-granularity", "value"),
+    State("gf-data-mode", "value"),
+    State("gf-analysis-start", "options"),
+    State("gf-analysis-end", "options"),
+    State("gf-analysis-start-field", "style"),
+    State("gf-analysis-end-field", "style"),
+    State("gf-period-badge", "children"),
+    State("gf-granularity-badge", "children"),
+    State("gf-status-badge", "children"),
+    State("gf-aggregated-badge", "children"),
+    State("gf-aggregated-badge", "style"),
     prevent_initial_call=True,
 )
-def sync_controls_from_store(global_filter, context_cycle_id, cycle_data, filter_options):
+def sync_controls_from_store(
+    global_filter,
+    context_cycle_id,
+    cycle_data,
+    filter_options,
+    cur_farm,
+    cur_ap_start,
+    cur_ap_end,
+    cur_granularity,
+    cur_mode,
+    cur_ap_opts,
+    cur_ap_opts_end,
+    cur_ap_start_style,
+    cur_ap_end_style,
+    cur_badge_period,
+    cur_badge_granularity,
+    cur_badge_status,
+    cur_badge_agg,
+    cur_badge_agg_style,
+):
     """Mantém controles UI alinhados quando o store muda por outro callback."""
     all_cycles = list_cycles()
     normalized = normalize_filter_state(global_filter, all_cycles, context_cycle_id=context_cycle_id)
@@ -258,23 +297,27 @@ def sync_controls_from_store(global_filter, context_cycle_id, cycle_data, filter
     new_ctx = normalized.get("cycle_id")
     ctx_out = no_update if new_ctx == context_cycle_id else new_ctx
     cycle_out = no_update if _cycle_store_same(active, cycle_data) else active
+
+    def _same(a, b):
+        return no_update if a == b else a
+
     return (
         ctx_out,
         cycle_out,
-        normalized.get("farm_id"),
-        ap_start,
-        ap_end,
-        normalized.get("view_granularity"),
-        normalized.get("data_mode"),
-        ap_opts,
-        ap_opts_end,
-        ap_start_style,
-        ap_end_style,
-        badges[0],
-        badges[1],
-        badges[2],
-        badges[3],
-        badges[4],
+        _same(normalized.get("farm_id"), cur_farm),
+        _same(ap_start, cur_ap_start),
+        _same(ap_end, cur_ap_end),
+        _same(normalized.get("view_granularity"), cur_granularity),
+        _same(normalized.get("data_mode"), cur_mode),
+        _same(ap_opts, cur_ap_opts),
+        _same(ap_opts_end, cur_ap_opts_end),
+        _same(ap_start_style, cur_ap_start_style),
+        _same(ap_end_style, cur_ap_end_style),
+        _same(badges[0], cur_badge_period),
+        _same(badges[1], cur_badge_granularity),
+        _same(badges[2], cur_badge_status),
+        _same(badges[3], cur_badge_agg),
+        _same(badges[4], cur_badge_agg_style),
     )
 
 

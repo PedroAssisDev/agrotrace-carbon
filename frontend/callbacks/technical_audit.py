@@ -52,23 +52,38 @@ def _load_events(ctx):
 @callback(
     Output("ta-page-header", "children"),
     Output("ta-empty-state", "children"),
-    Output("ta-cycle-select-row", "children"),
+    Output("filter-cycle-select", "options"),
+    Output("filter-cycle-select", "value"),
+    Output("filter-cycle-select", "style"),
     Input("global-filter-store", "data"),
     Input("cycle-store", "data"),
     Input("context-cycle-id", "data"),
     State("url", "pathname"),
     State("filter-options-store", "data"),
+    State("filter-cycle-select", "options", allow_optional=True),
+    State("filter-cycle-select", "value", allow_optional=True),
+    State("filter-cycle-select", "style", allow_optional=True),
     prevent_initial_call=False,
 )
 def refresh_technical_audit_chrome(
-    global_filter, cycle_data, context_cycle_id, pathname, filter_options,
+    global_filter,
+    cycle_data,
+    context_cycle_id,
+    pathname,
+    filter_options,
+    prev_options,
+    prev_value,
+    prev_style,
 ):
-    """Atualiza cabeçalho/seletor sem remontar abas (evita race no React)."""
+    """Atualiza cabeçalho e props do select estável (sem remount do Input)."""
     if (pathname or "/") != "/technical-audit":
-        return no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update
     ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
-    header, empty, cycle_row = _chrome_children(ctx_obj, filter_options)
-    return header, empty, cycle_row
+    header, empty, options, value, style = _chrome_children(ctx_obj, filter_options)
+    opts_out = no_update if options == (prev_options or []) else options
+    val_out = no_update if value == prev_value else value
+    style_out = no_update if style == (prev_style or {}) else style
+    return header, empty, opts_out, val_out, style_out
 
 
 @callback(

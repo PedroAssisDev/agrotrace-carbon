@@ -137,6 +137,17 @@ def register_raw(
     global_filter,
     filter_options,
 ):
+    triggered = ctx.triggered_id
+    # Ignora remount/aparecimento espúrio de upload-sample (ex.: Resumo remountado).
+    if triggered == "upload-sample":
+        if not sample:
+            return no_update, no_update, no_update, no_update
+    elif triggered == "upload-data":
+        if not contents:
+            return no_update, no_update, no_update, no_update
+    else:
+        return no_update, no_update, no_update, no_update
+
     if not contents and not sample:
         return no_update, no_update, no_update, no_update
     gf = normalize_global_filter(global_filter)
@@ -171,13 +182,13 @@ def register_raw(
         effective_period,
         layout_id,
         filename,
-        sample,
+        sample if triggered == "upload-sample" else None,
         gf.get("farm_id"),
     )
 
     try:
         with timed_op() as timer:
-            if contents and filename:
+            if triggered == "upload-data" and contents and filename:
                 _, content_string = contents.split(",", 1)
                 decoded = base64.b64decode(content_string)
                 raw_meta = save_uploaded_content(
@@ -186,7 +197,7 @@ def register_raw(
                     reporting_period=effective_period,
                     original_filename=filename,
                 )
-            elif sample:
+            elif triggered == "upload-sample" and sample:
                 src = SAMPLE_DATA_DIR / sample
                 raw_meta = save_raw_file(src, property_id=effective_id, reporting_period=effective_period)
             else:
