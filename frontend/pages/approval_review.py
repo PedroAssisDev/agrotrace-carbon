@@ -84,18 +84,20 @@ def layout(
     return html.Div(body + [
         ReviewToolbar(queue, selected),
         dbc.Row([
-            dbc.Col(dbc.Card(dbc.CardBody(
-                CalculationReviewTable(selected),
-            ), className="agro-card h-100"), md=5),
+            dbc.Col([
+                dbc.Card(dbc.CardBody(
+                    CalculationReviewTable(selected),
+                ), className="agro-card mb-3"),
+                FileApprovalFinalPanel(selected),
+            ], lg=5, md=12, className="cr-workbench-left"),
             dbc.Col(
                 html.Div(
                     id="cr-detail-panel",
                     children=CalculationItemReviewPanel(selected, default_item_id),
                     className="h-100",
                 ),
-                md=7,
+                lg=7, md=12,
             ),
-        ], className="g-3 mb-3 cr-workbench align-items-stretch"),
-        FileApprovalFinalPanel(selected),
+        ], className="g-3 mb-3 cr-workbench"),
         _audit_section(selected),
     ], className="page-approval page-content-inner")

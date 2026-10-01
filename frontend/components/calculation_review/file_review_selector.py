@@ -29,7 +29,6 @@ def FileReviewSelector(cycles: list[dict], selected_cycle_id: str | None = None)
             id="approval-cycle-select",
             options=options,
             value=selected,
-            size="sm",
-            className="form-select-narrow",
+            className="cr-file-select",
         ),
     ], className="cr-file-selector")

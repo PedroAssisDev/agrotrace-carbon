@@ -35,17 +35,12 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
             "resultado": r["resultado"],
             "unidade": r["unidade"],
             "co2e_kg": r["co2e_kg"],
-            "variaveis": r["variaveis"],
-            "zeros": r["zeros"],
             "status": _STATUS_LABELS.get(r["status"], r["status"]),
         })
 
     parts = [
         html.H6("Cálculos do arquivo", className="card-title mb-2"),
-        html.P(
-            "Selecione uma linha para revisar. Resultado = massa do gás; CO₂e = equivalente comparável.",
-            className="small text-aux mb-2",
-        ),
+        html.P("Selecione uma linha para revisar.", className="small text-aux mb-2"),
     ]
     if not table_rows:
         parts.append(html.P("Nenhum cálculo disponível para revisão.", className="text-muted small mb-2"))
@@ -58,8 +53,6 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                 {"name": "Resultado", "id": "resultado"},
                 {"name": "Unidade", "id": "unidade"},
                 {"name": "CO₂e (kg)", "id": "co2e_kg"},
-                {"name": "Vars", "id": "variaveis"},
-                {"name": "Zeros", "id": "zeros"},
                 {"name": "Status", "id": "status"},
             ],
             data=table_rows,
@@ -74,8 +67,8 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                 "textAlign": "left",
                 "whiteSpace": "normal",
                 "height": "auto",
-                "minWidth": "60px",
-                "maxWidth": "220px",
+                "minWidth": "64px",
+                "maxWidth": "240px",
             },
             style_header={
                 "fontWeight": "600",
@@ -94,21 +87,6 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                     "if": {"column_id": "co2e_kg"},
                     "textAlign": "right",
                     "fontVariantNumeric": "tabular-nums",
-                },
-                {
-                    "if": {"column_id": "variaveis"},
-                    "textAlign": "center",
-                },
-                {
-                    "if": {"column_id": "zeros"},
-                    "textAlign": "center",
-                },
-                {
-                    "if": {"filter_query": "{zeros} > 0", "column_id": "zeros"},
-                    "backgroundColor": COLORS["status_danger_bg"],
-                    "color": COLORS["text"],
-                    "fontWeight": "600",
-                    "borderLeft": f"3px solid {COLORS['status_danger_accent']}",
                 },
             ],
             css=[{

@@ -155,7 +155,8 @@ def _save_and_return(cycle: dict) -> dict:
     prevent_initial_call=True,
 )
 def item_decision_cb(n_ok, n_zero, n_reject, n_corr, item_id, reviewer, justification, cycle_data, global_filter, context_cycle_id, approval_cycle_id):
-    if not item_id or not any((n_ok, n_zero, n_reject, n_corr)):
+    # n_zero mantido por Input oculto legado — decisões de aprovação usam só cr-btn-approve-item
+    if not item_id or not any((n_ok, n_reject, n_corr)):
         return no_update, no_update
 
     cycle = _working_cycle(cycle_data, global_filter, context_cycle_id, approval_cycle_id)
@@ -165,11 +166,26 @@ def item_decision_cb(n_ok, n_zero, n_reject, n_corr, item_id, reviewer, justific
     triggered = ctx.triggered_id
     try:
         if triggered == "cr-btn-approve-item":
-            cycle = approve_item(cycle, item_id, reviewer=reviewer or "Revisor", justification=justification or "")
-            msg = "Item aprovado."
-        elif triggered == "cr-btn-approve-zero":
-            cycle = approve_with_zero(cycle, item_id, reviewer=reviewer or "Revisor", justification=justification or "")
-            msg = "Item aprovado com zero confirmado."
+            item = get_review_item(cycle, item_id)
+            zeros = (item or {}).get("zero_assumptions") or []
+            needs_zero = (
+                (item or {}).get("status") in ("COM_ZERO_ASSUMIDO", "AWAITING_REVIEW")
+                and any(not z.get("confirmed") for z in zeros)
+            )
+            if needs_zero:
+                cycle = approve_with_zero(
+                    cycle, item_id,
+                    reviewer=reviewer or "Revisor",
+                    justification=justification or "",
+                )
+                msg = "Item aprovado (zeros confirmados)."
+            else:
+                cycle = approve_item(
+                    cycle, item_id,
+                    reviewer=reviewer or "Revisor",
+                    justification=justification or "",
+                )
+                msg = "Item aprovado."
         elif triggered == "cr-btn-reject-item":
             cycle = reject_item(cycle, item_id, reviewer=reviewer or "Revisor", justification=justification or "")
             msg = "Item rejeitado."

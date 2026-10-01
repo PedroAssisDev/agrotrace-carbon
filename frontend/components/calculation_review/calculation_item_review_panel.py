@@ -29,7 +29,7 @@ def _result_block(item: dict) -> html.Div:
                 className="small text-aux",
             ),
             html.P(item.get("formula", "—"), className="small text-aux mb-0 mt-2 cr-detail-formula"),
-        ], className="cr-detail-result-block p-2 mb-2")
+        ], className="cr-detail-result-block mb-3")
 
     return html.Div([
         dbc.Row([
@@ -46,7 +46,7 @@ def _result_block(item: dict) -> html.Div:
             ], md=6),
         ], className="g-2 mb-1"),
         html.P(item.get("formula", "—"), className="small text-aux mb-0 cr-detail-formula"),
-    ], className="cr-detail-result-block p-2 mb-2")
+    ], className="cr-detail-result-block mb-3")
 
 
 def _input_variables_table(input_vars: list[dict]) -> html.Div:
@@ -91,7 +91,7 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
     header = html.Div([
         html.H6(item.get("formula_name", "Detalhe"), className="card-title mb-0"),
         StatusBadge(item.get("status", "AWAITING_REVIEW")),
-    ], className="d-flex justify-content-between align-items-center mb-2")
+    ], className="d-flex justify-content-between align-items-center mb-3")
 
     sections: list = [header, _result_block(item)]
 
@@ -102,17 +102,23 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
                 " · ",
                 html.Strong("Revisor: "), item.get("reviewed_by") or "—",
             ], className="text-aux"),
-        ], className="mb-2"))
+        ], className="mb-3"))
 
     if has_fallback:
         sections.append(dbc.Alert(
             "Algumas variáveis vieram do dado normalizado (fallback). Confirme antes de aprovar.",
             color="warning",
-            className="small py-2 mb-2",
+            className="small py-2 mb-3",
         ))
 
     sections.append(ZeroAssumptionAlert(item))
-    # Ações no topo — antes do conteúdo longo
+
+    # Fatores sempre aparentes
+    sections.append(html.Div(
+        CalculationFactorSelector(cycle, item),
+        className="cr-detail-section mb-3",
+    ))
+
     sections.append(CalculationApprovalActions(item, cycle))
 
     inputs_body: list = [_input_variables_table(input_vars)]
@@ -124,12 +130,9 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
             alt_names = ", ".join(a.get("ontology_var", a.get("variable", "")) for a in alts[:3]) or "nenhuma"
             alts_lines.append(html.Li(f"{ov} — alternativas: {alt_names}", className="small"))
         inputs_body.append(html.Div([
-            html.H6([
-                html.I(className="fas fa-exclamation-triangle me-1", **{"aria-hidden": "true"}),
-                "Variáveis ausentes",
-            ], className="small section-label mb-2 mt-2"),
+            html.P("Variáveis ausentes", className="small fw-semibold mb-1 mt-2"),
             html.Ul(alts_lines, className="mb-0 ps-3"),
-        ], className="cr-detail-section cr-detail-section--warning mt-2"))
+        ], className="cr-detail-section--warning mt-2"))
 
     n_inputs = len(input_vars)
     sections.append(dbc.Accordion([
@@ -137,11 +140,7 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
             html.Div(inputs_body),
             title=f"Entradas usadas ({n_inputs})",
         ),
-        dbc.AccordionItem(
-            CalculationFactorSelector(cycle, item),
-            title="Fatores / recálculo",
-        ),
-    ], start_collapsed=True, className="cr-detail-accordion mt-2"))
+    ], start_collapsed=True, className="cr-detail-accordion mt-3"))
 
     return dbc.Card(
         dbc.CardBody(sections, className="cr-detail-panel-body"),

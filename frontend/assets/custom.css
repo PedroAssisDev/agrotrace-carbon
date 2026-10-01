@@ -2116,6 +2116,10 @@
 }
 
 /* Revisão e Aprovação por cálculo */
+.page-approval.page-content-inner {
+    max-width: 1680px;
+}
+
 .page-approval .cr-header-badges {
     margin-bottom: 1rem;
 }
@@ -2130,7 +2134,7 @@
 }
 
 .page-approval .cr-emissions-total {
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -2143,10 +2147,10 @@
 }
 
 .page-approval .cr-stat-chip {
-    min-width: 4.5rem;
-    padding: 0.35rem 0.6rem;
+    min-width: 5.25rem;
+    padding: 0.5rem 0.75rem;
     border: 1px solid var(--color-border, #d8e0d8);
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--color-surface-muted, #f4f7f4);
     text-align: center;
 }
@@ -2161,7 +2165,7 @@
 
 .page-approval .cr-stat-chip-value {
     display: block;
-    font-size: 1.05rem;
+    font-size: 1.15rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -2184,6 +2188,12 @@
     border-radius: 8px;
 }
 
+.page-approval .cr-file-selector .form-select,
+.page-approval .cr-file-selector .form-select-narrow {
+    max-width: 100%;
+    width: 100%;
+}
+
 .page-approval .cr-file-selector-meta {
     justify-content: flex-end;
 }
@@ -2193,12 +2203,12 @@
 }
 
 .page-approval .cr-review-toolbar .card-body {
-    padding-top: 0.85rem;
-    padding-bottom: 0.85rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 .page-approval .cr-workbench {
-    min-height: 0;
+    align-items: stretch;
 }
 
 .page-approval .cr-workbench > [class*="col"] {
@@ -2206,9 +2216,20 @@
     flex-direction: column;
 }
 
-.page-approval .cr-workbench .agro-card {
+.page-approval .cr-workbench .agro-card,
+.page-approval #cr-detail-panel {
     flex: 1 1 auto;
-    min-height: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
+.page-approval .cr-workbench .agro-card > .card-body {
+    padding: 1rem 1.15rem;
+}
+
+.page-approval .cr-table-wrap {
+    display: flex;
+    flex-direction: column;
 }
 
 .page-approval .cr-review-table {
@@ -2225,28 +2246,46 @@
 }
 
 .page-approval .cr-detail-panel {
-    min-height: 320px;
-    max-height: min(70vh, 720px);
     display: flex;
     flex-direction: column;
+    min-height: 100%;
 }
 
 .page-approval .cr-detail-panel-body {
-    overflow-y: auto;
-    max-height: min(70vh, 720px);
+    padding: 1rem 1.15rem;
 }
 
 .page-approval .cr-detail-accordion {
     margin-bottom: 0;
 }
 
-.page-approval .cr-approval-actions {
-    margin-top: 0.25rem;
-    margin-bottom: 0.5rem;
-    padding: 0.5rem 0.65rem;
+.page-approval .cr-factor-selector {
+    margin-top: 0;
+    padding: 0.85rem 1rem;
     background: var(--color-surface-muted, #f4f7f4);
     border: 1px solid var(--color-border, #d8e0d8);
     border-radius: 8px;
+}
+
+.page-approval .cr-factor-selector .cr-factor-table {
+    background: #fff;
+}
+
+.page-approval .cr-approval-actions {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding: 0.75rem 0.9rem;
+    background: transparent;
+    border: 1px solid var(--color-border, #d8e0d8);
+    border-radius: 8px;
+}
+
+.page-approval .cr-approval-actions .btn {
+    min-width: 6.75rem;
+}
+
+.page-approval .cr-final-panel .card-body {
+    padding: 1rem 1.15rem;
 }
 
 .page-approval .cr-final-panel .cr-reviewer-fields {
@@ -2257,10 +2296,11 @@
     background: var(--color-surface-muted, #f4f7f4);
     border-radius: 8px;
     border: 1px solid var(--color-border, #d8e0d8);
+    padding: 0.75rem 0.9rem !important;
 }
 
 .page-approval .cr-detail-result {
-    font-size: 1.05rem;
+    font-size: 1.1rem;
 }
 
 .page-approval .cr-detail-formula {
