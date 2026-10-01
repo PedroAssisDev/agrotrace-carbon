@@ -14,6 +14,11 @@ from services.forecast_inference.errors import (
 )
 from services.forecast_inference.loader import ModelArtifactLoader
 from services.forecast_inference.period import next_period_label
+from services.forecast_inference.property_history import (
+    get_regression_scenario_defaults,
+    history_rows_for_property,
+    load_property_history_frame,
+)
 from services.forecast_inference.registry import ModelRegistryReader
 
 TARGETS = ("milk_production_liters", "total_ghg_emissions_tco2e")
@@ -39,8 +44,15 @@ class RegressionInferenceService:
         model_meta: dict[str, Any] = {}
         warnings: list[str] = []
         history_by_period: dict[str, dict[str, Any]] = {}
-        forecast_period = "Próximo período"
-        period_resolved = False
+
+        # Preferência: histórico da propriedade na fonte de treino (ciclos publicados).
+        property_defaults = get_regression_scenario_defaults(property_id, granularity)
+        property_frame = load_property_history_frame(property_id, granularity)
+        for row in history_rows_for_property(property_id, granularity):
+            history_by_period[str(row["period"])] = dict(row)
+
+        forecast_period = property_defaults.get("forecast_period") or "Próximo período"
+        period_resolved = bool(property_defaults.get("last_period"))
 
         for target in TARGETS:
             try:
@@ -66,7 +78,8 @@ class RegressionInferenceService:
                     },
                     "created_at": artifact.metadata.get("created_at"),
                 }
-                if artifact.history is not None:
+                # Fallback: histórico embutido no artefato se a fonte de ciclos estiver vazia.
+                if not history_by_period and artifact.history is not None:
                     for row in _history_for_property(artifact.history, property_id, target):
                         key = str(row["period"])
                         bucket = history_by_period.setdefault(
@@ -79,14 +92,14 @@ class RegressionInferenceService:
                         if row.get("lactating_cows") is not None:
                             bucket["lactating_cows"] = row.get("lactating_cows")
                         bucket[target] = row.get(target)
-                    if not period_resolved:
-                        forecast_period = next_period_label(
-                            granularity=granularity,
-                            history=artifact.history,
-                            property_id=property_id,
-                            manifest=artifact.manifest,
-                        )
-                        period_resolved = True
+                if not period_resolved:
+                    forecast_period = next_period_label(
+                        granularity=granularity,
+                        history=property_frame if not property_frame.empty else artifact.history,
+                        property_id=property_id,
+                        manifest=artifact.manifest,
+                    )
+                    period_resolved = True
             except (ModelNotFoundError, OutOfDomainPredictionError) as exc:
                 predictions[target] = None
                 warnings.append(f"{target}: {exc}")
@@ -111,6 +124,8 @@ class RegressionInferenceService:
             "property_id": property_id,
             "granularity": granularity,
             "forecast_period": forecast_period,
+            "last_period_label": property_defaults.get("last_period_label"),
+            "last_lactating_cows": property_defaults.get("last_lactating_cows"),
             "expected_lactating_cows": cows,
             "predicted_milk_production_liters": milk,
             "predicted_total_ghg_emissions_tco2e": emissions,

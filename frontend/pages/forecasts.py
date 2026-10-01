@@ -111,10 +111,11 @@ def _regression_panel(report: dict) -> html.Div:
         [
             SectionHeader(
                 "Cenario por rebanho",
-                "Informe a quantidade esperada de vacas em lactacao. O modelo global "
-                "estima producao e emissoes para o proximo periodo (mes ou ano).",
+                "Usa as vacas do ultimo periodo observado e estima producao e emissoes "
+                "para o periodo seguinte (mes ou ano).",
             ),
             html.Div(id="fc-regression-cta", children=infer_cta_for_family(report, "regression")),
+            html.Small(id="fc-regression-last-hint", className="text-aux d-block mb-2"),
             dbc.Row(
                 [
                     dbc.Col(
@@ -137,7 +138,7 @@ def _regression_panel(report: dict) -> html.Div:
                         [
                             html.Label(
                                 id="fc-cows-label",
-                                children="Vacas em lactacao esperadas (proximo mes)",
+                                children="Vacas em lactacao esperadas (periodo seguinte)",
                                 className="form-label small mb-1",
                             ),
                             dbc.Input(
@@ -161,7 +162,7 @@ def _regression_panel(report: dict) -> html.Div:
                                 color="success",
                                 className="w-100",
                                 disabled=run_disabled,
-                                title=disabled_reason or "Calcula o proximo periodo",
+                                title=disabled_reason or "Calcula o periodo seguinte ao ultimo registro",
                             ),
                         ],
                         md=3,
@@ -173,13 +174,14 @@ def _regression_panel(report: dict) -> html.Div:
             if disabled_reason
             else html.Div(id="fc-regression-disabled-hint"),
             html.Div(id="fc-regression-feedback"),
-            html.Div(id="fc-regression-kpis"),
             html.Div(
                 id="fc-regression-charts",
                 children=idle_charts_placeholder(
-                    "Informe as vacas e clique em Calcular previsao para ver o grafico."
+                    "As vacas do ultimo periodo sao preenchidas automaticamente. "
+                    "Clique em Calcular previsao para ver o grafico."
                 ),
             ),
+            html.Div(id="fc-regression-kpis"),
             html.Div(id="fc-regression-details"),
         ],
         className="pt-3",

@@ -53,18 +53,26 @@ def build_regression_kpis(result: dict[str, Any] | None) -> html.Div:
     milk = result.get("predicted_milk_production_liters")
     emissions = result.get("predicted_total_ghg_emissions_tco2e")
     intensity = result.get("derived_intensity_tco2e_per_liter")
+    last_cows = result.get("last_lactating_cows")
+    last_period = result.get("last_period_label")
+    cows_subtitle = f"{result.get('expected_lactating_cows', '—')} vacas no período previsto"
+    if last_cows is not None and last_period:
+        cows_subtitle = (
+            f"{result.get('expected_lactating_cows', '—')} vacas "
+            f"(último registro {last_period}: {last_cows})"
+        )
     metrics = [
         {
             "title": "Produção de leite prevista",
             "value": format_liters(milk) if milk is not None else "—",
-            "subtitle": f"Período: {result.get('forecast_period', '—')}",
+            "subtitle": f"Período seguinte: {result.get('forecast_period', '—')}",
             "icon": "fas fa-tint",
             "color": "info",
         },
         {
             "title": "Emissões previstas",
-            "value": format_co2e_t(emissions) if emissions is not None else "—",
-            "subtitle": f"{result.get('expected_lactating_cows', '—')} vacas em lactação",
+            "value": format_co2e_t(emissions, decimals=3) if emissions is not None else "—",
+            "subtitle": cows_subtitle,
             "icon": "fas fa-cloud",
             "color": "warning",
         },
