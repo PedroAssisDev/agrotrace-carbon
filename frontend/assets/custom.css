@@ -2124,6 +2124,102 @@
     max-width: 640px;
 }
 
+/* Consultas de Proveniência */
+.page-technical-audit .prov-sql-workspace {
+    max-width: 1100px;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-query-header {
+    margin-bottom: 0.25rem;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-readonly-alert {
+    border-left: 3px solid var(--color-warning, #d97706);
+}
+
+.page-technical-audit .prov-sql-workspace .prov-workbench-card .card-header,
+.page-technical-audit .prov-sql-workspace .prov-results-card .card-header {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-query-editor {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    min-height: 220px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    background: var(--color-surface-muted, #f8fafc);
+    border-color: var(--color-border, #e5e7eb);
+}
+
+.page-technical-audit .prov-sql-workspace .prov-query-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-limit-input {
+    width: 88px;
+    display: inline-block;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-clipboard-btn {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-query-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-secondary-accordion .accordion-button {
+    font-size: 0.9rem;
+    color: var(--color-text-muted, #6b7280);
+    padding: 0.65rem 1rem;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-history-item {
+    white-space: normal;
+    word-break: break-word;
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+    padding-bottom: 0.35rem !important;
+    margin-bottom: 0.35rem !important;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-history-item:last-child {
+    border-bottom: none;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-filter-field .form-label {
+    display: block;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-schema-explorer {
+    margin-top: 0.25rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+.page-technical-audit .prov-sql-workspace .prov-schema-table-name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85rem;
+}
+
+.page-technical-audit .prov-sql-workspace .prov-schema-table-block {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px dashed var(--color-border, #e5e7eb);
+}
+
+.page-technical-audit .prov-sql-workspace .prov-schema-table-block:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
 /* Revisão e Aprovação por cálculo */
 .page-approval.page-content-inner {
     max-width: 1680px;

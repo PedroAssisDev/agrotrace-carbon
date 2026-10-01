@@ -234,16 +234,13 @@ def register_raw(
 @callback(
     Output("cycle-store", "data", allow_duplicate=True),
     Input("btn-verify-intact", "n_clicks", allow_optional=True),
-    Input("btn-verify-tamper", "n_clicks", allow_optional=True),
     State("verify-cycle-select", "value", allow_optional=True),
     State("cycle-store", "data"),
     prevent_initial_call=True,
 )
-def run_verify_cb(n_ok, n_bad, selected_cycle_id, cycle):
-    triggered = ctx.triggered_id
-    if not cycle or triggered not in {"btn-verify-intact", "btn-verify-tamper"}:
+def run_verify_cb(n_ok, selected_cycle_id, cycle):
+    if not cycle or not n_ok or ctx.triggered_id != "btn-verify-intact":
         return no_update
-    tamper = triggered == "btn-verify-tamper"
     cycle = ensure_full_cycle(cycle)
     if selected_cycle_id and selected_cycle_id != cycle.get("cycle_id"):
         loaded = get_cycle(selected_cycle_id)
@@ -259,7 +256,7 @@ def run_verify_cb(n_ok, n_bad, selected_cycle_id, cycle):
             return no_update
         cycle = local_orchestrator.run_evidence_step(cycle)
         cycle = local_orchestrator.run_anchoring_step(cycle)
-    result = strip_private_keys(local_orchestrator.run_verification_step(cycle, tamper=tamper))
+    result = strip_private_keys(local_orchestrator.run_verification_step(cycle, tamper=False))
     save_cycle(result)
     return cycle_store_summary(result)
 

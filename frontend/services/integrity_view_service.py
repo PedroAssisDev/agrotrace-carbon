@@ -51,12 +51,21 @@ def build_comparison_rows(integrity: dict) -> list[dict]:
 def build_integrity_summary(cycle: dict) -> dict[str, Any]:
     integrity = cycle.get("integrity") or {}
     evidence = cycle.get("evidence_package") or {}
+    rows = build_comparison_rows(integrity)
+    merkle_anchored = evidence.get("merkle_root") or integrity.get("merkle_root_anchored")
+    merkle_recomputed = integrity.get("merkle_root_recomputed")
+    if not merkle_recomputed:
+        for row in rows:
+            if str(row.get("artifact", "")).lower().startswith("merkle"):
+                merkle_recomputed = row.get("recalculated_hash")
+                merkle_anchored = merkle_anchored or row.get("anchored_hash")
+                break
     return {
         "package_id": evidence.get("evidence_package_id"),
-        "merkle_anchored": evidence.get("merkle_root") or integrity.get("merkle_root_anchored"),
-        "merkle_recomputed": integrity.get("merkle_root_recomputed"),
+        "merkle_anchored": merkle_anchored,
+        "merkle_recomputed": merkle_recomputed,
         "is_valid": integrity.get("is_valid"),
         "verified_at": integrity.get("verified_at"),
         "message": integrity_message(integrity),
-        "rows": build_comparison_rows(integrity),
+        "rows": rows,
     }

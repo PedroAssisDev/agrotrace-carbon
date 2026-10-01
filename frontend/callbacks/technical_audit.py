@@ -106,6 +106,68 @@ def update_integrity_panel(selected_cycle_id, cycle_data, global_filter, context
 
 
 @callback(
+    Output("ta-blockchain-panel", "children"),
+    Input("bc-cycle-select", "value"),
+    State("cycle-store", "data"),
+    State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    prevent_initial_call=True,
+)
+def update_blockchain_panel(selected_cycle_id, cycle_data, global_filter, context_cycle_id):
+    """Atualiza painel Blockchain ao trocar o ciclo/pacote no seletor da aba."""
+    from components.audit.audit_blockchain_gate import AuditBlockchainGate
+    from pages.technical_audit_sections import (
+        _cycles_for_evidence_scope,
+        _default_blockchain_cycle_id,
+    )
+    from services.blockchain_view_service import blockchain_lock_message, is_blockchain_unlocked
+    from utils.file_helpers import get_cycle
+
+    ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
+    cycle = ctx_obj.active_cycle
+    if not cycle.get("cycle_id"):
+        return no_update
+
+    scope = _cycles_for_evidence_scope(ctx_obj)
+    hydrated = []
+    for c in scope:
+        cid = c.get("cycle_id")
+        full = get_cycle(cid) if cid else None
+        hydrated.append(full or c)
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(hydrated)
+    if not pkg_options:
+        return html.Div(
+            "Nenhum pacote de evidências no escopo.",
+            className="empty-state",
+        )
+
+    sel = selected_cycle_id or _default_blockchain_cycle_id(cycle, hydrated, pkg_options)
+    display = get_cycle(sel) if sel else cycle
+    if not display:
+        display = cycle
+
+    unlocked = is_blockchain_unlocked(display)
+    approval = (display.get("approval") or {}).get("decision", "Pendente")
+    approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
+    pub_st = (display.get("steps") or {}).get("publication", {}).get("status", "PENDING")
+    pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
+    pkg_rows = blockchain_adapter.build_package_summary_rows(hydrated)
+
+    return AuditBlockchainGate(
+        display,
+        unlocked=unlocked,
+        lock_message=blockchain_lock_message(display) or "",
+        approval_status=approval_label,
+        publication_status=pub_label,
+        pkg_rows=pkg_rows if unlocked else [],
+        scoped_package_count=len(pkg_rows),
+        pkg_options=pkg_options,
+        selected_cycle_id=sel,
+    )
+
+
+@callback(
     Output("ta-prov-events-body", "children"),
     Input("ta-prov-phase", "value"),
     Input("ta-prov-service", "value"),

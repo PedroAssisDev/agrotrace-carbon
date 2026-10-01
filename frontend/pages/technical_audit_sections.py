@@ -257,30 +257,84 @@ def _default_verify_cycle_id(cycle: dict, pkg_options: list[dict]) -> str | None
     return pkg_options[0].get("value")
 
 
+def _is_sepolia_anchored(cycle: dict) -> bool:
+    anchoring = cycle.get("anchoring") or {}
+    evidence = cycle.get("evidence_package") or {}
+    network = anchoring.get("network") or evidence.get("network")
+    kind = anchoring.get("anchoring_kind") or ""
+    if network != "ethereum_sepolia" or kind == "SIMULADA":
+        return False
+    tx = str(anchoring.get("transaction_id") or evidence.get("transaction_id") or "")
+    return bool(anchoring.get("explorer_url")) or (tx.startswith("0x") and len(tx) >= 66)
+
+
+def _default_blockchain_cycle_id(cycle: dict, scope_cycles: list[dict], pkg_options: list[dict]) -> str | None:
+    """Ativo com pacote → Sepolia no escopo → primeiro com pacote."""
+    if not pkg_options:
+        return None
+    values = {opt.get("value") for opt in pkg_options}
+    active_id = cycle.get("cycle_id")
+    if active_id in values and (cycle.get("evidence_package") or {}).get("evidence_package_id"):
+        # Se o ativo só tem simulação, preferir Sepolia no escopo quando existir
+        if _is_sepolia_anchored(cycle):
+            return active_id
+        for c in scope_cycles:
+            cid = c.get("cycle_id")
+            if cid in values and _is_sepolia_anchored(c):
+                return cid
+        return active_id
+    for c in scope_cycles:
+        cid = c.get("cycle_id")
+        if cid in values and _is_sepolia_anchored(c):
+            return cid
+    return pkg_options[0].get("value")
+
+
 def build_blockchain_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
     if not cycle.get("cycle_id"):
         return _empty(ctx)
 
-    unlocked = is_blockchain_unlocked(cycle)
-    approval = (cycle.get("approval") or {}).get("decision", "Pendente")
-    approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
-    pub_st = (cycle.get("steps") or {}).get("publication", {}).get("status", "PENDING")
-    pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
     scope_cycles = _cycles_for_evidence_scope(ctx)
-    pkg_rows = blockchain_adapter.build_package_summary_rows(scope_cycles)
+    # Garante dados completos (ancoring/explorer) ao montar opções
+    from utils.file_helpers import get_cycle
+
+    hydrated: list[dict] = []
+    for c in scope_cycles:
+        cid = c.get("cycle_id")
+        full = get_cycle(cid) if cid else None
+        hydrated.append(full or c)
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(hydrated)
+    selected_id = _default_blockchain_cycle_id(cycle, hydrated, pkg_options)
+    display = cycle
+    if selected_id and selected_id != cycle.get("cycle_id"):
+        loaded = get_cycle(selected_id)
+        if loaded:
+            display = loaded
+
+    unlocked = is_blockchain_unlocked(display)
+    approval = (display.get("approval") or {}).get("decision", "Pendente")
+    approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
+    pub_st = (display.get("steps") or {}).get("publication", {}).get("status", "PENDING")
+    pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
+    pkg_rows = blockchain_adapter.build_package_summary_rows(hydrated)
+
+    panel = AuditBlockchainGate(
+        display,
+        unlocked=unlocked,
+        lock_message=blockchain_lock_message(display) or "",
+        approval_status=approval_label,
+        publication_status=pub_label,
+        pkg_rows=pkg_rows if unlocked else [],
+        scoped_package_count=len(pkg_rows),
+        pkg_options=pkg_options,
+        selected_cycle_id=selected_id,
+    )
 
     return html.Div([
         *_cycle_header(ctx),
-        AuditBlockchainGate(
-            cycle,
-            unlocked=unlocked,
-            lock_message=blockchain_lock_message(cycle) or "",
-            approval_status=approval_label,
-            publication_status=pub_label,
-            pkg_rows=pkg_rows if unlocked else [],
-            scoped_package_count=len(pkg_rows),
-        ),
+        html.Div(id="ta-blockchain-panel", children=panel),
     ])
 
 
