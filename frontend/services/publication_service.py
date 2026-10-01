@@ -363,6 +363,13 @@ def publish_approved_cycle(cycle: dict) -> dict[str, Any]:
             publication_hash=truncate(out.get("publication_hash")),
             duration_ms=timer.duration_ms,
         )
+    # Best-effort: mantém a fonte de treino alinhada aos ciclos publicados.
+    try:
+        from services.model_training_adapter import refresh_training_source
+
+        refresh_training_source(force=True)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("[PUB] refresh training source failed: %s", exc)
     return out
 
 

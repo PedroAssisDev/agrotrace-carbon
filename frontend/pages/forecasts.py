@@ -10,6 +10,7 @@ from components.cards import AlertBox, SectionHeader
 from components.empty_state import EmptyFilterState
 from components.page_header import PageHeader
 from services import model_training_adapter as mta
+from services.forecast_view_service import idle_charts_placeholder
 from services.model_training_view_service import (
     build_action_bar,
     build_custom_panel,
@@ -18,6 +19,7 @@ from services.model_training_view_service import (
     build_models_header,
     build_retrain_modal,
     build_run_panel,
+    family_run_disabled_reason,
     infer_cta_for_family,
 )
 from services.page_context import resolve_page_context
@@ -102,9 +104,8 @@ def _models_panel(report, property_label, farm_id, history, current_run) -> html
 
 
 def _regression_panel(report: dict) -> html.Div:
-    models = [m for m in (report.get("models") or []) if m.get("family") == "regression"]
-    has_any = any(m.get("status") in {"available", "stale"} for m in models)
-    training = any(m.get("status") == "training" for m in models)
+    disabled_reason = family_run_disabled_reason(report, "regression")
+    run_disabled = bool(disabled_reason)
 
     return html.Div(
         [
@@ -146,7 +147,7 @@ def _regression_panel(report: dict) -> html.Div:
                                 step=1,
                                 placeholder="Ex.: 120",
                                 className="mb-2",
-                                disabled=training,
+                                disabled=run_disabled,
                             ),
                         ],
                         md=4,
@@ -159,7 +160,8 @@ def _regression_panel(report: dict) -> html.Div:
                                 id="fc-regression-run",
                                 color="success",
                                 className="w-100",
-                                disabled=not has_any or training,
+                                disabled=run_disabled,
+                                title=disabled_reason or "Calcula o proximo periodo",
                             ),
                         ],
                         md=3,
@@ -167,9 +169,17 @@ def _regression_panel(report: dict) -> html.Div:
                 ],
                 className="g-2 align-items-end mb-3",
             ),
+            html.Small(disabled_reason, id="fc-regression-disabled-hint", className="text-aux d-block mb-2")
+            if disabled_reason
+            else html.Div(id="fc-regression-disabled-hint"),
             html.Div(id="fc-regression-feedback"),
             html.Div(id="fc-regression-kpis"),
-            html.Div(id="fc-regression-charts"),
+            html.Div(
+                id="fc-regression-charts",
+                children=idle_charts_placeholder(
+                    "Informe as vacas e clique em Calcular previsao para ver o grafico."
+                ),
+            ),
             html.Div(id="fc-regression-details"),
         ],
         className="pt-3",
@@ -177,15 +187,15 @@ def _regression_panel(report: dict) -> html.Div:
 
 
 def _timeseries_panel(report: dict) -> html.Div:
-    models = [m for m in (report.get("models") or []) if m.get("family") == "time_series"]
-    has_any = any(m.get("status") in {"available", "stale"} for m in models)
-    training = any(m.get("status") == "training" for m in models)
+    disabled_reason = family_run_disabled_reason(report, "time_series")
+    run_disabled = bool(disabled_reason)
     summary = report.get("data_summary") or {}
 
     notice_extra = html.Small(
         f"Registros mensais da propriedade: {summary.get('property_monthly_records', 0)} "
-        f"(minimo {summary.get('min_ts_records', 12)}).",
+        f"(minimo {summary.get('min_ts_records', 12)} contiguos).",
         className="text-aux d-block mb-2",
+        id="fc-timeseries-records-hint",
     )
 
     return html.Div(
@@ -201,12 +211,21 @@ def _timeseries_panel(report: dict) -> html.Div:
                 "Gerar projecao",
                 id="fc-timeseries-run",
                 color="success",
-                className="mb-3",
-                disabled=not has_any or training,
+                className="mb-2",
+                disabled=run_disabled,
+                title=disabled_reason or "Gera projecao dos proximos 3 meses",
             ),
+            html.Small(disabled_reason, id="fc-timeseries-disabled-hint", className="text-aux d-block mb-3")
+            if disabled_reason
+            else html.Div(id="fc-timeseries-disabled-hint", className="mb-3"),
             html.Div(id="fc-timeseries-feedback"),
             html.Div(id="fc-timeseries-table"),
-            html.Div(id="fc-timeseries-charts"),
+            html.Div(
+                id="fc-timeseries-charts",
+                children=idle_charts_placeholder(
+                    "Clique em Gerar projecao para ver historico e os proximos 3 meses."
+                ),
+            ),
             html.Div(id="fc-timeseries-details"),
         ],
         className="pt-3",

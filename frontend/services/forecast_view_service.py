@@ -191,9 +191,9 @@ def build_timeseries_table(result: dict[str, Any] | None) -> html.Div:
         rows.append(
             html.Tr(
                 [
-                    html.Td(period),
+                    html.Td(_period_display(period)),
                     html.Td(format_liters(m) if m is not None else "—"),
-                    html.Td(format_co2e_t(e) if e is not None else "—"),
+                    html.Td(format_co2e_t(e, decimals=3) if e is not None else "—"),
                 ]
             )
         )
@@ -250,21 +250,49 @@ def empty_result_message(message: str) -> html.Div:
     return AlertBox(message, variant="info", className="small")
 
 
-def _period_display(iso_or_label: str) -> str:
-    text = str(iso_or_label)
-    if "T" in text or len(text) >= 10 and text[4] == "-":
-        try:
-            import pandas as pd
+def idle_charts_placeholder(message: str) -> html.Div:
+    return AlertBox(message, variant="secondary", className="small")
 
-            ts = pd.Timestamp(text)
-            months = (
-                "jan", "fev", "mar", "abr", "mai", "jun",
-                "jul", "ago", "set", "out", "nov", "dez",
-            )
-            return f"{months[ts.month - 1]}/{ts.year}"
-        except Exception:
-            return text[:10]
-    return text
+
+_MONTH_ABBR = (
+    "jan", "fev", "mar", "abr", "mai", "jun",
+    "jul", "ago", "set", "out", "nov", "dez",
+)
+_MONTH_LOOKUP = {name: idx + 1 for idx, name in enumerate(_MONTH_ABBR)}
+
+
+def _period_to_timestamp(value: Any):
+    """Converte período ISO ou rótulo pt (jan/2023) em Timestamp mensal."""
+    import pandas as pd
+
+    if value is None or value == "":
+        return None
+    if isinstance(value, pd.Timestamp):
+        ts = value
+    else:
+        text = str(value).strip()
+        # rótulo pt: jan/2023
+        if "/" in text and not text[0].isdigit():
+            parts = text.split("/")
+            if len(parts) == 2:
+                month = _MONTH_LOOKUP.get(parts[0].lower())
+                try:
+                    year = int(parts[1])
+                except ValueError:
+                    month = None
+                if month:
+                    return pd.Timestamp(year=year, month=month, day=1)
+        ts = pd.to_datetime(text, errors="coerce")
+    if ts is None or pd.isna(ts):
+        return None
+    return pd.Timestamp(ts).to_period("M").to_timestamp()
+
+
+def _period_display(iso_or_label: str) -> str:
+    ts = _period_to_timestamp(iso_or_label)
+    if ts is None:
+        return str(iso_or_label) if iso_or_label is not None else ""
+    return f"{_MONTH_ABBR[ts.month - 1]}/{ts.year}"
 
 
 def _empty_figure(title: str) -> go.Figure:
@@ -282,6 +310,21 @@ def _empty_figure(title: str) -> go.Figure:
     return fig
 
 
+def _apply_period_xaxis(fig: go.Figure, timestamps: list) -> None:
+    """Eixo temporal cronológico com rótulos pt (jan/2022)."""
+    ordered = sorted({ts for ts in timestamps if ts is not None})
+    if not ordered:
+        return
+    ticktext = [_period_display(ts) for ts in ordered]
+    fig.update_xaxes(
+        type="date",
+        tickmode="array",
+        tickvals=ordered,
+        ticktext=ticktext,
+        tickangle=-35,
+    )
+
+
 def _observed_plus_forecast_figure(
     *,
     title: str,
@@ -291,35 +334,58 @@ def _observed_plus_forecast_figure(
     forecast_value: float | None,
     yaxis_title: str,
 ) -> go.Figure:
-    labels = [_period_display(row.get("period", "")) for row in history]
+    hist_x = [_period_to_timestamp(row.get("period")) for row in history]
     values = [row.get(value_key) for row in history]
     has_hist = any(v is not None for v in values)
     if not has_hist and forecast_value is None:
         return _empty_figure(title)
 
     fig = go.Figure()
+    axis_ts: list = []
     if has_hist:
-        fig.add_trace(
-            go.Scatter(
-                x=labels,
-                y=values,
-                mode="lines+markers",
-                name="Observado",
-                line=dict(color=COLORS["primary"], width=2.5),
-                marker=dict(size=7),
+        pairs = [(x, y) for x, y in zip(hist_x, values) if x is not None]
+        if pairs:
+            xs, ys = zip(*pairs)
+            axis_ts.extend(xs)
+            fig.add_trace(
+                go.Scatter(
+                    x=list(xs),
+                    y=list(ys),
+                    mode="lines+markers",
+                    name="Observado",
+                    line=dict(color=COLORS["primary"], width=2.5),
+                    marker=dict(size=7),
+                    hovertemplate="%{customdata}<br>%{y}<extra>Observado</extra>",
+                    customdata=[_period_display(x) for x in xs],
+                )
             )
-        )
     if forecast_value is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=[forecast_label],
-                y=[forecast_value],
-                mode="markers",
-                name="Previsto",
-                marker=dict(color=COLORS.get("warning", "#D97706"), size=12, symbol="diamond"),
+        fc_ts = _period_to_timestamp(forecast_label)
+        if fc_ts is not None:
+            axis_ts.append(fc_ts)
+            fig.add_trace(
+                go.Scatter(
+                    x=[fc_ts],
+                    y=[forecast_value],
+                    mode="markers",
+                    name="Previsto",
+                    marker=dict(color=COLORS.get("warning", "#D97706"), size=12, symbol="diamond"),
+                    hovertemplate="%{customdata}<br>%{y}<extra>Previsto</extra>",
+                    customdata=[_period_display(fc_ts)],
+                )
             )
+    if not has_hist and forecast_value is not None:
+        fig.add_annotation(
+            text="Sem histórico observado desta propriedade na fonte de treino",
+            xref="paper",
+            yref="paper",
+            x=0.5,
+            y=0.08,
+            showarrow=False,
+            font=dict(color=COLORS.get("text_muted", COLORS["text"]), size=12),
         )
     apply_chart_theme(fig, title=title, yaxis_title=yaxis_title, hovermode="x unified")
+    _apply_period_xaxis(fig, axis_ts)
     fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
     return fig
 
@@ -333,7 +399,7 @@ def _history_plus_projection_figure(
     forecast_values: list[float] | None,
     yaxis_title: str,
 ) -> go.Figure:
-    hist_labels = [_period_display(row.get("period", "")) for row in history]
+    hist_x = [_period_to_timestamp(row.get("period")) for row in history]
     hist_values = [row.get(value_key) for row in history]
     has_hist = any(v is not None for v in hist_values)
     has_fc = bool(forecast_values) and any(v is not None for v in (forecast_values or []))
@@ -341,24 +407,39 @@ def _history_plus_projection_figure(
         return _empty_figure(title)
 
     fig = go.Figure()
+    axis_ts: list = []
+    last_hist_x = None
+    last_hist_y = None
     if has_hist:
-        fig.add_trace(
-            go.Scatter(
-                x=hist_labels,
-                y=hist_values,
-                mode="lines+markers",
-                name="Histórico",
-                line=dict(color=COLORS["primary"], width=2.5),
-                marker=dict(size=7),
+        pairs = [(x, y) for x, y in zip(hist_x, hist_values) if x is not None]
+        if pairs:
+            xs, ys = zip(*pairs)
+            axis_ts.extend(xs)
+            last_hist_x, last_hist_y = xs[-1], ys[-1]
+            fig.add_trace(
+                go.Scatter(
+                    x=list(xs),
+                    y=list(ys),
+                    mode="lines+markers",
+                    name="Histórico",
+                    line=dict(color=COLORS["primary"], width=2.5),
+                    marker=dict(size=7),
+                    hovertemplate="%{customdata}<br>%{y}<extra>Histórico</extra>",
+                    customdata=[_period_display(x) for x in xs],
+                )
             )
-        )
     if has_fc:
-        # Liga o último ponto histórico ao primeiro da projeção quando possível.
-        bridge_x = list(forecast_labels)
-        bridge_y = list(forecast_values or [])
-        if has_hist and hist_labels and hist_values and hist_values[-1] is not None:
-            bridge_x = [hist_labels[-1], *bridge_x]
-            bridge_y = [hist_values[-1], *bridge_y]
+        fc_pairs = [
+            (_period_to_timestamp(label), value)
+            for label, value in zip(forecast_labels, forecast_values or [])
+            if _period_to_timestamp(label) is not None and value is not None
+        ]
+        bridge_x = [x for x, _ in fc_pairs]
+        bridge_y = [y for _, y in fc_pairs]
+        if last_hist_x is not None and last_hist_y is not None and bridge_x:
+            bridge_x = [last_hist_x, *bridge_x]
+            bridge_y = [last_hist_y, *bridge_y]
+        axis_ts.extend(bridge_x)
         fig.add_trace(
             go.Scatter(
                 x=bridge_x,
@@ -367,8 +448,11 @@ def _history_plus_projection_figure(
                 name="Projeção",
                 line=dict(color=COLORS.get("warning", "#D97706"), width=2.5, dash="dash"),
                 marker=dict(size=8, symbol="diamond"),
+                hovertemplate="%{customdata}<br>%{y}<extra>Projeção</extra>",
+                customdata=[_period_display(x) for x in bridge_x],
             )
         )
     apply_chart_theme(fig, title=title, yaxis_title=yaxis_title, hovermode="x unified")
+    _apply_period_xaxis(fig, axis_ts)
     fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
     return fig

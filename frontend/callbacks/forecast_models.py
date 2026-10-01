@@ -17,6 +17,7 @@ from services.model_training_view_service import (
     build_model_cards,
     build_models_header,
     build_run_panel,
+    family_run_disabled_reason,
     infer_cta_for_family,
 )
 from utils.global_filter import get_farm_id
@@ -67,9 +68,17 @@ def sync_model_stores(pathname, global_filter):
     Output("fc-history-wrap", "children"),
     Output("fc-regression-cta", "children"),
     Output("fc-timeseries-cta", "children"),
+    Output("fc-regression-run", "disabled"),
+    Output("fc-regression-run", "title"),
+    Output("fc-expected-cows", "disabled"),
+    Output("fc-regression-disabled-hint", "children"),
+    Output("fc-timeseries-run", "disabled"),
+    Output("fc-timeseries-run", "title"),
+    Output("fc-timeseries-disabled-hint", "children"),
+    Output("fc-timeseries-records-hint", "children"),
     Input("fc-tabs", "active_tab"),
     Input("fc-models-refresh", "data"),
-    State("model-availability-store", "data"),
+    Input("model-availability-store", "data"),
     State("training-history-store", "data"),
     State("global-filter-store", "data"),
     prevent_initial_call=False,
@@ -80,6 +89,13 @@ def render_models_ui(active_tab, refresh_tick, report, history, global_filter):
         raise PreventUpdate
     farm_id = get_farm_id(global_filter)
     label = (global_filter or {}).get("farm_name") or farm_id or "—"
+    summary = report.get("data_summary") or {}
+    reg_reason = family_run_disabled_reason(report, "regression")
+    ts_reason = family_run_disabled_reason(report, "time_series")
+    records_hint = (
+        f"Registros mensais da propriedade: {summary.get('property_monthly_records', 0)} "
+        f"(minimo {summary.get('min_ts_records', 12)} contiguos)."
+    )
     return (
         build_models_header(report, label),
         build_model_cards(report),
@@ -87,6 +103,14 @@ def render_models_ui(active_tab, refresh_tick, report, history, global_filter):
         build_history_table(history or []),
         infer_cta_for_family(report, "regression"),
         infer_cta_for_family(report, "time_series"),
+        bool(reg_reason),
+        reg_reason or "Calcula o proximo periodo",
+        bool(reg_reason),
+        reg_reason or "",
+        bool(ts_reason),
+        ts_reason or "Gera projecao dos proximos 3 meses",
+        ts_reason or "",
+        records_hint,
     )
 
 
@@ -95,10 +119,13 @@ def render_models_ui(active_tab, refresh_tick, report, history, global_filter):
     Output("fc-training-action-feedback", "children"),
     Output("fc-training-poll", "disabled"),
     Output("fc-retrain-modal", "is_open", allow_duplicate=True),
+    Output("model-availability-store", "data", allow_duplicate=True),
+    Output("fc-models-refresh", "data", allow_duplicate=True),
     Input("fc-ensure-missing", "n_clicks"),
     Input("fc-retrain-stale", "n_clicks"),
     Input("fc-retrain-confirm", "n_clicks"),
     Input("fc-run-custom", "n_clicks"),
+    Input("fc-refresh-training-source", "n_clicks"),
     State("global-filter-store", "data"),
     State("model-availability-store", "data"),
     State("fc-candidate-profile", "value"),
@@ -106,6 +133,7 @@ def render_models_ui(active_tab, refresh_tick, report, history, global_filter):
     State("fc-min-improvement", "value"),
     State("fc-activate-after", "value"),
     State("fc-slot-checklist", "value"),
+    State("fc-models-refresh", "data"),
     prevent_initial_call=True,
 )
 def start_training(
@@ -113,6 +141,7 @@ def start_training(
     n_stale,
     n_confirm,
     n_custom,
+    n_refresh_source,
     global_filter,
     availability,
     profile,
@@ -120,24 +149,53 @@ def start_training(
     min_imp,
     activate_values,
     selected_ids,
+    refresh_tick,
 ):
     farm_id = get_farm_id(global_filter)
     if not farm_id:
-        return no_update, AlertBox("Selecione uma fazenda.", variant="warning"), no_update, no_update
+        return (
+            no_update,
+            AlertBox("Selecione uma fazenda.", variant="warning"),
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+        )
 
     triggered = ctx.triggered_id
     kwargs = _safe_kwargs(profile, metric, min_imp, activate_values)
+    tick = int(refresh_tick or 0)
 
     try:
+        if triggered == "fc-refresh-training-source":
+            result = mta.refresh_training_source(force=True)
+            if not result.get("ok"):
+                return (
+                    no_update,
+                    AlertBox(result.get("error") or "Falha ao atualizar fonte.", variant="danger"),
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                )
+            report = mta.get_model_availability(farm_id)
+            msg = AlertBox(
+                f"Fonte atualizada: {result.get('row_count', 0)} registros, "
+                f"{len(result.get('properties') or [])} propriedades.",
+                variant="success",
+                className="small",
+            )
+            return no_update, msg, no_update, no_update, report, tick + 1
+
         if triggered == "fc-ensure-missing":
             run = mta.ensure_missing_models(farm_id, **kwargs)
             msg = AlertBox(f"Execucao iniciada: {run.get('run_id')}", variant="success", className="small")
-            return run, msg, False, no_update
+            return run, msg, False, no_update, no_update, no_update
 
         if triggered == "fc-retrain-stale":
             run = mta.retrain_stale_models(farm_id, **kwargs)
             msg = AlertBox(f"Atualizacao iniciada: {run.get('run_id')}", variant="success", className="small")
-            return run, msg, False, no_update
+            return run, msg, False, no_update, no_update, no_update
 
         if triggered == "fc-retrain-confirm":
             slots = []
@@ -153,20 +211,38 @@ def start_training(
                         }
                     )
             if not slots:
-                return no_update, AlertBox("Nenhum modelo elegivel para retreinar.", variant="info"), no_update, False
+                return (
+                    no_update,
+                    AlertBox("Nenhum modelo elegivel para retreinar.", variant="info"),
+                    no_update,
+                    False,
+                    no_update,
+                    no_update,
+                )
             run = mta.train_selected_models(farm_id, slots, **kwargs)
             msg = AlertBox(f"Retreinamento iniciado: {run.get('run_id')}", variant="success", className="small")
-            return run, msg, False, False
+            return run, msg, False, False, no_update, no_update
 
         if triggered == "fc-run-custom":
             slots = mta.resolve_slot_selection(farm_id, selected_ids or [])
             if not slots:
-                return no_update, AlertBox("Selecione ao menos um modelo elegivel.", variant="warning"), no_update, no_update
+                return (
+                    no_update,
+                    AlertBox("Selecione ao menos um modelo elegivel.", variant="warning"),
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                )
             run = mta.train_selected_models(farm_id, slots, **kwargs)
-            msg = AlertBox(f"Treinamento personalizado iniciado: {run.get('run_id')}", variant="success", className="small")
-            return run, msg, False, no_update
+            msg = AlertBox(
+                f"Treinamento personalizado iniciado: {run.get('run_id')}",
+                variant="success",
+                className="small",
+            )
+            return run, msg, False, no_update, no_update, no_update
     except Exception as exc:  # noqa: BLE001
-        return no_update, AlertBox(str(exc), variant="danger"), no_update, False
+        return no_update, AlertBox(str(exc), variant="danger"), no_update, False, no_update, no_update
 
     raise PreventUpdate
 
@@ -226,7 +302,7 @@ def toggle_custom_panel(n_clicks, style):
     Output("training-run-store", "data", allow_duplicate=True),
     Output("model-availability-store", "data", allow_duplicate=True),
     Output("training-history-store", "data", allow_duplicate=True),
-    Output("fc-models-refresh", "data"),
+    Output("fc-models-refresh", "data", allow_duplicate=True),
     Input("fc-training-poll", "n_intervals"),
     State("training-run-store", "data"),
     State("global-filter-store", "data"),
