@@ -27,11 +27,11 @@ def test_enteric_yearly_explicit_factors_parametrized():
     ch4_per_animal = {c: 10.0 for c in ANIMAL_CATEGORIES}
     heads = {c: 2.0 for c in ANIMAL_CATEGORIES}
     res = calculate_enteric_fermentation_ch4(
-        temporal_scope=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
         headcounts_by_category=heads,
         ch4_kg_per_animal_in_period=ch4_per_animal,
     )
-    assert res.temporal_scope is TemporalScope.YEARLY
+    assert res.temporal_scope is TemporalScope.ANNUAL
     assert res.unit == "kg CH4"
     assert res.value == pytest.approx(10.0 * 2.0 * len(ANIMAL_CATEGORIES))
 
@@ -53,7 +53,7 @@ def test_enteric_rejects_key_mismatch():
     factors = {"Dry_Cows": 1.0}
     with pytest.raises(CalculationError, match="Chaves inconsistentes"):
         calculate_enteric_fermentation_ch4(
-            temporal_scope=TemporalScope.YEARLY,
+            temporal_scope=TemporalScope.ANNUAL,
             headcounts_by_category=heads,
             ch4_kg_per_animal_in_period=factors,
         )
@@ -61,7 +61,7 @@ def test_enteric_rejects_key_mismatch():
 
 def test_manure_yearly_multiplies_by_days_explicit():
     res = calculate_manure_management_ch4(
-        temporal_scope=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
         headcounts_by_category=_uniform_heads(1.0),
         body_weight_kg_by_category=_uniform_weights(100.0),
         manure_kg_per_kg_body_weight_per_day=_uniform_manure_day(0.1),
@@ -70,7 +70,7 @@ def test_manure_yearly_multiplies_by_days_explicit():
     )
     expected = 5 * 1 * 100 * 0.1 * 0.2 * 365
     assert res.value == pytest.approx(expected)
-    assert res.temporal_scope is TemporalScope.YEARLY
+    assert res.temporal_scope is TemporalScope.ANNUAL
 
 
 def test_manure_monthly_uses_thirty_days():
@@ -101,7 +101,7 @@ def test_manure_temporal_inconsistency_days_too_large_for_monthly():
 def test_manure_temporal_inconsistency_days_too_small_for_yearly():
     with pytest.raises(TemporalInconsistencyError, match="days_in_period"):
         calculate_manure_management_ch4(
-            temporal_scope=TemporalScope.YEARLY,
+            temporal_scope=TemporalScope.ANNUAL,
             headcounts_by_category=_uniform_heads(1.0),
             body_weight_kg_by_category=_uniform_weights(100.0),
             manure_kg_per_kg_body_weight_per_day=_uniform_manure_day(0.1),

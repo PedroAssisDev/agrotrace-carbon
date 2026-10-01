@@ -52,23 +52,38 @@ def _load_events(ctx):
 @callback(
     Output("ta-page-header", "children"),
     Output("ta-empty-state", "children"),
-    Output("ta-cycle-select-row", "children"),
+    Output("filter-cycle-select", "options"),
+    Output("filter-cycle-select", "value"),
+    Output("filter-cycle-select", "style"),
     Input("global-filter-store", "data"),
     Input("cycle-store", "data"),
     Input("context-cycle-id", "data"),
     State("url", "pathname"),
     State("filter-options-store", "data"),
+    State("filter-cycle-select", "options", allow_optional=True),
+    State("filter-cycle-select", "value", allow_optional=True),
+    State("filter-cycle-select", "style", allow_optional=True),
     prevent_initial_call=False,
 )
 def refresh_technical_audit_chrome(
-    global_filter, cycle_data, context_cycle_id, pathname, filter_options,
+    global_filter,
+    cycle_data,
+    context_cycle_id,
+    pathname,
+    filter_options,
+    prev_options,
+    prev_value,
+    prev_style,
 ):
-    """Atualiza cabeçalho/seletor sem remontar abas (evita race no React)."""
+    """Atualiza cabeçalho e props do select estável (sem remount do Input)."""
     if (pathname or "/") != "/technical-audit":
-        return no_update, no_update, no_update
+        return no_update, no_update, no_update, no_update, no_update
     ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
-    header, empty, cycle_row = _chrome_children(ctx_obj, filter_options)
-    return header, empty, cycle_row
+    header, empty, options, value, style = _chrome_children(ctx_obj, filter_options)
+    opts_out = no_update if options == (prev_options or []) else options
+    val_out = no_update if value == prev_value else value
+    style_out = no_update if style == (prev_style or {}) else style
+    return header, empty, opts_out, val_out, style_out
 
 
 @callback(
@@ -86,14 +101,84 @@ def update_integrity_panel(selected_cycle_id, cycle_data, global_filter, context
     if not cycle.get("cycle_id"):
         return no_update
 
-    pkg_options = blockchain_adapter.build_verify_cycle_options(ctx_obj.cycles)
+    from pages.technical_audit_sections import (
+        _cycles_for_evidence_scope,
+        _default_verify_cycle_id,
+    )
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(
+        _cycles_for_evidence_scope(ctx_obj),
+    )
     if not pkg_options:
+        return html.Div(
+            "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado "
+            "ou o ciclo ainda não foi publicado.",
+            className="empty-state",
+        )
+
+    sel = selected_cycle_id or _default_verify_cycle_id(cycle, pkg_options)
+    return AuditIntegrityPanel(cycle, pkg_options, selected_cycle_id=sel)
+
+
+@callback(
+    Output("ta-blockchain-panel", "children"),
+    Input("bc-cycle-select", "value"),
+    State("cycle-store", "data"),
+    State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
+    prevent_initial_call=True,
+)
+def update_blockchain_panel(selected_cycle_id, cycle_data, global_filter, context_cycle_id):
+    """Atualiza painel Blockchain ao trocar o ciclo/pacote no seletor da aba."""
+    from components.audit.audit_blockchain_gate import AuditBlockchainGate
+    from pages.technical_audit_sections import (
+        _cycles_for_evidence_scope,
+        _default_blockchain_cycle_id,
+    )
+    from services.blockchain_view_service import blockchain_lock_message, is_blockchain_unlocked
+    from utils.file_helpers import get_cycle
+
+    ctx_obj = _ctx_from_stores(cycle_data, global_filter, context_cycle_id)
+    cycle = ctx_obj.active_cycle
+    if not cycle.get("cycle_id"):
         return no_update
 
-    return AuditIntegrityPanel(
-        cycle,
-        pkg_options,
-        selected_cycle_id=selected_cycle_id or cycle.get("cycle_id"),
+    scope = _cycles_for_evidence_scope(ctx_obj)
+    hydrated = []
+    for c in scope:
+        cid = c.get("cycle_id")
+        full = get_cycle(cid) if cid else None
+        hydrated.append(full or c)
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(hydrated)
+    if not pkg_options:
+        return html.Div(
+            "Nenhum pacote de evidências no escopo.",
+            className="empty-state",
+        )
+
+    sel = selected_cycle_id or _default_blockchain_cycle_id(cycle, hydrated, pkg_options)
+    display = get_cycle(sel) if sel else cycle
+    if not display:
+        display = cycle
+
+    unlocked = is_blockchain_unlocked(display)
+    approval = (display.get("approval") or {}).get("decision", "Pendente")
+    approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
+    pub_st = (display.get("steps") or {}).get("publication", {}).get("status", "PENDING")
+    pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
+    pkg_rows = blockchain_adapter.build_package_summary_rows(hydrated)
+
+    return AuditBlockchainGate(
+        display,
+        unlocked=unlocked,
+        lock_message=blockchain_lock_message(display) or "",
+        approval_status=approval_label,
+        publication_status=pub_label,
+        pkg_rows=pkg_rows if unlocked else [],
+        scoped_package_count=len(pkg_rows),
+        pkg_options=pkg_options,
+        selected_cycle_id=sel,
     )
 
 

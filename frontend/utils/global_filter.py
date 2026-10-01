@@ -1,6 +1,6 @@
 """Filtro global: escopo analítico (fazenda + período) e referência operacional (cycle_id).
 
-Dois contextos (ver docs/conceptual_model_mrv.md):
+Dois contextos (ver docs/architecture/data-lifecycle.md e docs/modules/frontend.md):
 
 - **Analítico:** ``cycles_for_analysis()`` — vários ciclos no período; alimenta KPIs/gráficos.
 - **Operacional:** ``filter_cycles_by_context()`` — um ciclo; proveniência, evidências, wizard.
@@ -8,7 +8,7 @@ Dois contextos (ver docs/conceptual_model_mrv.md):
 ``cycle_id`` no store = ciclo operacional de referência (sinônimo conceitual: operational_cycle_id).
 Não substitui ``analysis_period_start/end`` como driver exclusivo de dashboards.
 
-Arquitetura de filtros: docs/filter_architecture_mrv.md
+Arquitetura de filtros: docs/modules/frontend.md
 """
 
 from __future__ import annotations
@@ -107,16 +107,12 @@ def filter_cycles_by_data_mode(cycles: list[dict], data_mode: str | None) -> lis
 
 
 def get_farm_id(filters: dict[str, Any] | None) -> str | None:
-    """Extrai farm_id do filtro global (compatível com sessões antigas com property_ids)."""
+    """Extrai farm_id do filtro global analítico."""
     if not filters:
         return None
     farm_id = filters.get("farm_id")
     if isinstance(farm_id, str) and farm_id.strip():
         return farm_id.strip()
-    legacy = filters.get("property_ids")
-    if isinstance(legacy, list) and legacy:
-        first = legacy[0]
-        return first if isinstance(first, str) and first.strip() else None
     return None
 
 
@@ -720,16 +716,6 @@ def intensity_trend_from_cycles(cycles: list[dict]) -> tuple[list[str], list[flo
         labels.append(r.get("period_label") or str(r.get("period_key") or ""))
         values.append(float(r["intensity"]))
     return labels, values
-
-
-def is_all_periods(filters: dict[str, Any]) -> bool:
-    """Deprecated: modo multi-período removido do fluxo principal."""
-    return False
-
-
-def get_period_mode(filters: dict[str, Any] | None) -> str:
-    """Deprecated: retorna 'single' para compatibilidade."""
-    return "single"
 
 
 def period_in_context(period: str | None, filters: dict[str, Any], active_cycle: dict | None = None) -> bool:

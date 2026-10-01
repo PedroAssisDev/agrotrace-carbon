@@ -1,4 +1,4 @@
-"""Ações de aprovação por item."""
+"""Ações de aprovação por item — UI enxuta, fluxo completo."""
 
 from __future__ import annotations
 
@@ -8,12 +8,19 @@ from dash import dcc, html
 from services.result_correction_service import correctable_fields_for_item
 
 
+def _needs_zero_confirmation(item: dict) -> bool:
+    st = item.get("status", "AWAITING_REVIEW")
+    if st not in ("COM_ZERO_ASSUMIDO", "AWAITING_REVIEW"):
+        return False
+    zeros = item.get("zero_assumptions") or []
+    return any(not z.get("confirmed") for z in zeros)
+
+
 def CalculationApprovalActions(item: dict | None, cycle: dict | None = None) -> html.Div:
     if not item:
         return html.Div()
 
-    st = item.get("status", "AWAITING_REVIEW")
-    has_zero = bool(item.get("zero_assumptions")) and st in ("COM_ZERO_ASSUMIDO", "AWAITING_REVIEW")
+    needs_zero = _needs_zero_confirmation(item)
     fields = (
         correctable_fields_for_item(
             cycle or {},
@@ -28,19 +35,24 @@ def CalculationApprovalActions(item: dict | None, cycle: dict | None = None) -> 
         for f in fields
     ]
 
-    return html.Div([
-        html.H6("Ações do item", className="small mb-2"),
-        dbc.ButtonGroup([
-            dbc.Button("Aprovar", id="cr-btn-approve-item", color="success", size="sm", outline=True),
+    approve_label = "Aprovar (confirma zeros)" if needs_zero else "Aprovar"
+    parts: list = [
+        html.Div([
             dbc.Button(
-                "Aprovar c/ zero",
-                id="cr-btn-approve-zero",
-                color="warning",
+                approve_label,
+                id="cr-btn-approve-item",
+                color="success",
+                size="sm",
+                className="me-1",
+            ),
+            dbc.Button(
+                "Rejeitar",
+                id="cr-btn-reject-item",
+                color="danger",
                 size="sm",
                 outline=True,
-                disabled=not has_zero,
+                className="me-1",
             ),
-            dbc.Button("Rejeitar", id="cr-btn-reject-item", color="danger", size="sm", outline=True),
             dbc.Button(
                 "Solicitar correção",
                 id="cr-btn-request-correction",
@@ -48,18 +60,36 @@ def CalculationApprovalActions(item: dict | None, cycle: dict | None = None) -> 
                 size="sm",
                 outline=True,
             ),
-        ], className="d-flex flex-wrap gap-1 mb-2"),
-        html.Div([
-            html.Label("Campos corrigíveis", className="small text-muted"),
+            # Mantido oculto para compatibilidade de layout/callbacks legados
+            html.Div(
+                dbc.Button(id="cr-btn-approve-zero", n_clicks=0),
+                style={"display": "none"},
+            ),
+        ], className="d-flex flex-wrap gap-1 align-items-center"),
+    ]
+
+    if needs_zero:
+        parts.append(html.Small(
+            "Este cálculo tem zeros assumidos — Aprovar confirma a ausência de dado.",
+            className="text-aux d-block mt-2",
+        ))
+
+    if field_options:
+        parts.append(html.Div([
+            html.Label("Campos para correção", className="small text-muted mb-1"),
             dcc.Dropdown(
                 id="cr-correctable-fields",
                 options=field_options,
                 multi=True,
-                placeholder="Selecionar campos…",
-                className="mb-2",
+                placeholder="Opcional ao solicitar correção…",
+                className="mb-0",
             ),
-        ], className="mb-2")
-        if field_options
-        else html.Div(dcc.Dropdown(id="cr-correctable-fields", options=[], style={"display": "none"})),
-        html.Div(id="cr-item-action-feedback", className="small"),
-    ], className="cr-approval-actions")
+        ], className="mt-2"))
+    else:
+        parts.append(
+            html.Div(dcc.Dropdown(id="cr-correctable-fields", options=[], style={"display": "none"}))
+        )
+
+    parts.append(html.Div(id="cr-item-action-feedback", className="small mt-2"))
+
+    return html.Div(parts, className="cr-approval-actions")

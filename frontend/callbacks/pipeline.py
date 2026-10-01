@@ -137,6 +137,17 @@ def register_raw(
     global_filter,
     filter_options,
 ):
+    triggered = ctx.triggered_id
+    # Ignora remount/aparecimento espúrio de upload-sample (ex.: Resumo remountado).
+    if triggered == "upload-sample":
+        if not sample:
+            return no_update, no_update, no_update, no_update
+    elif triggered == "upload-data":
+        if not contents:
+            return no_update, no_update, no_update, no_update
+    else:
+        return no_update, no_update, no_update, no_update
+
     if not contents and not sample:
         return no_update, no_update, no_update, no_update
     gf = normalize_global_filter(global_filter)
@@ -171,13 +182,13 @@ def register_raw(
         effective_period,
         layout_id,
         filename,
-        sample,
+        sample if triggered == "upload-sample" else None,
         gf.get("farm_id"),
     )
 
     try:
         with timed_op() as timer:
-            if contents and filename:
+            if triggered == "upload-data" and contents and filename:
                 _, content_string = contents.split(",", 1)
                 decoded = base64.b64decode(content_string)
                 raw_meta = save_uploaded_content(
@@ -186,7 +197,7 @@ def register_raw(
                     reporting_period=effective_period,
                     original_filename=filename,
                 )
-            elif sample:
+            elif triggered == "upload-sample" and sample:
                 src = SAMPLE_DATA_DIR / sample
                 raw_meta = save_raw_file(src, property_id=effective_id, reporting_period=effective_period)
             else:
@@ -234,25 +245,29 @@ def register_raw(
 @callback(
     Output("cycle-store", "data", allow_duplicate=True),
     Input("btn-verify-intact", "n_clicks", allow_optional=True),
-    Input("btn-verify-tamper", "n_clicks", allow_optional=True),
     State("verify-cycle-select", "value", allow_optional=True),
     State("cycle-store", "data"),
     prevent_initial_call=True,
 )
-def run_verify_cb(n_ok, n_bad, selected_cycle_id, cycle):
-    if not cycle or (not n_ok and not n_bad):
+def run_verify_cb(n_ok, selected_cycle_id, cycle):
+    if not cycle or not n_ok or ctx.triggered_id != "btn-verify-intact":
         return no_update
     cycle = ensure_full_cycle(cycle)
     if selected_cycle_id and selected_cycle_id != cycle.get("cycle_id"):
         loaded = get_cycle(selected_cycle_id)
         if loaded:
             cycle = loaded
+    from services.blockchain_view_service import is_blockchain_unlocked
     if not cycle.get("evidence_package"):
-        from services.blockchain_view_service import is_blockchain_unlocked
-        if is_blockchain_unlocked(cycle):
-            cycle = local_orchestrator.run_evidence_step(cycle)
-            cycle = local_orchestrator.run_anchoring_step(cycle)
-    result = strip_private_keys(local_orchestrator.run_verification_step(cycle, tamper=bool(n_bad)))
+        if not is_blockchain_unlocked(cycle):
+            logger.warning(
+                "verify skipped cycle=%s reason=no_evidence_and_blockchain_locked",
+                cycle.get("cycle_id"),
+            )
+            return no_update
+        cycle = local_orchestrator.run_evidence_step(cycle)
+        cycle = local_orchestrator.run_anchoring_step(cycle)
+    result = strip_private_keys(local_orchestrator.run_verification_step(cycle, tamper=False))
     save_cycle(result)
     return cycle_store_summary(result)
 

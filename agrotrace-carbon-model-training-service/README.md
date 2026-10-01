@@ -2,6 +2,8 @@
 
 Módulo responsável **somente pela geração, avaliação, seleção e versionamento de modelos**. A execução de previsões pelo frontend ou por outro componente de inferência não faz parte deste projeto.
 
+> Documento canônico do módulo: [../docs/modules/model-training-service.md](../docs/modules/model-training-service.md).
+
 ## Escopo definido
 
 ### Regressão (contemporânea aplicada a um cenário futuro)

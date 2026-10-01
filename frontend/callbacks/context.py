@@ -46,14 +46,19 @@ def _sync_from_cycle_id(cycle_id: str | None, global_filter: dict | None):
     Output("global-filter-store", "data", allow_duplicate=True),
     Input("filter-cycle-select", "value", allow_optional=True),
     State("global-filter-store", "data"),
+    State("context-cycle-id", "data"),
     prevent_initial_call=True,
 )
-def on_filter_cycle_select(cycle_id, global_filter):
+def on_filter_cycle_select(cycle_id, global_filter, context_cycle_id):
+    # Select desmontado / valor ausente: não limpar contexto (evita loop de remount).
     if not cycle_id:
-        return None, no_update, no_update
+        return no_update, no_update, no_update
+    prev = normalize_filter_state(global_filter, list_cycles(), context_cycle_id=context_cycle_id)
+    if cycle_id == (context_cycle_id or prev.get("cycle_id")):
+        return no_update, no_update, no_update
     result = _sync_from_cycle_id(cycle_id, global_filter)
     if result[0] is no_update:
-        return None, no_update, no_update
+        return no_update, no_update, no_update
     return result
 
 

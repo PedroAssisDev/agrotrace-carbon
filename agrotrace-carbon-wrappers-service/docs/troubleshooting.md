@@ -1,6 +1,6 @@
-# Troubleshooting
+﻿# Troubleshooting
 
-## Layout não identificado (process_file_auto)
+## Layout não identificado (detect_layout_id+process_file)
 
 Sintomas: excepção `LayoutDetectionError` ou `detect_layout_id` devolve `None`.
 

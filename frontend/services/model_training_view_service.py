@@ -136,20 +136,50 @@ def build_action_bar(report: dict[str, Any] | None) -> html.Div:
     has_missing = any(m.get("status") == "missing" and m.get("eligible") for m in models)
     has_stale = any(m.get("status") == "stale" and m.get("eligible") for m in models)
     training = any(m.get("status") == "training" for m in models)
-    disabled = training or not (report or {}).get("source_ok", True)
+    source_ok = (report or {}).get("source_ok", True)
+    disabled = training or not source_ok
+
+    why_disabled = ""
+    if training:
+        why_disabled = "Aguarde o treinamento em andamento."
+    elif not source_ok:
+        why_disabled = (report or {}).get("source_error") or "Fonte de treino indisponivel. Atualize a fonte."
+    elif not has_missing and not has_stale:
+        why_disabled = "Nenhum slot ausente/desatualizado elegivel no momento."
 
     return html.Div(
         [
             SectionHeader("Acoes", "O frontend apenas solicita; o treinamento ocorre no model-training-service."),
             dbc.ButtonGroup(
                 [
-                    dbc.Button("Criar modelos ausentes", id="fc-ensure-missing", color="success", disabled=disabled or not has_missing),
-                    dbc.Button("Atualizar desatualizados", id="fc-retrain-stale", color="warning", disabled=disabled or not has_stale),
-                    dbc.Button("Retreinar modelos", id="fc-open-retrain-modal", color="primary", outline=True, disabled=disabled),
-                    dbc.Button("Treinamento personalizado", id="fc-toggle-custom", color="secondary", outline=True, disabled=disabled),
+                    dbc.Button(
+                        "Atualizar fonte de treino",
+                        id="fc-refresh-training-source",
+                        color="info",
+                        outline=True,
+                        disabled=training,
+                        title="Regenera o CSV a partir dos ciclos publicados",
+                    ),
+                    dbc.Button(
+                        "Criar modelos ausentes",
+                        id="fc-ensure-missing",
+                        color="success",
+                        disabled=disabled or not has_missing,
+                        title=why_disabled if (disabled or not has_missing) else "Treina slots ausentes elegiveis",
+                    ),
+                    dbc.Button(
+                        "Atualizar desatualizados",
+                        id="fc-retrain-stale",
+                        color="warning",
+                        disabled=disabled or not has_stale,
+                        title=why_disabled if (disabled or not has_stale) else "Retreina slots desatualizados",
+                    ),
+                    dbc.Button("Retreinar modelos", id="fc-open-retrain-modal", color="primary", outline=True, disabled=disabled, title=why_disabled or ""),
+                    dbc.Button("Treinamento personalizado", id="fc-toggle-custom", color="secondary", outline=True, disabled=disabled, title=why_disabled or ""),
                 ],
                 className="flex-wrap",
             ),
+            html.Small(why_disabled, className="text-aux d-block mt-1") if why_disabled and disabled else html.Div(),
             html.Div(id="fc-training-action-feedback", className="mt-2"),
         ],
         className="mb-3",
@@ -336,29 +366,73 @@ def build_history_table(runs: list[dict[str, Any]] | None) -> html.Div:
 
 
 def infer_cta_for_family(report: dict[str, Any] | None, family: str, granularity: str | None = None) -> html.Div:
+    report = report or {}
+    summary = report.get("data_summary") or {}
     models = [
         m
-        for m in ((report or {}).get("models") or [])
+        for m in (report.get("models") or [])
         if m.get("family") == family and (granularity is None or m.get("granularity") == granularity)
     ]
+    if not report.get("source_ok", True):
+        return AlertBox(
+            report.get("source_error")
+            or "Fonte de treino indisponivel. Use a aba Modelos → Atualizar fonte de treino.",
+            variant="danger",
+        )
     if not models:
         return html.Div()
     if any(m.get("status") == "training" for m in models):
-        return AlertBox("Ha treinamento em andamento para estes modelos. Inferencia pausada para o escopo em conflito.", variant="info")
-    if all(m.get("status") == "ineligible" for m in models):
-        reasons = "; ".join(m.get("reason") or "" for m in models if m.get("reason"))
-        return AlertBox(f"Modelos inelegiveis. {reasons}", variant="warning")
-    if any(m.get("status") == "missing" for m in models):
         return AlertBox(
-            "Modelos ausentes. Use a aba Modelos → Criar modelos ausentes.",
-            variant="warning",
+            "Ha treinamento em andamento para estes modelos. Inferencia pausada para o escopo em conflito.",
+            variant="info",
         )
+    if all(m.get("status") == "ineligible" for m in models):
+        reasons = "; ".join(
+            dict.fromkeys(m.get("reason") or "" for m in models if m.get("reason"))
+        )
+        prop_n = summary.get("property_monthly_records", 0)
+        min_n = summary.get("min_ts_records", 12)
+        extra = ""
+        if family == "time_series":
+            extra = (
+                f" Historico mensal da propriedade: {prop_n} (minimo {min_n} meses contiguos). "
+                "Atualize a fonte de treino a partir dos ciclos publicados e, se elegivel, "
+                "use Modelos → Criar modelos ausentes."
+            )
+        return AlertBox(f"Modelos inelegiveis. {reasons}.{extra}", variant="warning")
+    if any(m.get("status") == "missing" for m in models):
+        action = (
+            "Use a aba Modelos → Atualizar fonte de treino e depois Criar modelos ausentes."
+            if family == "time_series"
+            else "Use a aba Modelos → Criar modelos ausentes."
+        )
+        return AlertBox(f"Modelos ausentes. {action}", variant="warning")
     if any(m.get("status") == "stale" for m in models):
         return AlertBox(
             "Modelos desatualizados. Voce pode prever com o modelo atual ou atualizar na aba Modelos.",
             variant="warning",
         )
     return html.Div()
+
+
+def family_run_disabled_reason(report: dict[str, Any] | None, family: str) -> str | None:
+    """Retorna motivo para desabilitar o botao de inferencia, ou None se habilitado."""
+    report = report or {}
+    models = [m for m in (report.get("models") or []) if m.get("family") == family]
+    if not report.get("source_ok", True):
+        return report.get("source_error") or "Fonte de treino indisponivel."
+    if any(m.get("status") == "training" for m in models):
+        return "Treinamento em andamento."
+    if not any(m.get("status") in {"available", "stale"} for m in models):
+        summary = report.get("data_summary") or {}
+        if family == "time_series":
+            return (
+                f"Sem modelo temporal disponivel. "
+                f"Registros mensais: {summary.get('property_monthly_records', 0)} "
+                f"(minimo {summary.get('min_ts_records', 12)} contiguos)."
+            )
+        return "Sem modelo de regressao disponivel. Crie os modelos ausentes na aba Modelos."
+    return None
 
 
 def _mini_stat(title: str, value: str) -> dbc.Card:

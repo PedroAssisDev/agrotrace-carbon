@@ -4,11 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agrotrace-carbon-blockchain-service"
-version = "0.1.0"
+version = "1.0.0"
 description = "Observer, evidence packager, hash/Merkle generator and simulated anchoring for Agrotrace Carbon"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "jsonschema>=4.0",
     "sqlalchemy>=2.0",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
@@ -17,7 +18,6 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "jsonschema>=4.0",
     "pytest>=8.0",
     "pytest-cov>=4.0",
 ]

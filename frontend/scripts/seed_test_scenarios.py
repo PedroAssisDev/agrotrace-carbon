@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 """Seed dos três cenários oficiais de teste.
 
-1. Propriedade com entrada annual direta
-2. Propriedade com dados monthly (base para consolidação annual)
-3. Propriedade com dados daily/intraday (base para consolidação monthly→annual)
+1. Propriedade com entrada annual direta (annual_report.csv Embrapa)
+2. Propriedade com dados monthly (monthly_report.csv Embrapa)
+3. Propriedade daily/intraday: sem CSV intraday de sample; usa monthly_report.csv
+   e o layout efetivo cai para monthly (fallback já existente)
 
 Os dados passam pela pipeline real até pendência de aprovação (sem mock silencioso).
+Samples: agrotrace-carbon-save-file/data/embrapa/ (SAMPLE_DATA_DIR).
 """
 
 from __future__ import annotations
@@ -36,7 +38,7 @@ SCENARIOS = [
         "temporal_granularity": TemporalGranularity.ANNUAL.value,
         "reporting_period": "2024",
         "layout_name": "annual",
-        "sample_candidates": ["annual_report.csv", "calculate_data_anual.csv"],
+        "sample_candidates": ["annual_report.csv"],
     },
     {
         "property_id": "PROP-MONTHLY-001",
@@ -47,7 +49,7 @@ SCENARIOS = [
         "temporal_granularity": TemporalGranularity.MONTHLY.value,
         "reporting_period": "2026-01",
         "layout_name": "monthly",
-        "sample_candidates": ["monthly_report.csv", "calculate_data_mensal.csv"],
+        "sample_candidates": ["monthly_report.csv"],
     },
     {
         "property_id": "PROP-DAILY-001",
@@ -58,7 +60,7 @@ SCENARIOS = [
         "temporal_granularity": TemporalGranularity.DAILY.value,
         "reporting_period": "2026-01-15",
         "layout_name": "intraday",
-        "sample_candidates": ["intraday_report.csv", "calculate_data_intraday.csv", "monthly_report.csv"],
+        "sample_candidates": ["monthly_report.csv"],
     },
 ]
 

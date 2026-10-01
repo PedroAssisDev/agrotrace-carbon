@@ -13,13 +13,17 @@ from emissions.temporal_scope import (
     [
         ("monthly", TemporalScope.MONTHLY),
         ("Mensal", TemporalScope.MONTHLY),
-        ("yearly", TemporalScope.YEARLY),
-        ("annual", TemporalScope.YEARLY),
-        ("ANUAL", TemporalScope.YEARLY),
+        ("annual", TemporalScope.ANNUAL),
+        ("ANUAL", TemporalScope.ANNUAL),
     ],
 )
 def test_normalize_temporal_label_accepts_aliases(label, expected):
     assert normalize_temporal_label(label) is expected
+
+
+def test_normalize_temporal_label_rejects_yearly_legacy():
+    with pytest.raises(CalculationError, match="Escopo temporal inválido"):
+        normalize_temporal_label("yearly")
 
 
 def test_normalize_temporal_label_rejects_invalid():
@@ -29,4 +33,4 @@ def test_normalize_temporal_label_rejects_invalid():
 
 def test_require_matching_scope_raises_on_mix():
     with pytest.raises(TemporalInconsistencyError, match="Inconsistência temporal"):
-        require_matching_scope(TemporalScope.MONTHLY, TemporalScope.YEARLY, context="Teste:")
+        require_matching_scope(TemporalScope.MONTHLY, TemporalScope.ANNUAL, context="Teste:")

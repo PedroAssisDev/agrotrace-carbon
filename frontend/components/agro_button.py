@@ -23,7 +23,7 @@ def AgroButton(
     size: str = "sm",
     **kwargs,
 ):
-    """Wrapper de dbc.Button com classes do design system (texto sempre escuro)."""
+    """Wrapper de dbc.Button com classes do design system (sólidos com texto branco)."""
     cls = _VARIANT_CLASS.get(variant, "btn-agro-primary")
     extra = kwargs.pop("className", "")
     className = f"{cls} {extra}".strip()

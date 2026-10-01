@@ -8,8 +8,14 @@ from dash import html
 
 def ApprovalReviewerFields() -> html.Div:
     return html.Div([
-        html.H6("Revisor", className="small mb-2"),
-        dbc.Input(id="cr-reviewer", placeholder="Nome do revisor", size="sm", className="mb-2", value="Revisor"),
+        html.H6("Finalizar aprovação", className="small mb-2"),
+        dbc.Input(
+            id="cr-reviewer",
+            placeholder="Nome do revisor",
+            size="sm",
+            value="Revisor",
+            className="mb-2",
+        ),
         dbc.Textarea(
             id="cr-justification",
             placeholder="Justificativa (obrigatória para rejeição/correção)",

@@ -1,4 +1,4 @@
-# Arquitetura geral — Camada de Wrappers
+﻿# Arquitetura geral — Camada de Wrappers
 
 ## Objetivo e problema
 
@@ -20,11 +20,11 @@ As fontes heterogêneas (CSV e futuros formatos) entram nos wrappers; a saída a
 - **Harmonização declarativa:** passos YAML aplicados em `normalizers.library.apply_layout_harmonization`
 - **Mapeamento canónico:** `CanonicalMappingEngine` com projeções do YAML
 - **Exportação:** `ExportConfiguration`, `OutputWriter`
-- **Entradas públicas:** `process_file`, `process_file_auto`
+- **Entradas públicas:** `process_file`, `detect_layout_id+process_file`
 
 ## Fluxo macro
 
-1. Resolver `layout_id` (explícito ou `process_file_auto` com deteção).
+1. Resolver `layout_id` (explícito ou `detect_layout_id+process_file` com deteção).
 2. Carregar YAML e diretório do layout.
 3. Ler linhas CSV.
 4. Por linha: mapear, validar, normalizar, harmonizar (se configurado), acumular.

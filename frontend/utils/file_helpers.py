@@ -16,16 +16,22 @@ logger = logging.getLogger("agrotrace.store")
 
 # ── Cache em memória (invalidação por mtime do diretório / arquivo) ───────────
 _cycles_list_cache: list[dict[str, Any]] | None = None
-_cycles_list_signature: tuple[int, float] | None = None
+_cycles_list_signature: tuple[int, float, float] | None = None
 _cycle_file_cache: dict[str, tuple[float, dict[str, Any]]] = {}
 
 
-def _cycles_dir_signature() -> tuple[int, float]:
+def _cycles_dir_signature() -> tuple[int, float, float]:
+    """Assinatura do diretório: count + max mtime + soma de mtimes.
+
+    Usar só max_mtime falha quando um arquivo antigo é atualizado e outro
+    arquivo mais novo permanece com mtime maior (cache stale cross-process).
+    """
     config.ensure_data_dirs()
     files = list(config.CYCLES_DIR.glob("*.json"))
     if not files:
-        return (0, 0.0)
-    return (len(files), max(f.stat().st_mtime for f in files))
+        return (0, 0.0, 0.0)
+    mtimes = [f.stat().st_mtime for f in files]
+    return (len(files), max(mtimes), sum(mtimes))
 
 
 def invalidate_cycle_cache(cycle_id: str | None = None) -> None:

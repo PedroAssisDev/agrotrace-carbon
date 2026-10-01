@@ -213,7 +213,7 @@ def _scenario3(v: Validator, tmp: Path) -> dict[str, Any]:
     from orchestration.pipeline import compute_farm_period_emissions
 
     farm = FarmPeriodInput(
-        temporal_scope=TemporalScope.YEARLY,
+        temporal_scope=TemporalScope.ANNUAL,
         days_in_period=365,
         headcounts_by_category={c: 10.0 if c == "Lactating_Cows" else 0.0 for c in ANIMAL_CATEGORIES},
         body_weight_kg_by_category={c: 550.0 for c in ANIMAL_CATEGORIES},

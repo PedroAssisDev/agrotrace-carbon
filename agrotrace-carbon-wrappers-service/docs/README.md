@@ -1,4 +1,4 @@
-# Documentação — Camada de Wrappers (EcoFarm OS)
+﻿# Documentação — Camada de Wrappers (EcoFarm OS)
 
 Documentação técnica da camada de **wrappers** para integração de dados heterogêneos de fazendas leiteiras. O objetivo é isolar formatos e semânticas de origem, validar e normalizar registos, produzir metadados de rastreabilidade e preparar projeções para camadas posteriores (armazém analítico, indicadores, ACV, ontologia, ML, dashboards).
 
@@ -14,7 +14,7 @@ Documentação técnica da camada de **wrappers** para integração de dados het
 1. **Núcleo estável** — `LayoutPipeline`, contratos (`contracts.py`) e estratégia de exportação concentram o comportamento principal.  
 2. **Layouts extensíveis** — novos layouts são ficheiros sob `layouts/<família>/<versão>/layout.yaml` registados automaticamente.  
 3. **Layouts V1 atuais** — `IntradayLayoutV1`, `MonthlyLayoutV1`, `AnnualLayoutV1` (identificadores de catálogo: `intraday:v1`, `monthly:v1`, `annual:v1`).  
-4. **API principal enxuta** — entradas públicas: `process_file` e `process_file_auto`.  
+4. **API principal enxuta** — entradas públicas: `process_file` e `detect_layout_id+process_file`.  
 5. **Separação de fases** — parsing físico, mapeamento lógico, validação, normalização, harmonização declarativa por layout, mapeamento canónico e exportação pós-wrapper.  
 6. **Rastreabilidade** — proveniência, contexto temporal/organizacional, relatórios de validação, manifestos de exportação.  
 7. **Exportação `;_;`** — formato delimitado customizado (não CSV RFC de um único carácter).  
@@ -49,8 +49,6 @@ Documentação técnica da camada de **wrappers** para integração de dados het
 | [Guia de extensão](extension-guide.md) | Novo layout, regras, exportação |
 | [FAQ](faq.md) | Perguntas frequentes técnicas |
 | [Ontologia: unidades e IRIs](ontology/units-and-iris.md) | Catálogo de unidades, IRIs de exemplo, YAML máquina-legível |
-| [Runbook Kubernetes](runbooks/kubernetes.md) | Jobs, recursos, rollout |
-| [Runbook filas](runbooks/message-queues.md) | Mensagens, idempotência, DLQ |
 
 ## Como executar testes
 

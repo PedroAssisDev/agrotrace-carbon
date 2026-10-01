@@ -26,9 +26,9 @@ def format_kg_co2e(value: Any) -> str:
     return format_co2e(value)
 
 
-def format_co2e_t(value: Any) -> str:
+def format_co2e_t(value: Any, decimals: int = 2) -> str:
     """Formata emissão em toneladas CO₂e."""
-    return f"{format_number(value, 2)} t CO₂e"
+    return f"{format_number(value, decimals)} t CO₂e"
 
 
 def format_t_co2e(value: Any) -> str:

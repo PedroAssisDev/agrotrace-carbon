@@ -1,4 +1,4 @@
-# Exemplos práticos
+﻿# Exemplos práticos
 
 ## Uso básico com layout explícito
 
@@ -37,10 +37,10 @@ r = process_file("/data/anual.csv", "annual:v1", processing_context=ctx)
 ## Deteção automática
 
 ```python
-from wrappers import process_file_auto, LayoutDetectionError
+from wrappers import detect_layout_id+process_file, LayoutDetectionError
 
 try:
-    r = process_file_auto("/data/desconhecido.csv")
+    r = detect_layout_id+process_file("/data/desconhecido.csv")
 except LayoutDetectionError:
     # pedir layout humano ou mover para quarentena
     raise

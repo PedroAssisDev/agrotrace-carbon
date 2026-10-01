@@ -2,11 +2,13 @@ paths:
   processed_data_dir: ../data/processed
   artifacts_dir: ../artifacts
 
-# Fonte padrão de resultados aprovados/publicados (CSV local do protótipo).
-# SPARQL/ontologia RDF ainda não está integrada; configure type: sparql quando disponível.
+# Fonte padrão: CSV gerado a partir dos ciclos publicados do frontend
+# (frontend/services/training_data_export_service.py → data/processed/).
+# O adapter do frontend sobrescreve o path absoluto para MODEL_TRAINING_PROCESSED_DIR.
+# SPARQL/ontologia RDF ainda pode ser configurado com type: sparql quando disponível.
 data_source:
   type: csv
-  path: ../examples/approved_results.csv
+  path: ../data/processed/approved_results_from_cycles.csv
 
 validation:
   approved_values: [approved, aprovado]

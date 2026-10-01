@@ -126,12 +126,12 @@ def _load_ipcc_defaults(group: str, cycle: dict) -> dict[str, Any]:
     from services import direct_imports as di
 
     if group == "enteric_ch4_kg_per_animal":
-        from emissions.defaults import default_enteric_ch4_kg_per_animal_yearly
+        from emissions.defaults import default_enteric_ch4_kg_per_animal_annual
         from emissions.factor_alignment import align_enteric_factors_to_scope
 
-        raw = default_enteric_ch4_kg_per_animal_yearly()
+        raw = default_enteric_ch4_kg_per_animal_annual()
         scope = (cycle.get("calculation") or {}).get("temporal", {}).get("scope", "MONTHLY")
-        temporal = di.TemporalScope.MONTHLY if str(scope).upper() == "MONTHLY" else di.TemporalScope.YEARLY
+        temporal = di.TemporalScope.MONTHLY if str(scope).upper() == "MONTHLY" else di.TemporalScope.ANNUAL
         return align_enteric_factors_to_scope(raw, temporal_scope=temporal, auto_prorate=True)
 
     if group == "manure_kg_per_kg_bw_per_day":
@@ -143,9 +143,9 @@ def _load_ipcc_defaults(group: str, cycle: dict) -> dict[str, Any]:
         return dict(default_manure_ch4_kg_per_kg_manure())
 
     if group == "energy_co2_kg_per_unit":
-        from emissions.defaults import default_energy_co2_kg_per_unit_yearly_basis
+        from emissions.defaults import default_energy_co2_kg_per_unit_annual_basis
 
-        raw = default_energy_co2_kg_per_unit_yearly_basis()
+        raw = default_energy_co2_kg_per_unit_annual_basis()
         vectors = _energy_vectors(cycle)
         # Intensidades (kg CO2/unidade): sem prorratação temporal.
         return {k: v for k, v in raw.items() if not vectors or k in vectors}

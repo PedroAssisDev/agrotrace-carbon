@@ -30,6 +30,15 @@ class PredictionFacade:
     def get_model_availability(self, property_id: str | None) -> dict[str, Any]:
         return self.registry.list_available_summary(property_id)
 
+    def get_regression_scenario_defaults(
+        self,
+        property_id: str,
+        granularity: str = "monthly",
+    ) -> dict[str, Any]:
+        from services.forecast_inference.property_history import get_regression_scenario_defaults
+
+        return get_regression_scenario_defaults(property_id, granularity)
+
     def predict_regression_scenario(
         self,
         property_id: str,

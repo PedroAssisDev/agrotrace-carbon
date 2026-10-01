@@ -81,7 +81,7 @@ def validate_days_in_period(temporal_scope: TemporalScope, days_in_period: int) 
                 f"Para temporal_scope={temporal_scope.value!r}, days_in_period deve ser "
                 f"<= 31 (período mensal); recebido {days_in_period!r}."
             )
-    elif temporal_scope is TemporalScope.YEARLY:
+    elif temporal_scope is TemporalScope.ANNUAL:
         if days_in_period < 360:
             raise TemporalInconsistencyError(
                 f"Para temporal_scope={temporal_scope.value!r}, days_in_period deve ser "

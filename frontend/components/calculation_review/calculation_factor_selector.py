@@ -78,25 +78,33 @@ def CalculationFactorSelector(cycle: dict, item: dict) -> html.Div:
         )
 
     return html.Div([
-        html.H6("Fatores da fórmula", className="small mb-2"),
-        gwp_note,
-        _factors_table(factor_rows),
         html.Div([
-            html.Small("Metodologia dos fatores", className="text-aux d-block mb-1"),
-            dbc.Input(
-                id="cr-factor-methodology",
-                type="text",
-                value=display_meth,
-                disabled=not has_custom,
-                size="sm",
-                className="mb-1",
-            ),
-            html.Small(
-                "Padrão IPCC. Origem: configured / default / inferred / absent. "
-                "O campo de metodologia é habilitado ao alterar algum fator.",
-                className="text-muted d-block",
-            ),
-        ], className="mt-3"),
+            html.H6("Fatores / recálculo", className="small mb-0"),
+            gwp_note,
+        ], className="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-2"),
+        _factors_table(factor_rows),
+        dbc.Row([
+            dbc.Col([
+                html.Small("Metodologia", className="text-aux d-block mb-1"),
+                dbc.Input(
+                    id="cr-factor-methodology",
+                    type="text",
+                    value=display_meth,
+                    disabled=not has_custom,
+                    size="sm",
+                ),
+            ], md=7),
+            dbc.Col([
+                dbc.Button(
+                    "Aplicar e recalcular",
+                    id="cr-btn-apply-factors",
+                    color="primary",
+                    outline=True,
+                    size="sm",
+                    className="w-100",
+                ),
+            ], md=5, className="d-flex align-items-end"),
+        ], className="g-2 mt-3"),
         dcc.Store(
             id="cr-factor-baseline-store",
             data={
@@ -104,12 +112,5 @@ def CalculationFactorSelector(cycle: dict, item: dict) -> html.Div:
                 "default_methodology": default_meth,
                 "applied_methodology": methodology.get("applied"),
             },
-        ),
-        dbc.Button(
-            "Aplicar fatores e recalcular",
-            id="cr-btn-apply-factors",
-            color="outline-primary",
-            size="sm",
-            className="mt-2",
         ),
     ], className="cr-factor-selector")

@@ -42,7 +42,9 @@ from services.calculation_input_mapping_service import (  # noqa: E402
 )
 from services.calculation_review_service import (  # noqa: E402
     build_calculation_review,
+    build_review_summary_cards,
     ensure_calculation_review,
+    format_item_result_display,
     list_review_items,
     MANDATORY_FORMULAS,
 )
@@ -135,9 +137,52 @@ def _run_validation(v: Validator) -> int:
     except Exception as exc:
         v.check("approval_layout monta sem erro", False, str(exc))
 
-    # 3. Unidade / display
+    # 3. Unidade / display (sem double-convert kg→t→×1000)
     total_item = next((it for it in items if it.get("formula_id") == "total_ghg_co2e"), None)
     v.check("item total tem unidade", bool(total_item and total_item.get("result_unit")))
+
+    synthetic = {
+        "result_value": 82631.35,
+        "result_unit": "kg CO2e",
+        "gas": "CO2e",
+    }
+    display = format_item_result_display(synthetic)
+    # Correto: ~82,63 t — bug antigo: ~82.631,40 t (display_value * 1000)
+    v.check(
+        "format_item_result_display t CO2e sem x1000",
+        "82,63" in display and "t CO" in display and "82.631" not in display,
+        f"display={display}",
+    )
+    if total_item and (total_item.get("result_value") or 0) >= 1000:
+        total_display = format_item_result_display(total_item)
+        v.check(
+            "item total mock formatado em toneladas",
+            "t CO" in total_display and "82.631" not in total_display,
+            f"display={total_display}",
+        )
+
+    summary_cards = build_review_summary_cards(cycle)
+    v.check("KPI itens (nao emissao) presente", "items" in summary_cards)
+    v.check(
+        "KPI emissao total presente",
+        summary_cards.get("emissions_display") not in (None, ""),
+        f"emissions={summary_cards.get('emissions_display')}",
+    )
+    if total_item is not None:
+        item_co2e = total_item.get("co2e_kg")
+        if item_co2e is None:
+            item_co2e = total_item.get("result_value")
+        summary_co2e = summary_cards.get("emissions_co2e_kg")
+        v.check(
+            "emissao summary == item Total",
+            summary_co2e is not None
+            and item_co2e is not None
+            and abs(float(summary_co2e) - float(item_co2e)) < 1e-6,
+            f"summary={summary_co2e} item={item_co2e}",
+        )
+    v.check("toolbar de revisao presente", "cr-review-toolbar" in page_str)
+    v.check("workbench presente", "cr-workbench" in page_str)
+    v.check("alerta blockchain grande ausente", "Blockchain bloqueado durante revisão" not in page_str)
 
     # 4. Zero explícito
     zero_items = [it for it in items if it.get("zero_assumptions")]

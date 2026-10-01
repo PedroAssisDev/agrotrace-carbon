@@ -232,52 +232,132 @@ def build_artifacts_section(ctx: PageContext) -> html.Div:
     ])
 
 
+def _cycles_for_evidence_scope(ctx: PageContext) -> list[dict]:
+    """Ciclos do escopo + ciclo ativo (mesmo se filtrado pelo data_mode)."""
+    by_id: dict[str, dict] = {}
+    for c in list(ctx.cycles or []) + list(ctx.analysis_cycles or []):
+        cid = c.get("cycle_id")
+        if cid:
+            by_id[cid] = c
+    active = ctx.active_cycle or {}
+    active_id = active.get("cycle_id")
+    if active_id:
+        by_id.setdefault(active_id, active)
+    return list(by_id.values())
+
+
+def _default_verify_cycle_id(cycle: dict, pkg_options: list[dict]) -> str | None:
+    """Prefere ciclo ativo se tiver pacote; senão o primeiro com evidência."""
+    if not pkg_options:
+        return None
+    values = {opt.get("value") for opt in pkg_options}
+    active_id = cycle.get("cycle_id")
+    if active_id in values:
+        return active_id
+    return pkg_options[0].get("value")
+
+
+def _is_sepolia_anchored(cycle: dict) -> bool:
+    anchoring = cycle.get("anchoring") or {}
+    evidence = cycle.get("evidence_package") or {}
+    network = anchoring.get("network") or evidence.get("network")
+    kind = anchoring.get("anchoring_kind") or ""
+    if network != "ethereum_sepolia" or kind == "SIMULADA":
+        return False
+    tx = str(anchoring.get("transaction_id") or evidence.get("transaction_id") or "")
+    return bool(anchoring.get("explorer_url")) or (tx.startswith("0x") and len(tx) >= 66)
+
+
+def _default_blockchain_cycle_id(cycle: dict, scope_cycles: list[dict], pkg_options: list[dict]) -> str | None:
+    """Ativo com pacote → Sepolia no escopo → primeiro com pacote."""
+    if not pkg_options:
+        return None
+    values = {opt.get("value") for opt in pkg_options}
+    active_id = cycle.get("cycle_id")
+    if active_id in values and (cycle.get("evidence_package") or {}).get("evidence_package_id"):
+        # Se o ativo só tem simulação, preferir Sepolia no escopo quando existir
+        if _is_sepolia_anchored(cycle):
+            return active_id
+        for c in scope_cycles:
+            cid = c.get("cycle_id")
+            if cid in values and _is_sepolia_anchored(c):
+                return cid
+        return active_id
+    for c in scope_cycles:
+        cid = c.get("cycle_id")
+        if cid in values and _is_sepolia_anchored(c):
+            return cid
+    return pkg_options[0].get("value")
+
+
 def build_blockchain_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
     if not cycle.get("cycle_id"):
         return _empty(ctx)
 
-    unlocked = is_blockchain_unlocked(cycle)
-    approval = (cycle.get("approval") or {}).get("decision", "Pendente")
+    scope_cycles = _cycles_for_evidence_scope(ctx)
+    # Garante dados completos (ancoring/explorer) ao montar opções
+    from utils.file_helpers import get_cycle
+
+    hydrated: list[dict] = []
+    for c in scope_cycles:
+        cid = c.get("cycle_id")
+        full = get_cycle(cid) if cid else None
+        hydrated.append(full or c)
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(hydrated)
+    selected_id = _default_blockchain_cycle_id(cycle, hydrated, pkg_options)
+    display = cycle
+    if selected_id and selected_id != cycle.get("cycle_id"):
+        loaded = get_cycle(selected_id)
+        if loaded:
+            display = loaded
+
+    unlocked = is_blockchain_unlocked(display)
+    approval = (display.get("approval") or {}).get("decision", "Pendente")
     approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
-    pub_st = (cycle.get("steps") or {}).get("publication", {}).get("status", "PENDING")
+    pub_st = (display.get("steps") or {}).get("publication", {}).get("status", "PENDING")
     pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
-    pkg_rows = blockchain_adapter.build_package_summary_rows(ctx.cycles) if unlocked else []
+    pkg_rows = blockchain_adapter.build_package_summary_rows(hydrated)
+
+    panel = AuditBlockchainGate(
+        display,
+        unlocked=unlocked,
+        lock_message=blockchain_lock_message(display) or "",
+        approval_status=approval_label,
+        publication_status=pub_label,
+        pkg_rows=pkg_rows if unlocked else [],
+        scoped_package_count=len(pkg_rows),
+        pkg_options=pkg_options,
+        selected_cycle_id=selected_id,
+    )
 
     return html.Div([
         *_cycle_header(ctx),
-        AuditBlockchainGate(
-            cycle,
-            unlocked=unlocked,
-            lock_message=blockchain_lock_message(cycle) or "",
-            approval_status=approval_label,
-            publication_status=pub_label,
-            pkg_rows=pkg_rows,
-        ),
+        html.Div(id="ta-blockchain-panel", children=panel),
     ])
 
 
 def build_integrity_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
-    pkg_options = blockchain_adapter.build_verify_cycle_options(ctx.cycles)
     if not cycle.get("cycle_id"):
         return _empty(ctx)
-    if not pkg_options:
-        return html.Div([
-            *_cycle_header(ctx),
-            html.Div(
-                "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado.",
-                className="empty-state",
-            ),
-        ])
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(_cycles_for_evidence_scope(ctx))
+    selected_id = _default_verify_cycle_id(cycle, pkg_options)
+    panel = (
+        AuditIntegrityPanel(cycle, pkg_options, selected_cycle_id=selected_id)
+        if pkg_options
+        else html.Div(
+            "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado "
+            "ou o ciclo ainda não foi publicado.",
+            className="empty-state",
+        )
+    )
 
     return html.Div([
         *_cycle_header(ctx),
-        html.Div(id="ta-integrity-panel", children=AuditIntegrityPanel(
-            cycle,
-            pkg_options,
-            selected_cycle_id=cycle.get("cycle_id"),
-        )),
+        html.Div(id="ta-integrity-panel", children=panel),
     ])
 
 

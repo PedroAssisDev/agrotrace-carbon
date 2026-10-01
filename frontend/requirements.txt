@@ -1,4 +1,5 @@
 dash>=4.0
+# Frontend package version: 1.0.0 (see pyproject.toml and config.__version__)
 dash-bootstrap-components>=2.0
 plotly>=6.0
 pandas>=2.0

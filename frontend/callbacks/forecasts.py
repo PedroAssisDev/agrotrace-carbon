@@ -21,6 +21,7 @@ from services.forecast_view_service import (
     build_warnings,
     empty_result_message,
 )
+from services.model_training_adapter import refresh_training_source
 from utils.global_filter import get_farm_id
 
 
@@ -38,13 +39,51 @@ def refresh_forecast_availability(pathname, global_filter):
 
 
 @callback(
+    Output("fc-expected-cows", "value"),
     Output("fc-cows-label", "children"),
+    Output("fc-regression-last-hint", "children"),
     Input("fc-regression-granularity", "value"),
+    Input("global-filter-store", "data"),
+    Input("url", "pathname"),
+    Input("fc-models-refresh", "data"),
+    prevent_initial_call=False,
 )
-def update_cows_label(granularity):
-    if granularity == "annual":
-        return "Vacas em lactação esperadas (próximo ano)"
-    return "Vacas em lactação esperadas (próximo mês)"
+def prefill_regression_cows(granularity, global_filter, pathname, _refresh_tick):
+    if pathname != "/previsoes":
+        raise PreventUpdate
+    farm_id = get_farm_id(global_filter)
+    if not farm_id:
+        return None, "Vacas em lactação esperadas (período seguinte)", ""
+
+    gran = granularity or "monthly"
+    try:
+        refresh_training_source()
+        defaults = get_prediction_facade().get_regression_scenario_defaults(farm_id, gran)
+    except Exception:
+        defaults = {}
+
+    last_cows = defaults.get("last_lactating_cows")
+    last_label = defaults.get("last_period_label")
+    next_label = defaults.get("forecast_period") or (
+        "próximo ano" if gran == "annual" else "próximo mês"
+    )
+    label = f"Vacas em lactação esperadas ({next_label})"
+    if last_cows is not None and last_label:
+        hint = (
+            f"Último registro: {last_label} com {last_cows} vacas em lactação. "
+            f"Previsão no período seguinte: {next_label}."
+        )
+    elif last_cows is not None:
+        hint = (
+            f"Último registro com {last_cows} vacas em lactação. "
+            f"Previsão no período seguinte: {next_label}."
+        )
+    else:
+        hint = (
+            "Sem histórico desta propriedade na fonte de treino. "
+            "Informe as vacas manualmente para o período seguinte."
+        )
+    return last_cows, label, hint
 
 
 @callback(

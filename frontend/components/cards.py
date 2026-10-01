@@ -25,6 +25,15 @@ _ALERT_CLASS = {
     "secondary": "alert-info-custom",
 }
 
+_ALERT_ICONS = {
+    "info": "fas fa-info-circle",
+    "warning": "fas fa-exclamation-triangle",
+    "danger": "fas fa-times-circle",
+    "success": "fas fa-check-circle",
+    "pending": "fas fa-clock",
+    "secondary": "fas fa-info-circle",
+}
+
 
 def AlertBox(
     message: str,
@@ -33,14 +42,21 @@ def AlertBox(
     title: str | None = None,
     className: str = "",
 ) -> html.Div:
-    """Alerta com fundo claro e texto escuro (legível para prints)."""
+    """Alerta com fundo claro, texto escuro e ícone semântico."""
     cls = _ALERT_CLASS.get(variant, "alert-info-custom")
-    children: list = []
+    icon = _ALERT_ICONS.get(variant, "fas fa-info-circle")
+    body: list = []
     if title:
-        children.append(html.Strong(title, className="d-block mb-1"))
-    children.append(html.Span(message))
+        body.append(html.Strong(title, className="d-block mb-1"))
+    body.append(html.Span(message))
     extra = f" {className}" if className else ""
-    return html.Div(children, className=f"{cls} mb-2{extra}")
+    return html.Div(
+        [
+            html.I(className=f"{icon} alert-box-icon", **{"aria-hidden": "true"}),
+            html.Div(body, className="alert-box-body"),
+        ],
+        className=f"{cls} alert-box mb-2{extra}",
+    )
 
 
 def _icon_wrap(icon: str, color: str, *, large: bool = False) -> html.Div:

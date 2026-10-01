@@ -36,6 +36,25 @@ def AuditIntegrityPanel(
     evidence = display_cycle.get("evidence_package") or {}
     mode = integrity.get("mode") or evidence.get("mode")
 
+    merkle_original = (
+        evidence.get("merkle_root")
+        or integrity.get("merkle_root_anchored")
+        or summary.get("merkle_anchored")
+    )
+    merkle_recomputed = integrity.get("merkle_root_recomputed") or summary.get("merkle_recomputed")
+    if not merkle_recomputed:
+        for row in summary.get("rows") or integrity.get("rows") or []:
+            if isinstance(row, dict) and str(row.get("artifact", "")).lower().startswith("merkle"):
+                merkle_recomputed = row.get("recalculated_hash")
+                merkle_original = merkle_original or row.get("anchored_hash")
+                break
+
+    def _short_hash(value: str | None) -> str:
+        if not value or value == "—":
+            return "—"
+        text = str(value)
+        return text[:24] + "…" if len(text) > 24 else text
+
     divergent_alert = None
     if integrity.get("is_valid") is False:
         divergent_alert = dbc.Alert(
@@ -52,10 +71,15 @@ def AuditIntegrityPanel(
                 value=sel_id,
                 size="sm",
             ), md=5),
-            dbc.Col(dbc.ButtonGroup([
-                dbc.Button("Executar verificação íntegra", id="btn-verify-intact", size="sm", className="btn-agro-approve"),
-                dbc.Button("Simular divergência", id="btn-verify-tamper", size="sm", className="btn-agro-reject"),
-            ]), md=7),
+            dbc.Col(
+                dbc.Button(
+                    "Executar verificação íntegra",
+                    id="btn-verify-intact",
+                    size="sm",
+                    className="btn-agro-approve",
+                ),
+                md=7,
+            ),
         ], className="mb-3 g-2"),
         divergent_alert,
         html.Div([
@@ -69,11 +93,11 @@ def AuditIntegrityPanel(
             ], md=4),
             dbc.Col([
                 html.Small("Merkle Root original", className="text-muted d-block"),
-                html.Code((evidence.get("merkle_root") or "—")[:24] + "…" if evidence.get("merkle_root") else "—"),
+                html.Code(_short_hash(merkle_original), className="hash-mono"),
             ], md=4),
             dbc.Col([
                 html.Small("Merkle recalculada", className="text-muted d-block"),
-                html.Code((integrity.get("merkle_root_recomputed") or "—")[:24] + "…" if integrity.get("merkle_root_recomputed") else "—"),
+                html.Code(_short_hash(merkle_recomputed), className="hash-mono"),
             ], md=4),
         ], className="mb-3 g-2 small"),
         html.P(f"Última verificação: {integrity.get('verified_at') or 'Nunca executada'}", className="small text-aux mb-2"),

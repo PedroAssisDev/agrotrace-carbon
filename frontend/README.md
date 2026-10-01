@@ -6,15 +6,28 @@ Interface Dash + orquestração in-process da pipeline MRV.
 
 ```bash
 python main.py
+# UI: http://127.0.0.1:8050
 ```
 
-## Rotas
+Não use `app.py` (conflito com o pacote `app` do blockchain-service).
 
-`/`, `/data-entry`, `/calculations`, `/approval`, `/indicators`, `/previsoes`, `/technical-audit`, `/settings`
+## Rotas (8)
+
+| Rota | Label |
+|------|-------|
+| `/` | Painel Executivo |
+| `/data-entry` | Entrada de Dados |
+| `/calculations` | Cálculos de Emissão |
+| `/approval` | Revisão e Aprovação |
+| `/indicators` | Análise Geral |
+| `/previsoes` | Previsões |
+| `/technical-audit` | Auditoria Técnica (9 abas) |
+| `/settings` | Configurações |
+
+Paths desconhecidos caem no dashboard. Não há `LEGACY_REDIRECTS`. Blockchain/evidências:
+aba em `/technical-audit`.
 
 ### Previsões (`/previsoes`)
-
-Três abas:
 
 | Aba | Função |
 |-----|--------|
@@ -24,23 +37,26 @@ Três abas:
 
 - Propriedade = `farm_id` do filtro global (sem “Todas”).
 - Inferência: `services/forecast_inference/`
-- Treinamento: somente via `services/model_training_adapter.py` → `ModelTrainingFacade` (sem sklearn no frontend).
-- Artefatos: `MODEL_TRAINING_ARTIFACTS_DIR` / `MODEL_REGISTRY_PATH` / `MODEL_TRAINING_CONFIG_PATH`.
+- Treinamento: `services/model_training_adapter.py` → `ModelTrainingFacade`
+- Artefatos: `MODEL_TRAINING_ARTIFACTS_DIR` / `MODEL_REGISTRY_PATH` / `MODEL_TRAINING_CONFIG_PATH`
 
 ## Scripts oficiais
 
 ```bash
-python scripts/reset_test_environment.py --confirm
-python scripts/seed_test_scenarios.py --wipe-first
-python scripts/run_pipeline_smoke_test.py
+# Seed canônico (demo): wipe → FARM-* → Embrapa P-* / BR-*
+python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42 --profile demo
 
-# Reset + simulados (FARM-*) + Embrapa monthly (P-*) + annual (BR-*, year=2022)
-python scripts/reset_and_seed_pending_cycles.py --confirm --seed 42
-
-# Aprovar em massa ciclos pendentes (publicacao -> evidencias -> blockchain)
+# Aprovar em massa (publicação → evidências → blockchain)
 python scripts/approve_all_pending_cycles.py --dry-run
 python scripts/approve_all_pending_cycles.py --confirm
-python scripts/approve_all_pending_cycles.py --confirm --property-prefix FARM-
+
+# Smoke e gate
+python scripts/run_pipeline_smoke_test.py
+python scripts/test_full_emission_cycle.py
+python scripts/run_full_regression.py
 ```
+
+Fluxo alternativo (3 cenários `PROP-*`): `reset_test_environment.py` +
+`seed_test_scenarios.py` — ver [docs/development/reset-and-seed.md](../docs/development/reset-and-seed.md).
 
 Documentação do monorepo: [../docs/README.md](../docs/README.md)

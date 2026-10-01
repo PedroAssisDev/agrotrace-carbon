@@ -1,4 +1,4 @@
-# Uso em produção
+﻿# Uso em produção
 
 Pressupõe Python 3.10+, dependência PyYAML instalada (`pip install -r requirements.txt`). O pacote `wrappers` deve ser importável (diretório pai no `PYTHONPATH` ou pacote instalado em modo editável).
 
@@ -22,17 +22,17 @@ print(result.processing_status, len(result.normalized_payload), len(result.rejec
 ## Pipeline automatizado (cron, Airflow, Prefect)
 
 - Passo 1: depositar ficheiros num diretório de entrada.  
-- Passo 2: para cada ficheiro, chamar `process_file_auto` **ou** `detect_layout_id` + `process_file`.  
+- Passo 2: para cada ficheiro, chamar `detect_layout_id+process_file` **ou** `detect_layout_id` + `process_file`.  
 - Passo 3: inspecionar `processing_status`; se `failure`, alertar e mover ficheiro para quarentena.  
 - Passo 4: agregar manifests em `validation_reports/` para painel de auditoria.
 
 ```python
-from wrappers import process_file_auto, ExportConfiguration, LayoutDetectionError
+from wrappers import detect_layout_id+process_file, ExportConfiguration, LayoutDetectionError
 from pathlib import Path
 
 def job(path: Path, base_out: Path):
     try:
-        r = process_file_auto(
+        r = detect_layout_id+process_file(
             str(path),
             export_config=ExportConfiguration(base_dir=base_out),
         )

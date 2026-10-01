@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dash import dash_table, html
 
+from layout.theme import COLORS
 from services.calculation_review_service import build_review_table_rows
 
 _STATUS_LABELS = {
@@ -33,14 +34,13 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
             "calculo": r["calculo"],
             "resultado": r["resultado"],
             "unidade": r["unidade"],
-            "variaveis": r["variaveis"],
-            "zeros": r["zeros"],
+            "co2e_kg": r["co2e_kg"],
             "status": _STATUS_LABELS.get(r["status"], r["status"]),
         })
 
     parts = [
         html.H6("Cálculos do arquivo", className="card-title mb-2"),
-        html.P("Selecione uma linha para revisar e aprovar.", className="small text-aux mb-2"),
+        html.P("Selecione uma linha para revisar.", className="small text-aux mb-2"),
     ]
     if not table_rows:
         parts.append(html.P("Nenhum cálculo disponível para revisão.", className="text-muted small mb-2"))
@@ -52,8 +52,7 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                 {"name": "Cálculo", "id": "calculo"},
                 {"name": "Resultado", "id": "resultado"},
                 {"name": "Unidade", "id": "unidade"},
-                {"name": "Vars", "id": "variaveis"},
-                {"name": "Zeros", "id": "zeros"},
+                {"name": "CO₂e (kg)", "id": "co2e_kg"},
                 {"name": "Status", "id": "status"},
             ],
             data=table_rows,
@@ -68,14 +67,15 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                 "textAlign": "left",
                 "whiteSpace": "normal",
                 "height": "auto",
-                "minWidth": "60px",
-                "maxWidth": "220px",
+                "minWidth": "64px",
+                "maxWidth": "240px",
             },
             style_header={
                 "fontWeight": "600",
                 "fontSize": "0.8rem",
-                "backgroundColor": "#EEF3EF",
-                "borderBottom": "1px solid #d8e0d8",
+                "backgroundColor": COLORS.get("table_header", COLORS["surface_muted"]),
+                "color": COLORS["text"],
+                "borderBottom": f"1px solid {COLORS['border']}",
             },
             style_data_conditional=[
                 {
@@ -84,22 +84,14 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                     "fontVariantNumeric": "tabular-nums",
                 },
                 {
-                    "if": {"column_id": "variaveis"},
-                    "textAlign": "center",
-                },
-                {
-                    "if": {"column_id": "zeros"},
-                    "textAlign": "center",
-                },
-                {
-                    "if": {"filter_query": "{zeros} > 0", "column_id": "zeros"},
-                    "color": "#c62828",
-                    "fontWeight": "600",
+                    "if": {"column_id": "co2e_kg"},
+                    "textAlign": "right",
+                    "fontVariantNumeric": "tabular-nums",
                 },
             ],
             css=[{
                 "selector": ".dash-spreadsheet tr.row-selected td",
-                "rule": "background-color: #E8F5E9 !important;",
+                "rule": f"background-color: {COLORS['status_success_bg']} !important; color: {COLORS['text']} !important;",
             }],
         ),
         className="cr-review-table",

@@ -67,11 +67,11 @@ def ProvenanceSchemaExplorer(schema: dict) -> html.Div:
         start_collapsed=True,
         always_open=False,
         className="prov-schema-accordion",
-    ) if items else html.P("Nenhuma tabela no escopo.", className="text-muted small")
+    ) if items else html.P("Nenhuma tabela no escopo.", className="text-muted small mb-0")
 
     return html.Div([
         html.Div([
-            html.H6("Explorador de esquema", className="section-subtitle d-inline me-2"),
+            html.H6("Referência de esquema", className="section-subtitle d-inline me-2"),
             *badges,
         ], className="mb-2"),
         html.P(
@@ -79,4 +79,4 @@ def ProvenanceSchemaExplorer(schema: dict) -> html.Div:
             className="text-aux small mb-2",
         ),
         accordion,
-    ], className="prov-schema-explorer mb-3")
+    ], className="prov-schema-explorer")

@@ -24,10 +24,10 @@ def ZeroAssumptionAlert(item: dict) -> html.Div:
         ]))
 
     return dbc.Alert([
-        html.Strong("Zero assumido — confirmação necessária", className="d-block mb-1"),
+        html.Strong("Zeros assumidos", className="d-block mb-1"),
         html.Ul(items, className="mb-0 small"),
         html.Small(
-            "Aprovar com zero confirma explicitamente que a ausência de dado é aceitável.",
+            "Ao clicar em Aprovar, a ausência desses dados será confirmada.",
             className="text-aux d-block mt-2",
         ),
-    ], color="warning", className="cr-zero-alert")
+    ], color="warning", className="cr-zero-alert py-2")

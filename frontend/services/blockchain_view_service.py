@@ -84,7 +84,17 @@ def build_evidence_summary(cycle: dict) -> dict[str, Any]:
         and str(anchoring.get("transaction_id")).startswith("0x")
         and len(str(anchoring.get("transaction_id"))) >= 66
     ):
-        explorer = f"https://sepolia.etherscan.io/tx/{anchoring.get('transaction_id')}"
+        try:
+            import config as app_config
+
+            base = getattr(
+                app_config,
+                "BLOCKCHAIN_SEPOLIA_EXPLORER_BASE_URL",
+                "https://sepolia.etherscan.io",
+            )
+        except Exception:
+            base = "https://sepolia.etherscan.io"
+        explorer = f"{str(base).rstrip('/')}/tx/{anchoring.get('transaction_id')}"
     return {
         "unlocked": is_blockchain_unlocked(cycle),
         "lock_reason": blockchain_lock_reason(cycle),

@@ -1,0 +1,70 @@
+{
+  "name": "agrotrace-carbon",
+  "version": "1.0.0",
+  "python": ">=3.11",
+  "build_date": "2026-08-04",
+  "projects": [
+    {
+      "path": "agrotrace-carbon-save-file",
+      "name": "agrotrace-carbon-save-file",
+      "version": "1.0.0",
+      "requires_python": ">=3.10"
+    },
+    {
+      "path": "agrotrace-carbon-wrappers-service",
+      "name": "agrotrace-carbon-wrappers-service",
+      "version": "1.0.0",
+      "requires_python": ">=3.10"
+    },
+    {
+      "path": "agrotrace-carbon-ontology-manager",
+      "name": "agromrv-o-lite",
+      "version": "1.0.0",
+      "requires_python": ">=3.9"
+    },
+    {
+      "path": "agrotrace-carbon-calculation-service",
+      "name": "ecofarm-calculations",
+      "version": "1.0.0",
+      "requires_python": ">=3.10"
+    },
+    {
+      "path": "agrotrace-carbon-model-training-service",
+      "name": "carbonseco-model-training-service",
+      "version": "1.0.0",
+      "requires_python": ">=3.11"
+    },
+    {
+      "path": "agrotrace-carbon-traceability-service",
+      "name": "agrotrace-carbon-provenance-service",
+      "version": "1.0.0",
+      "requires_python": ">=3.11"
+    },
+    {
+      "path": "agrotrace-carbon-blockchain-service",
+      "name": "agrotrace-carbon-blockchain-service",
+      "version": "1.0.0",
+      "requires_python": ">=3.11"
+    },
+    {
+      "path": "frontend",
+      "name": "agrotrace-carbon-frontend",
+      "version": "1.0.0",
+      "requires_python": ">=3.11"
+    }
+  ],
+  "internal_dependencies": [
+    {"consumer": "frontend", "provider": "agrotrace-carbon-save-file", "contract": "save_file API"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-wrappers-service", "contract": "process_file + detect_layout_id"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-ontology-manager", "contract": "ontology populate/validate/publish"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-calculation-service", "contract": "compute_farm_period_emissions"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-model-training-service", "contract": "ModelTrainingFacade (train/evaluate/registry; inference in frontend forecast_inference)"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-traceability-service", "contract": "ProvenanceRecorder"},
+    {"consumer": "frontend", "provider": "agrotrace-carbon-blockchain-service", "contract": "evidence/Merkle/anchor after FINAL_ONTOLOGY_PUBLISHED"}
+  ],
+  "canonicalization": "SHA-256 + Merkle (blockchain-service)",
+  "temporal_values": ["daily", "monthly", "annual"],
+  "organizational_values": ["animal", "lot", "property"],
+  "blockchain_providers": ["local_simulated", "anvil_local", "ethereum_sepolia"],
+  "notes": "No secrets, RPC credentials, personal paths, or operational DBs included."
+}

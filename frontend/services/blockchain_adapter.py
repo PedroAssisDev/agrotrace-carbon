@@ -411,10 +411,21 @@ def verify_integrity(evidence_package: dict, current_artifacts: dict | None = No
                 "recalculated_hash": evidence_package.get("package_hash", "—") if not tamper else "—",
                 "status": "íntegro" if details.get("package_hash_valid") and not tamper else "divergente",
             })
+            merkle_anchored = (
+                details.get("merkle_root_expected")
+                or details.get("merkle_root")
+                or evidence_package.get("merkle_root")
+                or "—"
+            )
+            merkle_recomputed = (
+                details.get("merkle_root_computed")
+                or details.get("merkle_root_recomputed")
+                or (evidence_package.get("merkle_root") if not tamper else "—")
+            )
             rows.append({
                 "artifact": "Merkle Root",
-                "anchored_hash": evidence_package.get("merkle_root", "—"),
-                "recalculated_hash": evidence_package.get("merkle_root", "—") if not tamper else "—",
+                "anchored_hash": merkle_anchored,
+                "recalculated_hash": merkle_recomputed if not tamper else "—",
                 "status": "íntegro" if details.get("merkle_root_valid") and not tamper else "divergente",
             })
 
@@ -430,6 +441,9 @@ def verify_integrity(evidence_package: dict, current_artifacts: dict | None = No
                 "rows": rows,
                 "details": details,
                 "tamper_simulated": tamper,
+                "merkle_root_anchored": merkle_anchored,
+                "merkle_root_recomputed": None if tamper else merkle_recomputed,
+                "verified_at": now_iso(),
             }
             log_call(
                 logger,
@@ -486,6 +500,15 @@ def _mock_verification(tamper: bool) -> dict[str, Any]:
     out = mock_integrity_check(integrate=not tamper)
     out["mode"] = "mock"
     out["tamper_simulated"] = tamper
+    if not out.get("verified_at"):
+        out["verified_at"] = now_iso()
+    if not out.get("merkle_root_recomputed") and not tamper:
+        # Prefere hash recalculado da linha Merkle Root, se existir
+        for row in out.get("rows") or []:
+            if isinstance(row, dict) and str(row.get("artifact", "")).lower().startswith("merkle"):
+                out["merkle_root_recomputed"] = row.get("recalculated_hash")
+                out.setdefault("merkle_root_anchored", row.get("anchored_hash"))
+                break
     return out
 
 

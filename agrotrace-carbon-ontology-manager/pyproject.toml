@@ -1,6 +1,6 @@
 [project]
 name = "agromrv-o-lite"
-version = "0.1.0"
+version = "1.0.0"
 description = "AgroMRV-O Lite — lightweight domain ontology for dairy MRV semantic integration"
 requires-python = ">=3.9"
 dependencies = [

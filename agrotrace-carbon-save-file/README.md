@@ -2,6 +2,8 @@
 
 Servico de preservacao do dado bruto original do AgroTrace Carbon.
 
+> Documento canônico do módulo: [../docs/modules/save-file.md](../docs/modules/save-file.md).
+
 ## Papel no ciclo
 
 Cobre as etapas iniciais de entrada e preservacao:
@@ -52,14 +54,55 @@ fallback explicito. A UI nao deve exibir caminhos absolutos.
 - `save_file/emulated/`: geração de CSVs simulados realistas (sem emissões pré-calculadas).
 - `data/emulated_uploads/`: staging regenerável (`emulated_*.csv` + `manifest.json`).
 - `data/originals/`: arquivos originais preservados após upload/import.
+- `data/embrapa/`: CSVs-fonte Embrapa (`annual_report.csv`, `monthly_report.csv`) e `split.py`.
+
+## Requisitos e instalação isolada
+
+- Python >= 3.10
+- Sem dependências runtime externas (stdlib)
+
+```bash
+cd agrotrace-carbon-save-file
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+pip install -e ".[test]"
+pip check
+python -c "from save_file import __version__, save_original_content; print(__version__)"
+```
+
+Fonte canônica de dependências: `pyproject.toml`.
+
+## Versão
+
+`1.0.0` (`save_file.__version__`)
 
 ## Testes
 
 ```bash
 cd agrotrace-carbon-save-file
-python -m unittest tests.test_retrieve_original tests.test_emulated_generation
+python -m unittest discover -s tests -q
+# ou: pytest -q
 ```
 
+
+## Dados Embrapa
+
+Os relatórios-fonte ficam em `data/embrapa/`:
+
+- `annual_report.csv` — relatório anual (agrupado por `Property_Name`)
+- `monthly_report.csv` — relatório mensal (agrupado por `Property` + `Period`)
+
+Antes de carregar/usar os arquivos da Embrapa na pipeline, prepare os CSVs
+por propriedade (e período, no mensal) com `split.py`:
+
+```bash
+cd agrotrace-carbon-save-file
+python data/embrapa/split.py
+```
+
+Isso gera os arquivos prontos em `data/embrapa/annual/` e
+`data/embrapa/monthly/` (pastas regeneráveis; não versionadas).
+Requer `pandas` no ambiente.
 
 ## Dados emulados
 

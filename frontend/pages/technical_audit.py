@@ -5,7 +5,6 @@ from __future__ import annotations
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 
-from components.cycle_select import CycleSelect
 from components.empty_state import EmptyFilterState
 from components.page_header import PageHeader
 from services.page_context import resolve_page_context
@@ -23,6 +22,23 @@ _AUDIT_TABS = [
 ]
 
 
+def _cycle_select_props(ctx) -> tuple[list, str | None, dict]:
+    """options, value e style do select estável (sem remount)."""
+    cycles = ctx.cycles or []
+    active_id = (ctx.active_cycle or {}).get("cycle_id")
+    if not active_id or len(cycles) <= 1:
+        return [], None, {"display": "none"}
+    options = [
+        {
+            "label": f"{c.get('cycle_id')} — {c.get('reporting_period')}",
+            "value": c.get("cycle_id"),
+        }
+        for c in cycles
+        if c.get("cycle_id")
+    ]
+    return options, active_id, {"display": "block"}
+
+
 def _chrome_children(ctx, filter_options):
     header = PageHeader(
         "Auditoria Técnica",
@@ -37,12 +53,8 @@ def _chrome_children(ctx, filter_options):
         if ctx.is_empty and not ctx.active_cycle.get("cycle_id")
         else None
     )
-    cycle_row = (
-        CycleSelect(ctx.cycles, ctx.active_cycle, select_id="filter-cycle-select")
-        if ctx.active_cycle.get("cycle_id")
-        else []
-    )
-    return header, empty, cycle_row
+    options, value, style = _cycle_select_props(ctx)
+    return header, empty, options, value, style
 
 
 def layout(
@@ -54,12 +66,22 @@ def layout(
 ) -> html.Div:
     ctx = resolve_page_context(cycle, global_filter, context_cycle_id)
     tab_id = active_tab if active_tab in {t[0] for t in _AUDIT_TABS} else "ta-summary"
-    header, empty, cycle_row = _chrome_children(ctx, filter_options)
+    header, empty, options, value, style = _chrome_children(ctx, filter_options)
 
     body = [
         html.Div(id="ta-page-header", children=header),
         html.Div(id="ta-empty-state", children=empty),
-        html.Div(id="ta-cycle-select-row", children=cycle_row),
+        html.Div(
+            dbc.Select(
+                id="filter-cycle-select",
+                options=options,
+                value=value,
+                size="sm",
+                className="mb-2 form-select-narrow-lg",
+                style=style,
+            ),
+            id="ta-cycle-select-row",
+        ),
         dcc.Store(id="ta-prov-events-data", data=[]),
         dcc.Store(id="ta-prov-query-history", storage_type="local"),
         dcc.Store(id="ta-prov-last-result"),
