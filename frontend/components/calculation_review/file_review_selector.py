@@ -1,34 +1,35 @@
-"""Seletor de arquivo/ciclo para revisão."""
+"""Seletor de arquivo — usado dentro da toolbar de revisão."""
 
 from __future__ import annotations
 
 import dash_bootstrap_components as dbc
 from dash import html
 
-from components.tables import DataTable
 from services.calculation_review_service import build_file_select_rows
 
 
 def FileReviewSelector(cycles: list[dict], selected_cycle_id: str | None = None) -> html.Div:
+    """Dropdown de arquivo (sem meta agregada enganosa)."""
     rows = build_file_select_rows(cycles)
     if not rows:
         return html.Div()
 
+    options = [
+        {
+            "label": f"{r['arquivo']} — {r['periodo']}",
+            "value": r["cycle_id"],
+        }
+        for r in rows
+    ]
+    selected = selected_cycle_id or (rows[0]["cycle_id"] if rows else None)
+
     return html.Div([
-        html.H6("Arquivos para revisão", className="card-title mb-3"),
-        html.Div(
-            DataTable(
-                rows,
-                columns=["arquivo", "fazenda", "periodo", "pipeline_status", "review_status", "pendentes"],
-            ),
-            className="table-responsive cr-file-table",
-        ),
-        html.Small("Selecionar ciclo:", className="text-aux d-block mt-3"),
+        html.Label("Arquivo em revisão", className="small text-aux mb-1 d-block"),
         dbc.Select(
             id="approval-cycle-select",
-            options=[{"label": f"{r['arquivo']} — {r['periodo']}", "value": r["cycle_id"]} for r in rows],
-            value=selected_cycle_id or (rows[0]["cycle_id"] if rows else None),
+            options=options,
+            value=selected,
             size="sm",
-            className="form-select-narrow mt-1",
+            className="form-select-narrow",
         ),
     ], className="cr-file-selector")

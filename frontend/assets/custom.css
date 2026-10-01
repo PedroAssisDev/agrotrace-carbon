@@ -2129,6 +2129,88 @@
     font-weight: 600;
 }
 
+.page-approval .cr-emissions-total {
+    font-size: 1.15rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.page-approval .cr-stat-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    justify-content: flex-end;
+}
+
+.page-approval .cr-stat-chip {
+    min-width: 4.5rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--color-border, #d8e0d8);
+    border-radius: 6px;
+    background: var(--color-surface-muted, #f4f7f4);
+    text-align: center;
+}
+
+.page-approval .cr-stat-chip-label {
+    display: block;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted, #5a6b5a);
+}
+
+.page-approval .cr-stat-chip-value {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.page-approval .cr-stat-chip--success {
+    border-left: 3px solid var(--status-success-accent);
+}
+
+.page-approval .cr-stat-chip--warning {
+    border-left: 3px solid var(--status-warning-accent);
+}
+
+.page-approval .cr-stat-chip--danger {
+    border-left: 3px solid var(--status-danger-accent);
+}
+
+.page-approval .cr-file-details-body {
+    background: var(--color-surface-muted, #f4f7f4);
+    border: 1px solid var(--color-border, #d8e0d8);
+    border-radius: 8px;
+}
+
+.page-approval .cr-file-selector-meta {
+    justify-content: flex-end;
+}
+
+.page-approval .cr-audit-accordion {
+    margin-top: 0.25rem;
+}
+
+.page-approval .cr-review-toolbar .card-body {
+    padding-top: 0.85rem;
+    padding-bottom: 0.85rem;
+}
+
+.page-approval .cr-workbench {
+    min-height: 0;
+}
+
+.page-approval .cr-workbench > [class*="col"] {
+    display: flex;
+    flex-direction: column;
+}
+
+.page-approval .cr-workbench .agro-card {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
 .page-approval .cr-review-table {
     margin-bottom: 0;
 }
@@ -2143,7 +2225,32 @@
 }
 
 .page-approval .cr-detail-panel {
-    min-height: 420px;
+    min-height: 320px;
+    max-height: min(70vh, 720px);
+    display: flex;
+    flex-direction: column;
+}
+
+.page-approval .cr-detail-panel-body {
+    overflow-y: auto;
+    max-height: min(70vh, 720px);
+}
+
+.page-approval .cr-detail-accordion {
+    margin-bottom: 0;
+}
+
+.page-approval .cr-approval-actions {
+    margin-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    padding: 0.5rem 0.65rem;
+    background: var(--color-surface-muted, #f4f7f4);
+    border: 1px solid var(--color-border, #d8e0d8);
+    border-radius: 8px;
+}
+
+.page-approval .cr-final-panel .cr-reviewer-fields {
+    margin-top: 0;
 }
 
 .page-approval .cr-detail-result-block {

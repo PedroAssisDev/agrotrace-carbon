@@ -3,51 +3,34 @@
 from __future__ import annotations
 
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import html
 
-from components.calculation_review.approval_reviewer_fields import ApprovalReviewerFields
 from components.calculation_review.calculation_item_review_panel import CalculationItemReviewPanel
 from components.calculation_review.calculation_review_table import CalculationReviewTable
 from components.calculation_review.file_approval_final_panel import FileApprovalFinalPanel
-from components.calculation_review.file_review_selector import FileReviewSelector
-from components.calculation_review.file_review_summary_cards import (
-    CalculationReviewSummaryCards,
-    FileReviewSummaryCards,
-)
+from components.calculation_review.file_review_summary_cards import ReviewToolbar
 from components.calculation_review.review_provenance_summary import ReviewProvenanceSummary
 from components.calculation_review.result_version_timeline import ResultVersionTimeline
 from components.empty_state import EMPTY_NO_PENDING_APPROVAL, EmptyFilterState, EmptyState
 from components.page_header import PageHeader
-from components.status_badges import StatusBadge
-from services.blockchain_view_service import is_blockchain_unlocked
 from services.calculation_approval_service import ensure_review_started
-from services.calculation_review_service import ensure_calculation_review, resolve_file_review_status
+from services.calculation_review_service import ensure_calculation_review
 from services.cycle_status_service import count_pending_approval, cycles_pending_approval
 from services.page_context import resolve_page_context
 
 
-def _header_badges(cycle: dict) -> html.Div:
-    calc = cycle.get("calculation") or {}
-    review_st = resolve_file_review_status(cycle)
-    bc = is_blockchain_unlocked(cycle)
-    pub = (cycle.get("steps") or {}).get("publication", {})
-    published = pub.get("status") in {"DONE", "DONE_WARNINGS", "COMPLETED"}
-
-    badges = [
-        StatusBadge("PRELIMINARY", label="Resultado preliminar"),
-        StatusBadge(review_st, label=review_st),
-        StatusBadge("PROVENANCE", label="Proveniência ativa"),
-    ]
-    if published:
-        badges.append(StatusBadge("APPROVED", label="Aprovado / Publicado"))
-    else:
-        badges.append(StatusBadge("BLOCKCHAIN_LOCKED", label="Blockchain bloqueado" if not bc else "Blockchain liberado"))
-
-    raw = cycle.get("raw_file") or {}
-    if raw.get("original_filename"):
-        badges.append(html.Span(raw["original_filename"], className="badge-status badge-status-dados-reais me-1 small"))
-
-    return html.Div(badges, className="d-flex flex-wrap gap-1 mt-2 cr-header-badges")
+def _audit_section(cycle: dict) -> html.Div:
+    return html.Div([
+        dbc.Accordion([
+            dbc.AccordionItem(
+                html.Div([
+                    html.Div(ResultVersionTimeline(cycle), className="mb-3"),
+                    ReviewProvenanceSummary(cycle),
+                ]),
+                title="Auditoria — versões e proveniência",
+            ),
+        ], start_collapsed=True, className="cr-audit-accordion"),
+    ], className="mb-3")
 
 
 def layout(
@@ -95,35 +78,24 @@ def layout(
         ))
         return html.Div(body, className="page-approval page-content-inner")
 
-    body.append(_header_badges(selected))
-
     review_items = (selected.get("calculation_review") or {}).get("items") or []
     default_item_id = review_items[0].get("calculation_item_id") if review_items else None
 
     return html.Div(body + [
-        dbc.Row([
-            dbc.Col(dbc.Card(dbc.CardBody(
-                FileReviewSelector(queue, selected.get("cycle_id")),
-            ), className="agro-card"), md=12, className="mb-3"),
-        ]),
-        FileReviewSummaryCards(selected),
-        CalculationReviewSummaryCards(selected),
-        dbc.Row([
-            dbc.Col(dbc.Card(dbc.CardBody(ApprovalReviewerFields()), className="agro-card"), md=12),
-        ], className="mb-3"),
+        ReviewToolbar(queue, selected),
         dbc.Row([
             dbc.Col(dbc.Card(dbc.CardBody(
                 CalculationReviewTable(selected),
-            ), className="agro-card"), md=7),
+            ), className="agro-card h-100"), md=5),
             dbc.Col(
                 html.Div(
                     id="cr-detail-panel",
                     children=CalculationItemReviewPanel(selected, default_item_id),
+                    className="h-100",
                 ),
-                md=5,
+                md=7,
             ),
-        ], className="g-3 mb-3"),
+        ], className="g-3 mb-3 cr-workbench align-items-stretch"),
         FileApprovalFinalPanel(selected),
-        html.Div(ResultVersionTimeline(selected), className="mb-3"),
-        ReviewProvenanceSummary(selected),
+        _audit_section(selected),
     ], className="page-approval page-content-inner")

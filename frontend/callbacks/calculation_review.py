@@ -121,6 +121,18 @@ def toggle_hash(n, is_open):
     return not is_open
 
 
+@callback(
+    Output("cr-file-details-collapse", "is_open"),
+    Input("cr-toggle-file-details", "n_clicks"),
+    State("cr-file-details-collapse", "is_open"),
+    prevent_initial_call=True,
+)
+def toggle_file_details(n, is_open):
+    if not n:
+        return no_update
+    return not is_open
+
+
 def _save_and_return(cycle: dict) -> dict:
     save_cycle(cycle)
     return cycle_store_summary(cycle)

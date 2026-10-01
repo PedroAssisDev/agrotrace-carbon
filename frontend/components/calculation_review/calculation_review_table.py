@@ -34,6 +34,7 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
             "calculo": r["calculo"],
             "resultado": r["resultado"],
             "unidade": r["unidade"],
+            "co2e_kg": r["co2e_kg"],
             "variaveis": r["variaveis"],
             "zeros": r["zeros"],
             "status": _STATUS_LABELS.get(r["status"], r["status"]),
@@ -41,7 +42,10 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
 
     parts = [
         html.H6("Cálculos do arquivo", className="card-title mb-2"),
-        html.P("Selecione uma linha para revisar e aprovar.", className="small text-aux mb-2"),
+        html.P(
+            "Selecione uma linha para revisar. Resultado = massa do gás; CO₂e = equivalente comparável.",
+            className="small text-aux mb-2",
+        ),
     ]
     if not table_rows:
         parts.append(html.P("Nenhum cálculo disponível para revisão.", className="text-muted small mb-2"))
@@ -53,6 +57,7 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
                 {"name": "Cálculo", "id": "calculo"},
                 {"name": "Resultado", "id": "resultado"},
                 {"name": "Unidade", "id": "unidade"},
+                {"name": "CO₂e (kg)", "id": "co2e_kg"},
                 {"name": "Vars", "id": "variaveis"},
                 {"name": "Zeros", "id": "zeros"},
                 {"name": "Status", "id": "status"},
@@ -82,6 +87,11 @@ def CalculationReviewTable(cycle: dict, selected_item_id: str | None = None) -> 
             style_data_conditional=[
                 {
                     "if": {"column_id": "resultado"},
+                    "textAlign": "right",
+                    "fontVariantNumeric": "tabular-nums",
+                },
+                {
+                    "if": {"column_id": "co2e_kg"},
                     "textAlign": "right",
                     "fontVariantNumeric": "tabular-nums",
                 },

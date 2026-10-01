@@ -15,22 +15,38 @@ from utils.formatting import format_kg_co2e
 
 
 def _result_block(item: dict) -> html.Div:
+    is_total = item.get("gas") == "CO2e" or item.get("formula_id") == "total_ghg_co2e"
+    co2e_kg = item.get("co2e_kg")
+    if co2e_kg is None and is_total:
+        co2e_kg = item.get("result_value")
+
+    if is_total:
+        return html.Div([
+            html.Small("Total CO₂e", className="text-aux d-block"),
+            html.Strong(format_item_result_display(item), className="cr-detail-result d-block"),
+            html.Span(
+                format_kg_co2e(co2e_kg) if co2e_kg is not None else "—",
+                className="small text-aux",
+            ),
+            html.P(item.get("formula", "—"), className="small text-aux mb-0 mt-2 cr-detail-formula"),
+        ], className="cr-detail-result-block p-2 mb-2")
+
     return html.Div([
         dbc.Row([
             dbc.Col([
-                html.Small("Resultado", className="text-aux d-block"),
+                html.Small("Resultado (massa do gás)", className="text-aux d-block"),
                 html.Strong(format_item_result_display(item), className="cr-detail-result"),
             ], md=6),
             dbc.Col([
-                html.Small("CO₂e", className="text-aux d-block"),
+                html.Small("Equivalente CO₂e", className="text-aux d-block"),
                 html.Strong(
-                    format_kg_co2e(item.get("co2e_kg")) if item.get("co2e_kg") is not None else "—",
+                    format_kg_co2e(co2e_kg) if co2e_kg is not None else "—",
                     className="cr-detail-result",
                 ),
             ], md=6),
-        ], className="g-2 mb-2"),
+        ], className="g-2 mb-1"),
         html.P(item.get("formula", "—"), className="small text-aux mb-0 cr-detail-formula"),
-    ], className="cr-detail-result-block p-2 mb-3")
+    ], className="cr-detail-result-block p-2 mb-2")
 
 
 def _input_variables_table(input_vars: list[dict]) -> html.Div:
@@ -72,13 +88,12 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
     has_fallback = any(iv.get("origin") == "normalized_fallback" for iv in input_vars)
     decided = item.get("review_decision")
 
-    sections: list = [
-        html.Div([
-            html.H6(item.get("formula_name", "Detalhe"), className="card-title mb-0"),
-            StatusBadge(item.get("status", "AWAITING_REVIEW")),
-        ], className="d-flex justify-content-between align-items-center mb-3"),
-        _result_block(item),
-    ]
+    header = html.Div([
+        html.H6(item.get("formula_name", "Detalhe"), className="card-title mb-0"),
+        StatusBadge(item.get("status", "AWAITING_REVIEW")),
+    ], className="d-flex justify-content-between align-items-center mb-2")
+
+    sections: list = [header, _result_block(item)]
 
     if decided:
         sections.append(html.Div([
@@ -87,29 +102,20 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
                 " · ",
                 html.Strong("Revisor: "), item.get("reviewed_by") or "—",
             ], className="text-aux"),
-        ], className="mb-3"))
-
-    factor_meth = item.get("factor_methodology") or {}
-    if factor_meth.get("applied"):
-        sections.append(html.Div([
-            html.Small([
-                html.Strong("Metodologia dos fatores: "),
-                factor_meth.get("applied"),
-            ], className="text-aux"),
-        ], className="mb-3"))
+        ], className="mb-2"))
 
     if has_fallback:
         sections.append(dbc.Alert(
             "Algumas variáveis vieram do dado normalizado (fallback). Confirme antes de aprovar.",
             color="warning",
-            className="small py-2 mb-3",
+            className="small py-2 mb-2",
         ))
 
-    sections.append(html.Div([
-        html.H6("Entradas usadas", className="small section-label mb-2"),
-        _input_variables_table(input_vars),
-    ], className="cr-detail-section mb-3"))
+    sections.append(ZeroAssumptionAlert(item))
+    # Ações no topo — antes do conteúdo longo
+    sections.append(CalculationApprovalActions(item, cycle))
 
+    inputs_body: list = [_input_variables_table(input_vars)]
     if missing:
         alts_lines = []
         for m in missing[:3]:
@@ -117,19 +123,27 @@ def CalculationItemReviewPanel(cycle: dict, item_id: str | None) -> html.Div:
             alts = list_compatible_alternatives(cycle, ov, m.get("expected_unit"))
             alt_names = ", ".join(a.get("ontology_var", a.get("variable", "")) for a in alts[:3]) or "nenhuma"
             alts_lines.append(html.Li(f"{ov} — alternativas: {alt_names}", className="small"))
-        sections.append(html.Div([
+        inputs_body.append(html.Div([
             html.H6([
                 html.I(className="fas fa-exclamation-triangle me-1", **{"aria-hidden": "true"}),
                 "Variáveis ausentes",
-            ], className="small section-label mb-2"),
+            ], className="small section-label mb-2 mt-2"),
             html.Ul(alts_lines, className="mb-0 ps-3"),
-        ], className="cr-detail-section cr-detail-section--warning mb-3"))
+        ], className="cr-detail-section cr-detail-section--warning mt-2"))
 
-    sections.extend([
-        ZeroAssumptionAlert(item),
-        CalculationFactorSelector(cycle, item),
-        html.Hr(className="my-3"),
-        CalculationApprovalActions(item, cycle),
-    ])
+    n_inputs = len(input_vars)
+    sections.append(dbc.Accordion([
+        dbc.AccordionItem(
+            html.Div(inputs_body),
+            title=f"Entradas usadas ({n_inputs})",
+        ),
+        dbc.AccordionItem(
+            CalculationFactorSelector(cycle, item),
+            title="Fatores / recálculo",
+        ),
+    ], start_collapsed=True, className="cr-detail-accordion mt-2"))
 
-    return dbc.Card(dbc.CardBody(sections), className="agro-card cr-detail-panel h-100")
+    return dbc.Card(
+        dbc.CardBody(sections, className="cr-detail-panel-body"),
+        className="agro-card cr-detail-panel h-100",
+    )

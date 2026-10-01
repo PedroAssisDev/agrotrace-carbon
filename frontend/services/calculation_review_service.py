@@ -254,17 +254,33 @@ def get_review_item_by_formula(cycle: dict, formula_id: str) -> dict | None:
 
 
 def build_review_summary_cards(cycle: dict) -> dict[str, Any]:
-    """Resumo para cards da UI."""
+    """Resumo para UI (contagens + emissão total alinhada ao item Total)."""
     review = cycle.get("calculation_review") or build_calculation_review(cycle)
     s = review.get("summary") or {}
+    items = review.get("items") or []
+    total_item = next((it for it in items if it.get("formula_id") == "total_ghg_co2e"), None)
+    # Fonte única: mesmo valor da linha Total da tabela de revisão
+    co2e_kg = None
+    if total_item is not None:
+        co2e_kg = total_item.get("co2e_kg")
+        if co2e_kg is None:
+            co2e_kg = total_item.get("result_value")
+    if co2e_kg is None:
+        co2e_kg = (cycle.get("calculation") or {}).get("co2e_total_kg")
+    items_count = s.get("total_items", 0)
+    approved = s.get("approved_items", 0)
     return {
-        "total": s.get("total_items", 0),
-        "approved": s.get("approved_items", 0),
+        "items": items_count,
+        "total": items_count,  # compat: contagem de itens, não emissão
+        "approved": approved,
         "pending": s.get("pending_items", 0),
         "with_zero": s.get("items_with_zero", 0),
         "manual_adjustments": s.get("items_with_manual_adjustment", 0),
         "rejected": s.get("rejected_items", 0),
         "correction": s.get("correction_requested", 0),
+        "progress_label": f"{approved}/{items_count}",
+        "emissions_co2e_kg": co2e_kg,
+        "emissions_display": format_co2e_from_kg(co2e_kg) if co2e_kg is not None else "—",
     }
 
 
@@ -284,17 +300,58 @@ def resolve_file_review_status(cycle: dict) -> str:
     return "AWAITING_REVIEW"
 
 
-def format_item_result_display(item: dict) -> str:
-    """Formata resultado para tabela."""
-    val = item.get("display_value")
-    unit = item.get("display_unit") or item.get("result_unit", "")
+def _canonical_display(item: dict) -> tuple[float | None, str]:
+    """Converte result_value/result_unit canônicos para valor/unidade de exibição."""
+    result_kg = item.get("result_value")
+    unit = item.get("result_unit") or ""
+    gas = item.get("gas") or ""
+    if result_kg is None and item.get("display_value") is not None:
+        return item.get("display_value"), item.get("display_unit") or unit
+    return _display_for_result(result_kg, unit, gas)
+
+
+def format_item_result_value(item: dict) -> str:
+    """Formata só o número do resultado (unidade fica em coluna separada)."""
+    val, unit = _canonical_display(item)
     if val is None:
         return "—"
     if unit == "t CO₂e":
-        return format_co2e_t(val * 1000) if val else "—"
+        return format_number(val, 2)
+    return format_number(val)
+
+
+def format_item_result_display(item: dict, *, include_unit: bool = True) -> str:
+    """Formata resultado a partir de result_value/result_unit (conversão kg→t num único lugar)."""
+    val, unit = _canonical_display(item)
+    if val is None:
+        return "—"
+    if unit == "t CO₂e":
+        # display já está em toneladas — não multiplicar por 1000
+        return format_co2e_t(val) if include_unit else format_number(val, 2)
     if "CO2e" in unit or "CO₂e" in unit:
-        return format_co2e(val)
-    return f"{format_number(val)} {unit}".strip()
+        return format_co2e(val) if include_unit else format_number(val)
+    if include_unit:
+        return f"{format_number(val)} {unit}".strip()
+    return format_number(val)
+
+
+def format_item_co2e_display(item: dict) -> str:
+    """Formata CO₂e comparável (sempre kg CO₂e)."""
+    co2e = item.get("co2e_kg")
+    if co2e is None and item.get("gas") == "CO2e":
+        co2e = item.get("result_value")
+    if co2e is None:
+        return "—"
+    return format_number(co2e)
+
+
+def format_co2e_from_kg(co2e_kg: float | None) -> str:
+    """Formata emissão total a partir de kg CO₂e (converte para t quando >= 1000)."""
+    if co2e_kg is None:
+        return "—"
+    if co2e_kg >= 1000:
+        return format_co2e_t(co2e_kg / 1000)
+    return format_co2e(co2e_kg)
 
 
 def build_file_summary(cycle: dict) -> dict[str, Any]:
@@ -338,12 +395,14 @@ def build_review_table_rows(cycle: dict) -> list[dict]:
     for it in list_review_items(cycle):
         zeros = len(it.get("zero_assumptions") or [])
         missing = len(it.get("missing_variables") or [])
+        _, display_unit = _canonical_display(it)
         rows.append({
             "calculation_item_id": it.get("calculation_item_id"),
             "formula_id": it.get("formula_id"),
             "calculo": it.get("formula_name"),
-            "resultado": format_item_result_display(it),
-            "unidade": it.get("display_unit") or it.get("result_unit"),
+            "resultado": format_item_result_value(it),
+            "unidade": display_unit or it.get("result_unit") or "—",
+            "co2e_kg": format_item_co2e_display(it),
             "variaveis": len(it.get("input_variables") or []),
             "zeros": zeros or missing,
             "status": it.get("status", "AWAITING_REVIEW"),
