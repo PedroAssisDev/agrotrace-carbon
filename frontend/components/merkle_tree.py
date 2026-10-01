@@ -12,10 +12,13 @@ def MerkleTreeView(evidence: dict | None, hashes: dict | None = None) -> html.Di
     if not evidence and not hashes:
         return html.Div("Nenhum pacote de evidências disponível.", className="empty-state text-muted")
 
-    merkle_root = (evidence or {}).get("merkle_root", "—")
-    items = list((hashes or evidence or {}).get("hashes", hashes or {}).items())
-    if not items and hashes:
-        items = list(hashes.items())
+    evidence = evidence or {}
+    merkle_root = evidence.get("merkle_root", "—")
+    leaf_map = hashes if isinstance(hashes, dict) else None
+    if leaf_map is None:
+        nested = evidence.get("hashes")
+        leaf_map = nested if isinstance(nested, dict) else {}
+    items = list(leaf_map.items())
 
     leaves = []
     for i, (name, h) in enumerate(items):

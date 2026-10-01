@@ -21,6 +21,11 @@ try:
 
     load_dotenv(WORKSPACE_ROOT / ".env", override=False)
     load_dotenv(FRONTEND_DIR / ".env", override=False)
+    # Credenciais Sepolia / Anvil tipadas ficam no .env do blockchain-service.
+    load_dotenv(
+        WORKSPACE_ROOT / "agrotrace-carbon-blockchain-service" / ".env",
+        override=True,
+    )
 except ImportError:
     pass
 

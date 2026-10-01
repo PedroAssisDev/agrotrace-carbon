@@ -240,19 +240,26 @@ def register_raw(
     prevent_initial_call=True,
 )
 def run_verify_cb(n_ok, n_bad, selected_cycle_id, cycle):
-    if not cycle or (not n_ok and not n_bad):
+    triggered = ctx.triggered_id
+    if not cycle or triggered not in {"btn-verify-intact", "btn-verify-tamper"}:
         return no_update
+    tamper = triggered == "btn-verify-tamper"
     cycle = ensure_full_cycle(cycle)
     if selected_cycle_id and selected_cycle_id != cycle.get("cycle_id"):
         loaded = get_cycle(selected_cycle_id)
         if loaded:
             cycle = loaded
+    from services.blockchain_view_service import is_blockchain_unlocked
     if not cycle.get("evidence_package"):
-        from services.blockchain_view_service import is_blockchain_unlocked
-        if is_blockchain_unlocked(cycle):
-            cycle = local_orchestrator.run_evidence_step(cycle)
-            cycle = local_orchestrator.run_anchoring_step(cycle)
-    result = strip_private_keys(local_orchestrator.run_verification_step(cycle, tamper=bool(n_bad)))
+        if not is_blockchain_unlocked(cycle):
+            logger.warning(
+                "verify skipped cycle=%s reason=no_evidence_and_blockchain_locked",
+                cycle.get("cycle_id"),
+            )
+            return no_update
+        cycle = local_orchestrator.run_evidence_step(cycle)
+        cycle = local_orchestrator.run_anchoring_step(cycle)
+    result = strip_private_keys(local_orchestrator.run_verification_step(cycle, tamper=tamper))
     save_cycle(result)
     return cycle_store_summary(result)
 

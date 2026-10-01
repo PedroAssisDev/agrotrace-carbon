@@ -47,7 +47,10 @@ _SEVERITY_STYLES = [
 
 _INTEGRITY_STYLES = [
     {"if": {"filter_query": '{status} = "divergente"'}, "backgroundColor": COLORS["status_danger_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_danger_accent']}"},
+    {"if": {"filter_query": '{status} = "Divergente"'}, "backgroundColor": COLORS["status_danger_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_danger_accent']}"},
     {"if": {"filter_query": '{status} = "integro"'}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_success_accent']}"},
+    {"if": {"filter_query": '{status} = "íntegro"'}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_success_accent']}"},
+    {"if": {"filter_query": '{status} = "Íntegro"'}, "backgroundColor": COLORS["status_success_bg"], "color": COLORS["text"], "borderLeft": f"3px solid {COLORS['status_success_accent']}"},
 ]
 
 

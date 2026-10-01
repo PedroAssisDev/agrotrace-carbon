@@ -1598,6 +1598,15 @@
     font-size: 1rem;
 }
 
+.integrity-alert-pending {
+    background-color: var(--status-info-bg, #EEF2FF) !important;
+    border-color: var(--status-info-accent, #6366F1) !important;
+    border-left: 4px solid var(--status-info-accent, #6366F1) !important;
+    color: var(--color-text-primary) !important;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
 /* ── Presentation mode ─────────────────────────────────────────────────────── */
 .presentation-mode ._dash-debug-menu {
     display: none !important;
@@ -2562,6 +2571,7 @@
     .alert-pending-custom,
     .integrity-alert-success,
     .integrity-alert-danger,
+    .integrity-alert-pending,
     .compact-step,
     .cycle-milestone,
     .cr-origin-ontology,

@@ -86,15 +86,23 @@ def update_integrity_panel(selected_cycle_id, cycle_data, global_filter, context
     if not cycle.get("cycle_id"):
         return no_update
 
-    pkg_options = blockchain_adapter.build_verify_cycle_options(ctx_obj.cycles)
-    if not pkg_options:
-        return no_update
-
-    return AuditIntegrityPanel(
-        cycle,
-        pkg_options,
-        selected_cycle_id=selected_cycle_id or cycle.get("cycle_id"),
+    from pages.technical_audit_sections import (
+        _cycles_for_evidence_scope,
+        _default_verify_cycle_id,
     )
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(
+        _cycles_for_evidence_scope(ctx_obj),
+    )
+    if not pkg_options:
+        return html.Div(
+            "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado "
+            "ou o ciclo ainda não foi publicado.",
+            className="empty-state",
+        )
+
+    sel = selected_cycle_id or _default_verify_cycle_id(cycle, pkg_options)
+    return AuditIntegrityPanel(cycle, pkg_options, selected_cycle_id=sel)
 
 
 @callback(

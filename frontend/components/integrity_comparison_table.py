@@ -15,11 +15,17 @@ def IntegrityComparisonTable(integrity: dict | None) -> html.Div:
     rows = integrity.get("rows", [])
     final = integrity.get("final_status", "—")
     is_valid = integrity.get("is_valid")
-    alert_class = "integrity-alert-success" if is_valid else "integrity-alert-danger"
+    if is_valid is True:
+        alert_class = "integrity-alert-success"
+    elif is_valid is False:
+        alert_class = "integrity-alert-danger"
+    else:
+        alert_class = "integrity-alert-pending"
 
     return html.Div([
-        html.Div(final, className=f"alert mb-3 {alert_class}", role="alert"),
-        IntegrityDataTable(rows, columns=["artifact", "anchored_hash", "recalculated_hash", "status"]),
+        html.Div(final, className=f"alert mb-3 {alert_class}", role="alert") if final and final != "—" else None,
+        IntegrityDataTable(rows, columns=["artifact", "anchored_hash", "recalculated_hash", "status"])
+        if rows else html.Div("Execute a verificação de integridade.", className="empty-state"),
         html.Div([
             html.Strong("Modo: "),
             StatusBadge(integrity.get("mode") or integrity.get("source") or "PENDING"),

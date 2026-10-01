@@ -20,18 +20,24 @@ def integrity_message(integrity: dict) -> str:
     return integrity.get("message", "Verificação pendente.")
 
 
+def _normalize_comparison_row(item: dict) -> dict:
+    status = item.get("status", "Não verificado")
+    return {
+        "artifact": item.get("artifact") or item.get("name", "—"),
+        "anchored_hash": item.get("anchored_hash") or item.get("expected", "—"),
+        "recalculated_hash": (
+            item.get("recalculated_hash")
+            or item.get("current_hash")
+            or item.get("actual", "—")
+        ),
+        "status": status,
+    }
+
+
 def build_comparison_rows(integrity: dict) -> list[dict]:
-    comparisons = integrity.get("comparisons") or integrity.get("artifacts") or []
-    rows = []
-    for item in comparisons:
-        if isinstance(item, dict):
-            status = item.get("status", "Não verificado")
-            rows.append({
-                "artifact": item.get("artifact") or item.get("name", "—"),
-                "anchored_hash": item.get("anchored_hash") or item.get("expected", "—"),
-                "recalculated_hash": item.get("current_hash") or item.get("actual", "—"),
-                "status": status,
-            })
+    # verify_integrity grava linhas em ``rows``; formatos legados usam comparisons/artifacts.
+    raw_rows = integrity.get("rows") or integrity.get("comparisons") or integrity.get("artifacts") or []
+    rows = [_normalize_comparison_row(item) for item in raw_rows if isinstance(item, dict)]
     if not rows and integrity.get("is_valid") is not None:
         rows.append({
             "artifact": "Pacote completo",

@@ -24,11 +24,19 @@ def AuditBlockchainGate(
     approval_status: str,
     publication_status: str,
     pkg_rows: list[dict] | None = None,
+    scoped_package_count: int = 0,
 ) -> html.Div:
     if not cycle.get("cycle_id"):
         return html.Div("Selecione um ciclo para auditar blockchain.", className="empty-state")
 
     if not unlocked:
+        scope_hint = None
+        if scoped_package_count > 0:
+            scope_hint = html.P(
+                f"Há {scoped_package_count} pacote(s) de evidência em outros ciclos do escopo. "
+                "Selecione um ciclo publicado no seletor acima para auditar ancoragem e Merkle.",
+                className="small text-info mt-2 mb-0",
+            )
         return html.Div(
             dbc.Card(dbc.CardBody([
                 html.I(className="fas fa-lock gate-icon d-block mb-2"),
@@ -53,6 +61,7 @@ def AuditBlockchainGate(
                     action_label="Ir para Aprovação",
                     action_href="/approval",
                 ),
+                scope_hint,
             ]), className="agro-card blockchain-gate-card"),
         )
 
@@ -70,17 +79,17 @@ def AuditBlockchainGate(
             MockSourceBadge(mode, label="Blockchain" if mode == "mock" else None),
         ], className="mb-3"),
         dbc.Tabs([
-            dbc.Tab(label="Resumo", children=html.Div([
+            dbc.Tab(label="Resumo", tab_id="bc-resumo", children=html.Div([
                 DataTable(
                     pkg_rows or [],
                     columns=["ciclo", "propriedade", "período", "pacote", "status"],
                 ) if pkg_rows else html.P("Nenhum pacote no escopo.", className="text-muted small"),
                 BlockchainAnchorCard(evidence, anchoring),
             ], className="mt-3")),
-            dbc.Tab(label="Pacote", children=html.Div(EvidencePackageViewer(evidence), className="mt-3")),
-            dbc.Tab(label="Hashes", children=html.Div(HashViewer(hashes), className="mt-3")),
-            dbc.Tab(label="Merkle Root", children=html.Div(MerkleTreeView(evidence, hashes), className="mt-3")),
-            dbc.Tab(label="Vínculo proveniência", children=html.Div([
+            dbc.Tab(label="Pacote", tab_id="bc-pacote", children=html.Div(EvidencePackageViewer(evidence), className="mt-3")),
+            dbc.Tab(label="Hashes", tab_id="bc-hashes", children=html.Div(HashViewer(hashes), className="mt-3")),
+            dbc.Tab(label="Merkle Root", tab_id="bc-merkle", children=html.Div(MerkleTreeView(evidence, hashes), className="mt-3")),
+            dbc.Tab(label="Vínculo proveniência", tab_id="bc-vinculo", children=html.Div([
                 html.P(
                     "Trilha reconstruída via adapters (provenance.db + ciclo). "
                     "Sem consulta direta ao SQLite do blockchain-service.",
@@ -96,11 +105,46 @@ def AuditBlockchainGate(
                     className="small mt-2 mb-0",
                 ),
             ], className="mt-3")),
-            dbc.Tab(label="Detalhes", children=html.Div([
+            dbc.Tab(label="Detalhes", tab_id="bc-detalhes", children=html.Div([
                 html.P(f"Pacote: {summary.get('evidence_package_id', '—')}", className="small"),
+                html.P(f"Rede: {summary.get('network', '—')}", className="small"),
+                html.P(f"Tipo: {summary.get('anchoring_kind', '—')}", className="small"),
                 html.P(f"Merkle Root: {summary.get('merkle_root', '—')}", className="small"),
-                html.P(f"Tx/Simulação: {summary.get('transaction_id', '—')}", className="small"),
+                html.P([
+                    html.Span("Tx: "),
+                    html.Span(str(summary.get("transaction_id") or "—"), className="hash-mono small"),
+                ], className="small"),
                 html.P(f"Status ancoragem: {summary.get('anchoring_status', '—')}", className="small"),
+                html.Div([
+                    dbc.Button(
+                        [html.I(className="fas fa-external-link-alt me-2"), "Abrir transação no Etherscan Sepolia"],
+                        href=summary["explorer_url"],
+                        target="_blank",
+                        rel="noopener noreferrer",
+                        color="primary",
+                        size="sm",
+                        className="me-2 mb-2",
+                        external_link=True,
+                    ) if summary.get("explorer_url") else html.P(
+                        "Link do explorador disponível após ancoragem real na Sepolia.",
+                        className="small text-muted mb-2",
+                    ),
+                    dbc.Button(
+                        [html.I(className="fas fa-file-contract me-2"), "Abrir contrato no Etherscan"],
+                        href=f"https://sepolia.etherscan.io/address/{summary['contract_address']}",
+                        target="_blank",
+                        rel="noopener noreferrer",
+                        color="secondary",
+                        outline=True,
+                        size="sm",
+                        className="mb-2",
+                        external_link=True,
+                    ) if (
+                        summary.get("network") == "ethereum_sepolia"
+                        and summary.get("contract_address")
+                        and str(summary.get("contract_address")).startswith("0x")
+                    ) else None,
+                ], className="mt-2"),
             ], className="mt-3")),
-        ], className="agro-tabs"),
+        ], id="ta-blockchain-inner-tabs", active_tab="bc-resumo", className="agro-tabs"),
     ])

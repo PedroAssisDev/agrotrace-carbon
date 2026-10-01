@@ -232,6 +232,31 @@ def build_artifacts_section(ctx: PageContext) -> html.Div:
     ])
 
 
+def _cycles_for_evidence_scope(ctx: PageContext) -> list[dict]:
+    """Ciclos do escopo + ciclo ativo (mesmo se filtrado pelo data_mode)."""
+    by_id: dict[str, dict] = {}
+    for c in list(ctx.cycles or []) + list(ctx.analysis_cycles or []):
+        cid = c.get("cycle_id")
+        if cid:
+            by_id[cid] = c
+    active = ctx.active_cycle or {}
+    active_id = active.get("cycle_id")
+    if active_id:
+        by_id.setdefault(active_id, active)
+    return list(by_id.values())
+
+
+def _default_verify_cycle_id(cycle: dict, pkg_options: list[dict]) -> str | None:
+    """Prefere ciclo ativo se tiver pacote; senão o primeiro com evidência."""
+    if not pkg_options:
+        return None
+    values = {opt.get("value") for opt in pkg_options}
+    active_id = cycle.get("cycle_id")
+    if active_id in values:
+        return active_id
+    return pkg_options[0].get("value")
+
+
 def build_blockchain_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
     if not cycle.get("cycle_id"):
@@ -242,7 +267,8 @@ def build_blockchain_section(ctx: PageContext) -> html.Div:
     approval_label = "Concluída" if approval == "APPROVED" else "Pendente"
     pub_st = (cycle.get("steps") or {}).get("publication", {}).get("status", "PENDING")
     pub_label = "Concluída" if pub_st in {"DONE", "DONE_WARNINGS"} else "Pendente"
-    pkg_rows = blockchain_adapter.build_package_summary_rows(ctx.cycles) if unlocked else []
+    scope_cycles = _cycles_for_evidence_scope(ctx)
+    pkg_rows = blockchain_adapter.build_package_summary_rows(scope_cycles)
 
     return html.Div([
         *_cycle_header(ctx),
@@ -252,32 +278,32 @@ def build_blockchain_section(ctx: PageContext) -> html.Div:
             lock_message=blockchain_lock_message(cycle) or "",
             approval_status=approval_label,
             publication_status=pub_label,
-            pkg_rows=pkg_rows,
+            pkg_rows=pkg_rows if unlocked else [],
+            scoped_package_count=len(pkg_rows),
         ),
     ])
 
 
 def build_integrity_section(ctx: PageContext) -> html.Div:
     cycle = ctx.active_cycle
-    pkg_options = blockchain_adapter.build_verify_cycle_options(ctx.cycles)
     if not cycle.get("cycle_id"):
         return _empty(ctx)
-    if not pkg_options:
-        return html.Div([
-            *_cycle_header(ctx),
-            html.Div(
-                "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado.",
-                className="empty-state",
-            ),
-        ])
+
+    pkg_options = blockchain_adapter.build_verify_cycle_options(_cycles_for_evidence_scope(ctx))
+    selected_id = _default_verify_cycle_id(cycle, pkg_options)
+    panel = (
+        AuditIntegrityPanel(cycle, pkg_options, selected_cycle_id=selected_id)
+        if pkg_options
+        else html.Div(
+            "Nenhum pacote de evidências no escopo. Blockchain pode estar bloqueado "
+            "ou o ciclo ainda não foi publicado.",
+            className="empty-state",
+        )
+    )
 
     return html.Div([
         *_cycle_header(ctx),
-        html.Div(id="ta-integrity-panel", children=AuditIntegrityPanel(
-            cycle,
-            pkg_options,
-            selected_cycle_id=cycle.get("cycle_id"),
-        )),
+        html.Div(id="ta-integrity-panel", children=panel),
     ])
 
 
