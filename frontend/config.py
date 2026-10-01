@@ -221,9 +221,12 @@ DASH_PORT = 8050
 DEBUG = True
 
 # Blockchain network for anchoring (local_simulated | anvil_local | ethereum_sepolia)
-# Prefer BLOCKCHAIN_DEFAULT_NETWORK_CODE env; never default to Sepolia without config.
+# Prefer BLOCKCHAIN_DEFAULT_NETWORK_CODE env; default local_simulated for safety.
 BLOCKCHAIN_DEFAULT_NETWORK_CODE = os.environ.get(
     "BLOCKCHAIN_DEFAULT_NETWORK_CODE", "local_simulated"
+)
+BLOCKCHAIN_SEPOLIA_EXPLORER_BASE_URL = os.environ.get(
+    "BLOCKCHAIN_SEPOLIA_EXPLORER_BASE_URL", "https://sepolia.etherscan.io"
 )
 
 # Logging: AGROTRACE_LOG_LEVEL (default DEBUG), AGROTRACE_LOG_FILE → utils/logging_config.py
