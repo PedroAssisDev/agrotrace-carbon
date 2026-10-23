@@ -25,10 +25,10 @@ from services.model_training_view_service import (
 from services.page_context import resolve_page_context
 from utils.global_filter import get_farm_id
 
-_PAGE_TITLE = "Previsoes de Producao e Emissoes"
+_PAGE_TITLE = "Previsões de Produção e Emissões"
 _PAGE_SUBTITLE = (
-    "Gestao dinamica de modelos, cenarios por rebanho (regressao global) e "
-    "projecao historica mensal por propriedade."
+    "Gestão dinâmica de modelos, cenários por rebanho (regressão global) e "
+    "projeção histórica mensal por propriedade."
 )
 
 
@@ -177,8 +177,8 @@ def _regression_panel(report: dict) -> html.Div:
             html.Div(
                 id="fc-regression-charts",
                 children=idle_charts_placeholder(
-                    "As vacas do ultimo periodo sao preenchidas automaticamente. "
-                    "Clique em Calcular previsao para ver o grafico."
+                    "As vacas do último período são preenchidas automaticamente. "
+                    "Clique em Calcular previsão para ver o gráfico."
                 ),
             ),
             html.Div(id="fc-regression-kpis"),
@@ -203,19 +203,19 @@ def _timeseries_panel(report: dict) -> html.Div:
     return html.Div(
         [
             SectionHeader(
-                "Projecao historica",
-                "Gera a projecao dos proximos 3 meses com base na serie temporal mensal "
-                "da propriedade — sem variaveis exogenas nem entrada de vacas.",
+                "Projeção histórica",
+                "Gera a projeção dos próximos 3 meses com base na série temporal mensal "
+                "da propriedade — sem variáveis exógenas nem entrada de vacas.",
             ),
             notice_extra,
             html.Div(id="fc-timeseries-cta", children=infer_cta_for_family(report, "time_series")),
             dbc.Button(
-                "Gerar projecao",
+                "Gerar projeção",
                 id="fc-timeseries-run",
                 color="success",
                 className="mb-2",
                 disabled=run_disabled,
-                title=disabled_reason or "Gera projecao dos proximos 3 meses",
+                title=disabled_reason or "Gera projeção dos próximos 3 meses",
             ),
             html.Small(disabled_reason, id="fc-timeseries-disabled-hint", className="text-aux d-block mb-3")
             if disabled_reason
@@ -225,7 +225,7 @@ def _timeseries_panel(report: dict) -> html.Div:
             html.Div(
                 id="fc-timeseries-charts",
                 children=idle_charts_placeholder(
-                    "Clique em Gerar projecao para ver historico e os proximos 3 meses."
+                    "Clique em Gerar projeção para ver histórico e os próximos 3 meses."
                 ),
             ),
             html.Div(id="fc-timeseries-details"),

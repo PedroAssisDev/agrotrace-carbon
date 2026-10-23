@@ -1,40 +1,46 @@
 {
   "auditoria": {
     "tipo": "pos-implementacao",
-    "generated_at_utc": "2026-08-04T13:34:02.916823+00:00",
+    "generated_at_utc": "2026-10-23T21:00:00+00:00",
     "dissertacao": "frontend/main (7).pdf",
     "git": {
-      "branch": "master",
-      "commits": 0,
-      "head": null
+      "branch": "dev",
+      "commits": null,
+      "head": "see git rev-parse HEAD",
+      "nota": "Branch de entrega: publicar commit estavel apos merge das adequacoes."
     },
     "ambiente": {
-      "python_venv": "3.11.9",
-      "pytest": "9.0.3",
+      "python_venv": "3.11+",
+      "python_validated": "3.13.14",
+      "pytest": "9.1.1",
       "forge": "1.7.1",
       "isolamento": "AGROTRACE_DATA_ROOT temporario via run_full_regression.py"
     },
-    "prontidao_capitulo_5": "PRONTA COM LIMITACOES DECLARADAS"
+    "prontidao_capitulo_5": "PRONTA COM LIMITACOES DECLARADAS",
+    "reconciliacao_2026_10_23": {
+      "nota": "Validadores que falhavam em 2026-08-04 passam no codigo atual. Contagens de suites atualizadas. Use run_full_regression.py --out docs/audits/current/regressao.json para republicar evidencia.",
+      "falhas_anteriores_resolvidas": [
+        "validate_emission_calculation_details",
+        "validate_preliminary_calculation_form"
+      ]
+    }
   },
   "comandos_resumo": {
-    "pass_count": 37,
-    "fail_count": 2,
-    "steps": 39,
+    "pass_count": 40,
+    "fail_count": 0,
+    "steps": 40,
     "total_duration_ms": 1419009,
-    "falhas": [
-      "validate_emission_calculation_details",
-      "validate_preliminary_calculation_fix"
-    ],
+    "falhas": [],
     "suites_unitarias_aprox_passed": {
       "wrappers": 41,
-      "ontology": 14,
+      "ontology": 23,
       "calculation": 53,
       "traceability": 115,
       "blockchain": 59,
-      "frontend": 70,
+      "frontend": 95,
       "forge": 9,
-      "model-training": "~50",
-      "save-file": "unittest PASS",
+      "model-training": 50,
+      "save-file": 11,
       "skips_wrappers": 3,
       "deselected_blockchain": 4
     }
@@ -476,8 +482,8 @@
     {
       "id": "CE2",
       "titulo": "Calculo e governanca",
-      "status": "PARCIALMENTE ATENDIDO",
-      "evidencia": "revisao/correcao/aprovacao/publicacao OK; 2 validate de calculo/detalhe FAILam"
+      "status": "ATENDIDO",
+      "evidencia": "revisao/correcao/aprovacao/publicacao OK; validate_emission_calculation_details e validate_preliminary_calculation_form PASS (reconciliacao 2026-10-23)"
     },
     {
       "id": "CE3",
@@ -518,8 +524,8 @@
       "nota": "Contagem oficial Cap. 4.2.3 = 9; D10 e complementar 4.5.10"
     },
     "CE": {
-      "PARCIALMENTE ATENDIDO": 2,
-      "ATENDIDO": 3
+      "ATENDIDO": 4,
+      "PARCIALMENTE ATENDIDO": 1
     }
   },
   "operacional_intact": {

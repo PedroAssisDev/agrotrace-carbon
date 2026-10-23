@@ -10,6 +10,6 @@
   "contract_version": "1.0.0",
   "abi_file": "app/infrastructure/anchoring/contracts/CarbonEvidenceRegistry.abi.v1.0.0.json",
   "abi_checksum_sha256": "b7f1b6494c350d49990dea948f3c0e59ddd04c8ec2cc1ba45bef0e13d7286b99",
-  "status": "not_deployed",
-  "notes": "Populate after a real Sepolia forge script --broadcast. Do not invent values. Legacy ABI CarbonEvidenceRegistry.abi.json remains readable."
+  "status": "not_deployed_via_foundry_script",
+  "notes": "Este arquivo registra apenas o resultado do script Foundry DeployCarbonEvidenceRegistry.s.sol commitado no repositório (não executado/broadcast neste índice). Validações acadêmicas contra um contrato Sepolia já implantado pelo autor estão em evidence/sepolia/ (evidência declarada; ver evidence/README.md). Populate contract_address aqui somente após forge script --broadcast versionado. Do not invent values."
 }

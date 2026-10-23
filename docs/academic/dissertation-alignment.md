@@ -34,5 +34,20 @@ impede IDs fora de RF001–RF021 / RNF001–RNF012 / CE1–CE5 na fonte alinhada
 - Termos temporais: `daily`, `monthly`, `annual`. `yearly` é apenas alias legado de leitura.
 - Organizacional: `animal`, `lot`, `property`.
 - Resultado: preliminar → em revisão → aprovado/rejeitado → publicado.
-- "AgroTrace Carbon" é o nome técnico de pastas/artefatos; no texto, use "arquitetura
-  proposta para MRV agropecuário".
+- **AgroMRV-Flow** é o nome canônico da arquitetura na dissertação e na interface
+  do protótipo (`APP_TITLE`).
+- **agrotrace-carbon** / "AgroTrace Carbon" são nomes técnicos de pastas, pacotes
+  Python e artefatos do monorepo (legado de implementação). No texto acadêmico,
+  use **AgroMRV-Flow**; mencione o repositório `agrotrace-carbon` apenas quando
+  referir o artefato de software.
+- **CarbonSECO** (pacote `carbonseco-model-training-service`) é a linhagem do
+  módulo de treinamento preditivo; documente-o como evolução, não como nome do
+  protótipo atual.
+
+## Interação na avaliação (não confundir com LLM)
+
+O protótipo **não** integra LLM/chat. A interação avaliada em auditoria técnica
+é por **consultas estruturadas** (13 templates SQL somente-leitura na aba
+Consultas de Proveniência) e formulários Dash. Prompts arquivados sob
+`docs/archive/prompts/` e `PROMPT-AUDITORIA-CURSOR.md` são metodologia de
+desenvolvimento, não funcionalidade do produto.

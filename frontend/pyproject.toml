@@ -17,6 +17,7 @@ dependencies = [
     "joblib>=1.4",
     "owlready2>=0.40",
     "sqlalchemy>=2.0",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]

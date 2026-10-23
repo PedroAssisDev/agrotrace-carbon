@@ -1,4 +1,4 @@
-"""Configuração central do frontend AgroTrace Carbon.
+"""Configuração central do frontend AgroMRV-Flow (monorepo agrotrace-carbon).
 
 Único módulo autorizado a ler ``AGROTRACE_DATA_ROOT``. Quando a variável está
 ausente, preserva o layout histórico sob ``frontend/data`` e originais no
@@ -200,9 +200,9 @@ ALLOW_MOCK_FALLBACK = False
 # PRESENTATION_MODE: ativa CSS de prints (sem debug menu, sombras suaves, payload claro).
 PRESENTATION_MODE = True
 
-APP_TITLE = "AgroTrace Carbon"
+APP_TITLE = "AgroMRV-Flow"
 APP_SUBTITLE = (
-    "Plataforma para gestão, cálculo e acompanhamento de emissões agropecuárias"
+    "Arquitetura para MRV agropecuário — gestão, cálculo e evidências de emissões"
 )
 
 # ── Layouts de wrapper ──────────────────────────────────────────────────────
@@ -218,7 +218,13 @@ LAYOUT_OPTIONS = {
 # ── Dash server ─────────────────────────────────────────────────────────────
 DASH_HOST = "127.0.0.1"
 DASH_PORT = 8050
-DEBUG = True
+# Default False for demonstrações; use AGROTRACE_DASH_DEBUG=1 no desenvolvimento.
+DEBUG = os.environ.get("AGROTRACE_DASH_DEBUG", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
 # Blockchain network for anchoring (local_simulated | anvil_local | ethereum_sepolia)
 # Prefer BLOCKCHAIN_DEFAULT_NETWORK_CODE env; default local_simulated for safety.

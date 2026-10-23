@@ -7,14 +7,16 @@ O runner canônico executa a suíte ponta a ponta em um `AGROTRACE_DATA_ROOT` te
 
 ```bash
 python frontend/scripts/run_full_regression.py
+# Publicar evidência versionada:
+python frontend/scripts/run_full_regression.py --out docs/audits/current/regressao.json
 # Mais rápido:  ... --quick
 # Sem Forge:    ... --skip-forge
 ```
 
 Passos cobertos: testes por serviço (save-file, wrappers, ontology, calculation,
 model-training, traceability, blockchain), Forge, testes do frontend, todos os
-`validate_*.py`, smoke, ciclo completo e varredura de segredos. Saída padrão em
-`docs/audits/current/regressao.json`.
+`validate_*.py`, smoke, ciclo completo e varredura de segredos. **Saída padrão:**
+arquivo temporário (não sobrescreve `docs/audits/current/regressao.json`).
 
 ## Seed e smoke
 

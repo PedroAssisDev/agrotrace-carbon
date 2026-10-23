@@ -22,7 +22,7 @@ foreach ($p in $projects) {
   if (Test-Path "$p\pyproject.toml") {
     if ($p -eq "frontend") {
       pip install -e "$p[dev]"
-    } elseif (Test-Path "$p\requirements.txt" -and $p -eq "agrotrace-carbon-wrappers-service") {
+    } elseif ((Test-Path "$p\requirements.txt") -and ($p -eq "agrotrace-carbon-wrappers-service")) {
       pip install -e "$p[test]"
     } else {
       pip install -e "$p"

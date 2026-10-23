@@ -1,5 +1,5 @@
 """
-AgroTrace Carbon — Frontend Python (chamadas diretas).
+AgroMRV-Flow — Frontend Python (chamadas diretas).
 
 Entry point: python main.py
 """

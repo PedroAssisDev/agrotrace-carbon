@@ -1,33 +1,37 @@
-# AgroTrace Carbon
+# AgroMRV-Flow
 
-Protótipo acadêmico da arquitetura proposta para MRV agropecuário (Monitoring,
-Reporting, Verification). Cobre o ciclo de vida auditável do dado — do arquivo bruto à
-verificação de evidência — com aprovação humana antes de qualquer ancoragem.
+Protótipo acadêmico da arquitetura **AgroMRV-Flow** para MRV agropecuário
+(Monitoring, Reporting, Verification). O repositório Git chama-se
+`agrotrace-carbon` (nome técnico das pastas e pacotes); a identidade acadêmica e
+da interface é **AgroMRV-Flow**.
 
-## Módulos
+Cobre o ciclo de vida auditável do dado — do arquivo bruto à verificação de
+evidência — com aprovação humana antes de qualquer ancoragem.
 
-| Módulo | Responsabilidade |
-|--------|------------------|
-| `frontend` | Interface Dash e orquestração (8 rotas) |
-| `agrotrace-carbon-save-file` | Preservação do original + SHA-256 |
-| `agrotrace-carbon-wrappers-service` | Normalização por layouts |
-| `agrotrace-carbon-ontology-manager` | Ontologia de trabalho/final e validação |
-| `agrotrace-carbon-calculation-service` | Cálculo de emissões (IPCC/ECOFARM) |
-| `agrotrace-carbon-model-training-service` | Estimativa preditiva |
-| `agrotrace-carbon-traceability-service` | Serviço de proveniência |
-| `agrotrace-carbon-blockchain-service` | Evidências, Merkle e ancoragem |
+## Módulos (pasta → pacote → papel)
 
-Integração por chamadas Python diretas (sem HTTP entre módulos). Ancoragem com provider
-simulado por padrão (`local_simulated`) e provider EVM opcional (Anvil/Sepolia). A
-blockchain só age após `FINAL_ONTOLOGY_PUBLISHED`.
+| Pasta | Pacote Python | Responsabilidade |
+|--------|----------------|------------------|
+| `frontend` | `agrotrace-carbon-frontend` | Interface Dash e orquestração (8 rotas) |
+| `agrotrace-carbon-save-file` | `agrotrace-carbon-save-file` | Preservação do original + SHA-256 |
+| `agrotrace-carbon-wrappers-service` | `agrotrace-carbon-wrappers-service` | Normalização por layouts |
+| `agrotrace-carbon-ontology-manager` | `agromrv-o-lite` | Ontologia de trabalho/final e validação |
+| `agrotrace-carbon-calculation-service` | `ecofarm-calculations` | Cálculo de emissões (IPCC/ECOFARM) |
+| `agrotrace-carbon-model-training-service` | `carbonseco-model-training-service` | Estimativa preditiva (linhagem CarbonSECO) |
+| `agrotrace-carbon-traceability-service` | `agrotrace-carbon-provenance-service` | Serviço de proveniência |
+| `agrotrace-carbon-blockchain-service` | `agrotrace-carbon-blockchain-service` | Evidências, Merkle e ancoragem |
+
+Integração por chamadas Python diretas (sem HTTP entre módulos). Ancoragem com
+provider simulado por padrão (`local_simulated`) e provider EVM opcional
+(Anvil/Sepolia). A blockchain só age após `FINAL_ONTOLOGY_PUBLISHED`.
 
 A pasta [`tooling/`](tooling/README.md) concentra atalhos de manutenção do
 monorepo (instalar, testar, empacotar). Não faz parte do ciclo MRV — seed,
-aprovação e regressão ficam em `frontend/scripts/`. Detalhes: [tooling/README.md](tooling/README.md).
+aprovação e regressão ficam em `frontend/scripts/`.
 
 ## Requisitos mínimos
 
-- Python 3.11+
+- Python 3.11+ (recomendado 3.11–3.13; desenvolvimento validado em 3.13)
 - (Opcional) Foundry/Forge para os contratos Solidity
 
 ## Instalação e configuração
@@ -38,6 +42,10 @@ python -m venv .venv
 .\tooling\install-workspace.ps1   # Linux/macOS: ./tooling/install-workspace.sh
 cp .env.example .env              # ajuste local; nunca versione .env
 ```
+
+**Distribuição à banca:** use `git clone` ou o pacote gerado por
+`python tooling/build_software_release.py`. **Não** copie a pasta de trabalho
+inteira — ela pode conter `.env` local, bancos operacionais e virtualenvs.
 
 ## Executar o frontend
 
@@ -50,21 +58,25 @@ python main.py
 ## Regressão completa
 
 Valida o monorepo de ponta a ponta sob um `AGROTRACE_DATA_ROOT` temporário
-(não altera os dados operacionais em `frontend/data/`). Executa testes dos
-serviços, Forge (contratos), testes do frontend, todos os `validate_*.py`,
-smoke, ciclo completo de emissão e varredura de segredos; gera
-`docs/audits/current/regressao.json`.
-
-É a verificação canônica antes de submissão ou após mudanças amplas: confirma
-que packaging, pipeline, gate blockchain e validadores ainda passam juntos.
+(não altera os dados operacionais em `frontend/data/`). Por padrão grava o
+relatório em um arquivo temporário; use `--out` para publicar sob
+`docs/audits/current/`.
 
 ```bash
 python frontend/scripts/run_full_regression.py
+# Publicar evidência versionada:
+python frontend/scripts/run_full_regression.py --out docs/audits/current/regressao.json
 # Mais rápido (pula smoke/ciclo completo):  ... --quick
 # Sem contratos Solidity:                  ... --skip-forge
 ```
 
-## Dados de demonstração (simulados + Embrapa)
+## Dados de demonstração (dois grupos da avaliação)
+
+A avaliação usa **dois grupos** de dados (o grupo diário está fora do escopo):
+
+1. **Simulados (`FARM-*`)** — gerados com RNG (`--seed 42`).
+2. **Embrapa** — mensal `P-*` e anual `BR-*` (CSVs-fonte versionados; o seed
+   executa `split.py` automaticamente antes da importação).
 
 Operação **destrutiva**: apaga ciclos/DBs locais e reimporta. Exige `--confirm`.
 
@@ -109,27 +121,7 @@ python scripts/approve_all_pending_cycles.py --confirm
 python scripts/approve_all_pending_cycles.py --confirm --property-prefix FARM-
 python scripts/approve_all_pending_cycles.py --confirm --property-prefix P-
 python scripts/approve_all_pending_cycles.py --confirm --property-prefix BR-
-
-# Uma propriedade específica: liste no dry-run e copie um property_id
-python scripts/approve_all_pending_cycles.py --dry-run
-# Exemplo (simulado oficial):
-python scripts/approve_all_pending_cycles.py --confirm --property-id FARM-MONTHLY-001
-# Exemplo (qualquer outra do dry-run — troque pelo id listado, ex. Embrapa P-* / BR-*):
-python scripts/approve_all_pending_cycles.py --confirm --property-id BR-12
-
-# Limitar quantidade
-python scripts/approve_all_pending_cycles.py --confirm --limit 10
 ```
-
-| Flag | Função |
-|------|--------|
-| `--dry-run` | Lista ciclos sem alterar |
-| `--confirm` | Executa a aprovação em massa |
-| `--property-prefix` | Filtra por prefixo (`FARM-`, `P-`, `BR-`) |
-| `--property-id` | Filtra por propriedade exata |
-| `--limit` | Processa só N ciclos (`0` = todos) |
-
-
 
 ## Dados operacionais
 
@@ -141,8 +133,9 @@ apague esses dados manualmente.
 
 - Índice da documentação: [docs/README.md](docs/README.md)
 - Alinhamento com a dissertação: [docs/academic/dissertation-alignment.md](docs/academic/dissertation-alignment.md)
-  (o PDF/LaTeX da dissertação não está versionado neste repositório)
+- Manual de instalação e reprodução: [docs/manual/README.md](docs/manual/README.md)
+- Proveniência dos dados Embrapa: [agrotrace-carbon-save-file/data/embrapa/README.md](agrotrace-carbon-save-file/data/embrapa/README.md)
 
 ## Licença
 
-Uso acadêmico. Consulte o autor antes de redistribuir.
+Uso acadêmico. Consulte o autor antes de redistribuir. Veja [LICENSE](LICENSE).

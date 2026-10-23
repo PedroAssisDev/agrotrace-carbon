@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import logging
 import re
+import runpy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -17,6 +18,7 @@ from typing import Any
 from config import (
     LAYOUT_OPTIONS,
     SAVE_FILE_EMBRAPA_ANNUAL_DIR,
+    SAVE_FILE_EMBRAPA_DIR,
     SAVE_FILE_EMBRAPA_MONTHLY_DIR,
 )
 from services import local_orchestrator as orch
@@ -26,6 +28,7 @@ from utils.file_helpers import save_cycle
 logger = logging.getLogger("agrotrace.embrapa_import")
 
 ANNUAL_DEFAULT_YEAR = 2022
+_SPLIT_SCRIPT = SAVE_FILE_EMBRAPA_DIR / "split.py"
 MONTH_LABELS_PT = (
     "Jan", "Fev", "Mar", "Abr", "Mai", "Jun",
     "Jul", "Ago", "Set", "Out", "Nov", "Dez",
@@ -178,6 +181,26 @@ def _import_one(
     return cycle
 
 
+def ensure_embrapa_split(*, force: bool = False) -> None:
+    """Garante pastas monthly/ e annual/ a partir dos CSVs-fonte (split.py).
+
+    Em clone limpo as pastas geradas não estão no Git; este passo as reconstrói.
+    """
+    monthly_dir = SAVE_FILE_EMBRAPA_MONTHLY_DIR
+    annual_dir = SAVE_FILE_EMBRAPA_ANNUAL_DIR
+    monthly_ok = monthly_dir.is_dir() and any(monthly_dir.glob("*.csv"))
+    annual_ok = annual_dir.is_dir() and any(annual_dir.glob("*.csv"))
+    if monthly_ok and annual_ok and not force:
+        return
+    if not _SPLIT_SCRIPT.is_file():
+        raise FileNotFoundError(
+            f"Script de split Embrapa ausente: {_SPLIT_SCRIPT}. "
+            "Os CSVs-fonte annual_report.csv / monthly_report.csv devem estar versionados."
+        )
+    logger.info("Executando split Embrapa: %s", _SPLIT_SCRIPT)
+    runpy.run_path(str(_SPLIT_SCRIPT), run_name="__main__")
+
+
 def import_embrapa_uploads(
     *,
     monthly_dir: Path | None = None,
@@ -185,8 +208,17 @@ def import_embrapa_uploads(
     annual_year: int = ANNUAL_DEFAULT_YEAR,
     include_monthly: bool = True,
     include_annual: bool = True,
+    ensure_split: bool = True,
+    require_nonempty: bool = True,
 ) -> EmbrapaImportResult:
-    """Importa pastas Embrapa até pendência de aprovação (sem wipe)."""
+    """Importa pastas Embrapa até pendência de aprovação (sem wipe).
+
+    Por padrão executa ``split.py`` se as pastas geradas estiverem vazias e
+    falha se, após o split, ainda não houver arquivos para importar.
+    """
+    if ensure_split and monthly_dir is None and annual_dir is None:
+        ensure_embrapa_split()
+
     monthly_dir = monthly_dir or SAVE_FILE_EMBRAPA_MONTHLY_DIR
     annual_dir = annual_dir or SAVE_FILE_EMBRAPA_ANNUAL_DIR
     created: list[dict] = []
@@ -195,7 +227,14 @@ def import_embrapa_uploads(
     annual_count = 0
 
     if include_monthly:
-        for item in _discover_monthly(monthly_dir):
+        monthly_items = _discover_monthly(monthly_dir)
+        if require_nonempty and not monthly_items:
+            raise FileNotFoundError(
+                f"Nenhum CSV Embrapa mensal em {monthly_dir}. "
+                "Execute `python data/embrapa/split.py` no save-file ou remova "
+                "--skip-embrapa apenas após preparar as pastas."
+            )
+        for item in monthly_items:
             cycle = _import_one(
                 item,
                 layout_name="monthly",
@@ -209,7 +248,13 @@ def import_embrapa_uploads(
             logger.info("Embrapa mensal %s → %s", item["path"].name, cycle.get("cycle_id"))
 
     if include_annual:
-        for item in _discover_annual(annual_dir, year=annual_year):
+        annual_items = _discover_annual(annual_dir, year=annual_year)
+        if require_nonempty and not annual_items:
+            raise FileNotFoundError(
+                f"Nenhum CSV Embrapa anual em {annual_dir} (year={annual_year}). "
+                "Execute `python data/embrapa/split.py` no save-file."
+            )
+        for item in annual_items:
             cycle = _import_one(
                 item,
                 layout_name="annual",

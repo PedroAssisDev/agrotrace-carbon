@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .venv/
+.venv*/
 venv/
 .env
 .env.*
@@ -15,6 +16,10 @@ data/input/**
 !data/input/.gitkeep
 data/processed/**
 !data/processed/.gitkeep
+configs/artifacts/**
+!configs/artifacts/.gitkeep
 *.joblib
 *.keras
+*.pkl
+*.pickle
 .DS_Store

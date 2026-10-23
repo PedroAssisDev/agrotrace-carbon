@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.egg
 *.egg-info/
+.eggs/
 build/
 dist/
 .pytest_cache/
@@ -11,8 +12,15 @@ dist/
 .ruff_cache/
 .coverage
 .coverage.*
+coverage.xml
 htmlcov/
+.tox/
+.nox/
+.hypothesis/
+
+# Virtualenvs (qualquer pasta do monorepo)
 .venv/
+.venv*/
 venv/
 env/
 
@@ -32,6 +40,8 @@ logs/
 *.bak
 *.tmp
 *.temp
+*.orig
+*.rej
 **/tmp/
 **/temp/
 
@@ -42,28 +52,40 @@ frontend/data/**
 # Save-file: datasets, originais, emulados e staging local
 agrotrace-carbon-save-file/data/**
 !agrotrace-carbon-save-file/data/**/.gitkeep
-# Embrapa: CSVs-fonte versionados; annual/ e monthly/ são gerados por split.py
+# Embrapa: CSVs-fonte + README/split versionados; monthly/ e annual/ gerados por split.py
 !agrotrace-carbon-save-file/data/embrapa/
 !agrotrace-carbon-save-file/data/embrapa/annual_report.csv
 !agrotrace-carbon-save-file/data/embrapa/monthly_report.csv
 !agrotrace-carbon-save-file/data/embrapa/split.py
+!agrotrace-carbon-save-file/data/embrapa/README.md
+agrotrace-carbon-save-file/data/embrapa/monthly/
+agrotrace-carbon-save-file/data/embrapa/annual/
 agrotrace-carbon-save-file/save_file/data/**
 !agrotrace-carbon-save-file/save_file/data/**/.gitkeep
 
 # Runtime local na raiz
 /data/**
 
-# Model training: artefatos gerados (path real fica sob configs/)
+# Model training — artefatos gerados; /previsoes exige retreino após clone
 agrotrace-carbon-model-training-service/artifacts/**
+!agrotrace-carbon-model-training-service/artifacts/.gitkeep
 agrotrace-carbon-model-training-service/configs/artifacts/**
+!agrotrace-carbon-model-training-service/configs/artifacts/.gitkeep
 agrotrace-carbon-model-training-service/data/input/**
 agrotrace-carbon-model-training-service/data/processed/**
 *.joblib
 *.keras
+*.pkl
+*.pickle
 
-# Blockchain: runs locais de validação Sepolia (não são código)
+# Blockchain: runs locais novos; evidência acadêmica Sepolia permanece versionada
 agrotrace-carbon-blockchain-service/evidence/**
 !agrotrace-carbon-blockchain-service/evidence/**/.gitkeep
+!agrotrace-carbon-blockchain-service/evidence/README.md
+!agrotrace-carbon-blockchain-service/evidence/sepolia/
+!agrotrace-carbon-blockchain-service/evidence/sepolia/**
+# Logs locais de validação Sepolia (mesmo sob evidence/sepolia)
+agrotrace-carbon-blockchain-service/evidence/**/*.log
 
 # Service local DBs / SQLite operacional
 **/*.sqlite
@@ -92,10 +114,14 @@ agrotrace-carbon-blockchain-service/contracts/lib/
 **/contracts/out/
 **/broadcast/
 
-.venv-test/
-.venv-packaging-test/
+# Inventário Markdown temporário (ferramenta de manutenção; não é doc canônica)
+docs/maintenance/md_inventory_tmp.txt
+.md_inventory_tmp.txt
+.md_authorial.json
 
+# Relatório de regressão efêmero (a evidência canônica é regressao.json via --out)
+docs/audits/current/_regressao.json
 
-# Generated release package (use scripts/build_software_release.py)
+# Generated release package (use tooling/build_software_release.py)
 software-release/
 

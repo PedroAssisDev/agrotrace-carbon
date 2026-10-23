@@ -33,7 +33,7 @@ SKIP_DIR_NAMES = {
     ".cursor",
     "data",
     "artifacts",
-    "evidence",
+    # evidence/ is scanned (academic Sepolia artifacts); redacted tokens allowed below
     "contracts",  # Foundry artifacts under contracts/out already covered; skip whole tree for speed
 }
 
@@ -91,6 +91,10 @@ ALLOWLIST_PATH_FRAGMENTS = (
     "test_evm_hash_conversion",
     "test_validar_sepolia",
     "evm_types.py",  # __repr__ field name only
+    # Declared academic evidence (Sepolia validation runs): public addresses +
+    # already-redacted RPC tokens (********). Not credentials.
+    "evidence/sepolia/",
+    "evidence\\sepolia\\",
 )
 
 
@@ -131,6 +135,9 @@ def scan_tree(root: Path) -> list[dict]:
             if "0000000000000000000000000000000000000000000000000000000000000001" in line:
                 continue
             if "example.invalid" in line:
+                continue
+            # Redacted tokens in academic evidence / logs
+            if "********" in line or "/v2/********" in line:
                 continue
             for kind, pattern in PATTERNS:
                 if pattern.search(line):

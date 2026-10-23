@@ -1,7 +1,8 @@
 # Limitações e classificação do que está implementado
 
-Documento canônico de honestidade técnica. Afirmações aqui seguem o código
-executável, não planos futuros.
+Documento canônico de honestidade técnica da arquitetura **AgroMRV-Flow**
+(repositório `agrotrace-carbon`). Afirmações aqui seguem o código executável,
+não planos futuros.
 
 ## Classificação
 
@@ -37,8 +38,9 @@ Evidência típica: `frontend/scripts/run_pipeline_smoke_test.py`,
 
 - Ancoragem default: provider `local_simulated` / `SimulatedAnchorProvider`
   (`BLOCKCHAIN_DEFAULT_NETWORK_CODE`, tipicamente `local_simulated`)
-- Em falha de emit de proveniência, o adapter pode devolver dict com
-  `source: "mock"` (degradação registrada, não silent happy-path)
+- Em falha de emit de proveniência com `ALLOW_MOCK_FALLBACK=True`, o adapter
+  pode devolver dict com `source: "mock"`. Com o default operacional
+  (`ALLOW_MOCK_FALLBACK=False`), falhas de emit são **relançadas**.
 
 ## Preparados (não default)
 

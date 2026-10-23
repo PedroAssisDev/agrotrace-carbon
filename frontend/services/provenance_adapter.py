@@ -77,8 +77,31 @@ def _ensure_reviewer_agent() -> UUID:
     return agent_id
 
 
+# Namespace estável para derivar UUID a partir de cycle_id não-UUID (ex.: CYCLE-…).
+_AGGREGATE_NS = uuid.UUID("6ba7b810-9dad-11d1-80b4-00c04fd430c8")
+
+
+def _coerce_uuid(value: Any, *, fallback_seed: str | None = None) -> UUID:
+    """Aceita UUID, string UUID ou identificador opaco → UUID determinístico."""
+    if value is None or value == "":
+        if fallback_seed:
+            return uuid.uuid5(_AGGREGATE_NS, str(fallback_seed))
+        return uuid.uuid4()
+    if isinstance(value, UUID):
+        return value
+    text = str(value).strip()
+    try:
+        return uuid.UUID(text)
+    except (ValueError, AttributeError, TypeError):
+        return uuid.uuid5(_AGGREGATE_NS, text)
+
+
 def register_provenance_event(event_type: str, payload: dict) -> dict[str, Any]:
-    """Registra evento observável na proveniência real ou mock."""
+    """Registra evento observável na proveniência real ou mock.
+
+    Com ``ALLOW_MOCK_FALLBACK=False`` (padrão operacional), falhas de emit
+    são relançadas — não há degradação silenciosa para ``source: mock``.
+    """
     if not _available():
         return {
             "source": "mock",
@@ -90,7 +113,17 @@ def register_provenance_event(event_type: str, payload: dict) -> dict[str, Any]:
 
     try:
         recorder, uow_factory = _get_recorder()
-        aggregate_id = uuid.UUID(payload.get("aggregate_id")) if payload.get("aggregate_id") else uuid.uuid4()
+        raw_aggregate = payload.get("aggregate_id")
+        aggregate_id = _coerce_uuid(
+            raw_aggregate,
+            fallback_seed=payload.get("cycle_id") or event_type,
+        )
+        def _optional_uuid(key: str) -> UUID | None:
+            raw = payload.get(key)
+            if raw is None or raw == "":
+                return None
+            return _coerce_uuid(raw)
+
         with uow_factory() as uow:
             recorder.record_observable_event(
                 uow,
@@ -98,10 +131,10 @@ def register_provenance_event(event_type: str, payload: dict) -> dict[str, Any]:
                 aggregate_type=payload.get("aggregate_type", "emission_cycle"),
                 aggregate_id=aggregate_id,
                 payload=payload,
-                pipeline_run_id=UUID(payload["pipeline_run_id"]) if payload.get("pipeline_run_id") else None,
-                calculation_execution_id=UUID(payload["calculation_execution_id"]) if payload.get("calculation_execution_id") else None,
-                calculation_result_set_id=UUID(payload["calculation_result_set_id"]) if payload.get("calculation_result_set_id") else None,
-                reporting_period_id=UUID(payload["reporting_period_id"]) if payload.get("reporting_period_id") else None,
+                pipeline_run_id=_optional_uuid("pipeline_run_id"),
+                calculation_execution_id=_optional_uuid("calculation_execution_id"),
+                calculation_result_set_id=_optional_uuid("calculation_result_set_id"),
+                reporting_period_id=_optional_uuid("reporting_period_id"),
             )
             uow.commit()
         return {"source": "real", "event_type": event_type, "aggregate_id": str(aggregate_id), "created_at": now_iso()}
@@ -114,6 +147,8 @@ def register_provenance_event(event_type: str, payload: dict) -> dict[str, Any]:
             pipeline_run_id=payload.get("pipeline_run_id"),
             error=str(exc),
         )
+        if not config.ALLOW_MOCK_FALLBACK:
+            raise
         return {"source": "mock", "event_type": event_type, "error": str(exc), "created_at": now_iso()}
 
 

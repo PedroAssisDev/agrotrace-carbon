@@ -51,7 +51,7 @@ UI em `http://127.0.0.1:8050`. Entrypoint canônico: `frontend/main.py` (não us
 | `/indicators` | Análise Geral |
 | `/previsoes` | Previsões |
 | `/technical-audit` | Auditoria Técnica |
-| `/settings` | Configurações |
+| `/settings` | Diagnóstico técnico |
 
 Paths desconhecidos caem no Painel Executivo. Não há mecanismo de redirect de rotas
 legadas em `router.py`.

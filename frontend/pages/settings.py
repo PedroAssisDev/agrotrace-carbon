@@ -42,10 +42,16 @@ def layout(
     avail = di.availability()
     return html.Div([
         PageHeader(
-            "Configurações",
-            "Modos, módulos integrados e caminhos do protótipo (somente leitura).",
+            "Diagnóstico técnico",
+            "Painel de diagnóstico do protótipo (somente leitura) — modos, módulos e caminhos.",
             gf,
             filter_options,
+        ),
+        dbc.Alert(
+            "Esta tela é um diagnóstico técnico para mantenedores e banca. "
+            "Não faz parte do fluxo operacional de MRV.",
+            color="info",
+            className="mb-3",
         ),
         _settings_card("Filtro global ativo", html.Div([
             html.P(format_filter_badge(gf, options), className="text-aux mb-1"),
@@ -68,9 +74,13 @@ def layout(
                 html.Li(f"USE_DIRECT_FUNCTION_CALLS: {config.USE_DIRECT_FUNCTION_CALLS}"),
                 html.Li(f"ALLOW_MOCK_FALLBACK: {config.ALLOW_MOCK_FALLBACK}"),
                 html.Li(f"PRESENTATION_MODE: {config.PRESENTATION_MODE}"),
+                html.Li(f"DEBUG (AGROTRACE_DASH_DEBUG): {config.DEBUG}"),
             ], className="mb-0")), md=6),
-            dbc.Col(_settings_card("Módulos reais", html.Ul([
-                html.Li(f"{k}: {'disponível' if v else 'indisponível (mock)'}") for k, v in avail.items()
+            dbc.Col(_settings_card("Módulos integrados", html.Ul([
+                html.Li(
+                    f"{k}: {'disponível' if v else 'indisponível (fallback diagnóstico)'}"
+                )
+                for k, v in avail.items()
             ], className="mb-0")), md=6),
         ], className="g-3 mb-0"),
         _settings_card("Caminhos", html.Pre(

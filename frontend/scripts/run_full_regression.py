@@ -1,5 +1,8 @@
 """Runner da regressão final (22 passos) sob AGROTRACE_DATA_ROOT temporário.
 
+Por padrão grava o relatório fora do versionamento (temp). Para publicar a
+evidência acadêmica sob docs/audits/current/, passe ``--out`` explicitamente.
+
 Uso:
     python scripts/run_full_regression.py
     python scripts/run_full_regression.py --out docs/audits/current/regressao.json
@@ -110,7 +113,11 @@ def main() -> int:
     parser.add_argument(
         "--out",
         type=Path,
-        default=REPO_ROOT / "docs" / "audits" / "current" / "regressao.json",
+        default=None,
+        help=(
+            "Caminho do relatório JSON. Default: arquivo temporário "
+            "(não sobrescreve docs/audits/current/regressao.json)."
+        ),
     )
     parser.add_argument("--skip-forge", action="store_true")
     parser.add_argument("--quick", action="store_true", help="Skip long e2e (smoke/full cycle)")
@@ -240,10 +247,17 @@ def main() -> int:
             "fail_count": sum(1 for r in results if r.get("exit_code") not in (0, None)),
         }
 
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+        out_path = args.out
+        if out_path is None:
+            out_path = Path(tempfile.gettempdir()) / f"agrotrace-regressao-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json"
+        else:
+            out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
         print(f"\n=== REGRESSION SUMMARY === pass={report['pass_count']} fail={report['fail_count']}")
-        print(f"report: {args.out}")
+        print(f"report: {out_path}")
+        if args.out is None:
+            print("(default temp path — use --out docs/audits/current/regressao.json to publish)")
         for r in results:
             if r.get("exit_code") != 0:
                 print(f"  FAIL {r.get('name')}: exit={r.get('exit_code')} {r.get('summary', '')[:120]}")

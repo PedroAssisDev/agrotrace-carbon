@@ -23,6 +23,7 @@ from scripts._pending_seed_assertions import validate_seed_collection  # noqa: E
 from services.cycle_status_service import resolve_managerial_status  # noqa: E402
 from services.embrapa_import_service import (  # noqa: E402
     ANNUAL_DEFAULT_YEAR,
+    ensure_embrapa_split,
     import_embrapa_uploads,
 )
 from services.emulated_import_service import import_emulated_manifest  # noqa: E402
@@ -84,9 +85,15 @@ def main() -> int:
     embrapa = None
     if not args.skip_embrapa:
         print(
-            f"2/3 Importando Embrapa monthly (P-*) + annual (BR-*, year={args.embrapa_year})..."
+            f"2/3 Preparando split + importando Embrapa monthly (P-*) "
+            f"+ annual (BR-*, year={args.embrapa_year})..."
         )
-        embrapa = import_embrapa_uploads(annual_year=args.embrapa_year)
+        ensure_embrapa_split()
+        embrapa = import_embrapa_uploads(
+            annual_year=args.embrapa_year,
+            ensure_split=False,
+            require_nonempty=True,
+        )
     else:
         print("2/3 Embrapa ignorado (--skip-embrapa).")
 

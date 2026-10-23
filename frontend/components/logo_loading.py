@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dash import html
 
+from config import APP_TITLE
 from utils.random_background import logo_url
 
 
@@ -17,7 +18,7 @@ def create_global_loading_overlay(
     brand_node = (
         html.Img(
             src=logo,
-            alt="AgroTrace Carbon",
+            alt=APP_TITLE,
             className="global-loading-brand",
         )
         if logo

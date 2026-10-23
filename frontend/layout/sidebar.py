@@ -5,6 +5,7 @@ from __future__ import annotations
 import dash_bootstrap_components as dbc
 from dash import html
 
+from config import APP_TITLE
 from utils.random_background import logo_url
 
 MANAGERIAL_NAV = [
@@ -21,7 +22,7 @@ TECHNICAL_NAV = [
 ]
 
 SETTINGS_NAV = [
-    ("/settings", "fas fa-cog", "Configurações"),
+    ("/settings", "fas fa-cog", "Diagnóstico técnico"),
 ]
 
 
@@ -35,9 +36,9 @@ def _nav_links(items: list[tuple[str, str, str]]) -> list:
 def create_sidebar() -> html.Div:
     logo = logo_url()
     if logo:
-        brand_block = html.Div(html.Img(src=logo, alt="AgroTrace Carbon", className="sidebar-logo"), className="sidebar-brand")
+        brand_block = html.Div(html.Img(src=logo, alt=APP_TITLE, className="sidebar-logo"), className="sidebar-brand")
     else:
-        brand_block = html.Div(html.Div("AgroTrace Carbon", className="sidebar-brand-title"), className="sidebar-brand")
+        brand_block = html.Div(html.Div(APP_TITLE, className="sidebar-brand-title"), className="sidebar-brand")
 
     return html.Div(
         [

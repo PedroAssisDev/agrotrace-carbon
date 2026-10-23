@@ -1,7 +1,9 @@
-# Documentação — AgroTrace Carbon
+# Documentação — AgroMRV-Flow
 
-Mapa da documentação por público. Links relativos. Documentos arquivados **não** são
-listados como atuais.
+Mapa da documentação por público (repositório técnico `agrotrace-carbon`).
+Links relativos. Documentos arquivados **não** são listados como atuais.
+
+**Manual de instalação e reprodução:** [manual/README.md](manual/README.md)
 
 Status: `atual` = reflete o código; `gerado` = produzido por script (não editar à mão);
 `histórico` = preservado, não representa o estado atual.
